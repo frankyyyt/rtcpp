@@ -74,6 +74,11 @@ class node_allocator_lazy {
   : m_data(alloc.m_data)
   , m_size(alloc.m_size)
   {}
+  template<typename U>
+  void destroy(U* p) {p->~U();}
+  template< typename U, typename... Args>
+  void construct(U* p, Args&&... args)
+  {::new((void *)p) U(std::forward<Args>(args)...);}
 };
 
 template < typename T
@@ -152,6 +157,7 @@ class node_allocator_lazy<T, N, true> {
   pointer address(reference x) const noexcept { return std::addressof(x); }
   const_pointer address(const_reference x) const noexcept
   { return std::addressof(x); }
+  constexpr std::size_t max_size() const {return 1;}
 };
 
 template <typename T>
@@ -203,6 +209,7 @@ struct allocator_traits<rt::node_allocator_lazy<T>> {
   template<class U, class... Args >
   static void construct(allocator_type& a, U* p, Args&&... args)
   {a.construct(p, std::forward<Args>(args)...);}
+  constexpr std::size_t max_size(allocator_type& a) const {return a.max_size();}
 };
 
 template <typename T>

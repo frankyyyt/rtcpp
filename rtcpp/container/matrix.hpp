@@ -199,7 +199,6 @@ matrix_scaled<E> const operator*(const matrix_expr<E>& v, typename E::value_type
 template <typename E>
 matrix_scaled<E> const operator/(const matrix_expr<E>& v, typename E::value_type val)
 {
-  using value_type = typename E::value_type;
   const double tmp = static_cast<double>(1) / val;
   return matrix_scaled<E>(tmp, v);
 }

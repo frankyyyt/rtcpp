@@ -35,6 +35,7 @@ int main()
 
   // Not node_type2, array allocation is fine.
   auto a = alloc.allocate(10); // Ok
+  *a = 10;
 
   // Error, node alocation not enabled for int.
   //auto b = alloc.allocate_node(); // Compile time error
@@ -52,6 +53,7 @@ int main()
 
   // Ok, node allocation enabled.
   auto d = node_alloc.allocate_node(); // Ok
+  *d = node_type2();
 
   // Rebinds to the unordered container internal array allocation
   // type. 
@@ -61,7 +63,8 @@ int main()
   array_alloc_type array_alloc(alloc);
 
   // Ok, Not the node type, array allocation enabled.
-  auto e = alloc.allocate(10); // Compile time error
+  auto e = alloc.allocate(10);
+  *e = 10;
 
   // Error, node alocation is not enabled for float*.
   //auto f = alloc.allocate_node(); // Ok
