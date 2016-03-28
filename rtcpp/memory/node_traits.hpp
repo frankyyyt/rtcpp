@@ -11,30 +11,18 @@
 
 namespace rt {
 
-template<class T, class R = void>  
-struct enable_if_type { using type = R; };
+template <typename ...> using void_type = void;
 
-template<class T, class Enable = void>
-struct has_pointer : std::false_type
-{
-  using pointer = Enable;
-};
+#define RTCPP_HAS_NESTED_TYPE(TYPE)\
+  template <typename T, typename = void_type<>>\
+  struct has_##TYPE : std::false_type {};\
+  \
+  template <typename T>\
+  struct has_##TYPE<T, void_type<typename T::TYPE>>\
+  : std::true_type {};
 
-template<class T>
-struct has_pointer< T, typename enable_if_type<typename T::pointer>::type> : std::true_type {
-  using pointer = typename T::pointer;
-};
-
-template<class T, class Enable = void>
-struct has_value_type : std::false_type
-{
-  using value_type = Enable;
-};
-
-template<class T>
-struct has_value_type< T, typename enable_if_type<typename T::value_type>::type> : std::true_type {
-  using value_type = typename T::value_type;
-};
+RTCPP_HAS_NESTED_TYPE(pointer)
+RTCPP_HAS_NESTED_TYPE(value_type)
 
 template <typename T>
 struct is_node_type {
