@@ -30,6 +30,7 @@ class node_allocator {
   using const_pointer = const T*;
   using const_reference = const T&;
   using reference = T&;
+  using value_type = T;
   template<class U>
   struct rebind { using other = node_allocator<U , NodeType>; };
   public:
@@ -115,19 +116,17 @@ bool operator!=( const node_allocator<T, K>& alloc1
 
 }
 
-namespace std {
+namespace rt {
 
-template <typename T, typename NodeType>
-struct allocator_traits<rt::node_allocator<T, NodeType>> {
-  using allocator_type = rt::node_allocator<T, NodeType>;
-  using alloc_type = rt::node_allocator<T, NodeType>;
-  using node_allocation_only =
-    typename allocator_type::node_allocation_only;
+template <typename Alloc>
+struct allocator_traits {
+  using allocator_type = Alloc;
+  using alloc_type = Alloc;
   using is_always_equal = std::false_type;
-  using const_reference = const T&;
-  using pointer = T*;
+  using const_reference = typename Alloc::const_reference;
+  using pointer = typename Alloc::pointer;
   using size_type = std::size_t;
-  using value_type = T;
+  using value_type = typename Alloc::value_type;
   using difference_type = std::ptrdiff_t;
   using const_void_pointer =
     typename std::pointer_traits<pointer>::template
@@ -167,7 +166,7 @@ struct allocator_traits<rt::node_allocator<T, NodeType>> {
   static
   typename std::enable_if<!rt::has_allocate_node<Alloc2>::value>::type
   deallocate_node(Alloc2& a, pointer p)
-  {a.deallocate(1);}
+  {a.deallocate(p, 1);}
 
   template<class U>
   static void destroy(allocator_type& a, U* p) {a.destroy(p);}
