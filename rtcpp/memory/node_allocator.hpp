@@ -25,7 +25,7 @@ class node_allocator {
   public:
   static constexpr std::size_t reserved() {return node_stack::memory_use;}
   using size_type = std::size_t;
-  using use_node_allocation = std::true_type;
+  using node_allocation_only = std::true_type;
   using pointer = T*;
   using const_pointer = const T*;
   using const_reference = const T&;
@@ -65,7 +65,8 @@ class node_allocator {
   , m_size(alloc.m_size)
   {}
   template <typename U = T>
-  typename std::enable_if<is_same_node_type<U, NodeType>::value, pointer>::type
+  typename std::enable_if<
+    is_same_node_type<U, NodeType>::value, pointer>::type
   allocate_node()
   {
     char* p = m_stack.pop(); 
@@ -74,9 +75,10 @@ class node_allocator {
     return reinterpret_cast<pointer>(p); 
   }
   template <typename U = T>
-  typename std::enable_if<!is_same_node_type<U, NodeType>::value, pointer>::type
+  typename std::enable_if<
+    !is_same_node_type<U, NodeType>::value, pointer>::type
   allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
-  { return std_alloc.allocate(n, hint); }
+  {return std_alloc.allocate(n, hint);}
   template <typename U = T>
   typename std::enable_if<std::is_same<U, NodeType>::value>::type
   deallocate_node(pointer p)
@@ -117,16 +119,21 @@ namespace std {
 
 template <typename T, typename NodeType>
 struct allocator_traits<rt::node_allocator<T, NodeType>> {
-  using use_node_allocation = typename rt::node_allocator<T, NodeType>::use_node_allocation;
+  using allocator_type = rt::node_allocator<T, NodeType>;
+  using alloc_type = rt::node_allocator<T, NodeType>;
+  using node_allocation_only =
+    typename allocator_type::node_allocation_only;
   using is_always_equal = std::false_type;
-  using allocator_type = typename rt::node_allocator<T, NodeType>;
   using const_reference = const T&;
   using pointer = T*;
   using size_type = std::size_t;
   using value_type = T;
   using difference_type = std::ptrdiff_t;
-  using const_void_pointer = typename std::pointer_traits<pointer>::template rebind<const void>;
-  using void_pointer = typename std::pointer_traits<pointer>::template rebind<void>;
+  using const_void_pointer =
+    typename std::pointer_traits<pointer>::template
+      rebind<const void>;
+  using void_pointer =
+    typename std::pointer_traits<pointer>::template rebind<void>;
   using const_pointer = typename allocator_type::const_pointer;
   using propagate_on_container_copy_assignment = std::true_type;
   using propagate_on_container_move_assignment = std::true_type;
@@ -137,10 +144,31 @@ struct allocator_traits<rt::node_allocator<T, NodeType>> {
   static allocator_type
     select_on_container_copy_construction(const allocator_type& a)
     {return a;}
-  static pointer allocate_node(allocator_type& a)
+
+  template <typename Alloc2 = allocator_type>
+  static typename std::enable_if<
+    rt::has_allocate_node<Alloc2>::value, pointer>::type
+  allocate_node(Alloc2& a)
   {return a.allocate_node();}
-  static void deallocate_node( allocator_type& a
-                        , pointer p) {a.deallocate_node(p);}
+
+  template <typename Alloc2 = allocator_type>
+  static typename std::enable_if<
+    !rt::has_allocate_node<Alloc2>::value, pointer>::type
+  allocate_node(Alloc2& a)
+  {return a.allocate(1);}
+
+  template <typename Alloc2 = allocator_type>
+  static
+  typename std::enable_if<rt::has_allocate_node<Alloc2>::value>::type
+  deallocate_node(Alloc2& a, pointer p)
+  {a.deallocate_node(p);}
+
+  template <typename Alloc2 = allocator_type>
+  static
+  typename std::enable_if<!rt::has_allocate_node<Alloc2>::value>::type
+  deallocate_node(Alloc2& a, pointer p)
+  {a.deallocate(1);}
+
   template<class U>
   static void destroy(allocator_type& a, U* p) {a.destroy(p);}
   template<class U, class... Args >

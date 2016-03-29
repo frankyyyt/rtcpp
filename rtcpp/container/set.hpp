@@ -259,7 +259,7 @@ namespace detail
    All the content of this namespace will be removed if the proposal gets
    accepted! At the moment std::allocator traits do not offer the function
    allocate_node, so I am guessing its existance based on the typedef
-   use_node_allocation. I am using SFINAE to test if it exists.  If it does, I
+   node_allocation_only. I am using SFINAE to test if it exists.  If it does, I
    call the function allocate_node/deallocate_node othersize
    allocate/deallocate.
 */
@@ -272,7 +272,7 @@ struct test_use_node_alloc : std::false_type {};
 
 template<class T>
 struct test_use_node_alloc< T
-                          , typename enable_if_type<typename T::use_node_allocation>::type
+                          , typename enable_if_type<typename T::node_allocation_only>::type
                           > : std::true_type {};
 // allocate
 

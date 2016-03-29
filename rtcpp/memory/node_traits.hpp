@@ -53,5 +53,21 @@ struct is_same_node_type<N1, N2, false> {
   static const bool value = false;
 };
 
+template<typename Alloc1>
+struct allocate_node_helper
+{
+  template<typename Alloc2,
+    typename = decltype(std::declval<Alloc2*>()->allocate_node())>
+  static std::true_type test(int);
+
+  template<typename>
+  static std::false_type test(...);
+
+  using type = decltype(test<Alloc1>(0));
+};
+
+template<typename Alloc>
+using has_allocate_node = typename allocate_node_helper<Alloc>::type;
+
 }
 
