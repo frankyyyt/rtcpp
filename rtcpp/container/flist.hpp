@@ -24,7 +24,8 @@ class flist {
   typedef flist_iterator<T> iterator;
   typedef T value_type;
   private:
-  typedef typename std::allocator_traits<Allocator>::template rebind_alloc<node_type> inner_allocator_type;
+  typedef typename std::allocator_traits<Allocator>::template
+    rebind_alloc<node_type> inner_allocator_type;
   inner_allocator_type m_inner_alloc;
   node_pointer head;
   node_pointer tail;

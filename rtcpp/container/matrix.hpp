@@ -23,7 +23,8 @@ class matrix_expr {
   using size_type = typename matrix_traits<E>::size_type;
   static constexpr std::size_t rows = matrix_traits<E>::rows;
   static constexpr std::size_t cols = matrix_traits<E>::cols;
-  value_type operator()(size_type i, size_type j) const {return static_cast<const E&>(*this)(i, j);}
+  value_type operator()(size_type i, size_type j) const
+  {return static_cast<const E&>(*this)(i, j);}
   operator E&() {return static_cast<E&>(*this);}
   operator const E&() const {return static_cast<const E&>(*this);}
 };
@@ -50,21 +51,27 @@ public:
   explicit matrix(const T& val) { fill(val);};
   reference operator[](size_type i) {return m_data[i];}
   const_reference operator[](size_type i) const {return m_data[i];}
-  value_type operator()(size_type i, size_type j) const {return m_data[row_major_idx(i, j, N)];}
-  reference operator()(size_type i, size_type j) {return m_data[row_major_idx(i, j, N)];}
+  value_type operator()(size_type i, size_type j) const
+  {return m_data[row_major_idx(i, j, N)];}
+  reference operator()(size_type i, size_type j)
+  {return m_data[row_major_idx(i, j, N)];}
   iterator begin() {return m_data.begin();}
   iterator end() {return m_data.end();}
   const_iterator begin() const {return m_data.begin();}
   const_iterator end() const {return m_data.end();}
   const_iterator cbegin() const {return m_data.begin();}
   const_iterator cend() const {return m_data.end();}
-  const_iterator row_cbegin(size_type i) const {return m_data.begin() + row_major_idx(i, 0, N);}
+  const_iterator row_cbegin(size_type i) const
+  {return m_data.begin() + row_major_idx(i, 0, N);}
   reference front() {return *begin();}
   const_reference front() const {return *cbegin();}
   reference back() {return *(begin() + data_size);}
-  const_reference back() const {return *(cbegin() + data_size);}
-  const_iterator row_cend(size_type i) const {return row_cbegin(i) + N;}
-  iterator row_begin(size_type i) {return m_data.begin() + row_major_idx(i, 0, N);}
+  const_reference back() const
+  {return *(cbegin() + data_size);}
+  const_iterator row_cend(size_type i) const
+  {return row_cbegin(i) + N;}
+  iterator row_begin(size_type i)
+  {return m_data.begin() + row_major_idx(i, 0, N);}
   iterator row_end(size_type i) {return row_begin(i) + N;}
   template <typename E>
   matrix(const matrix_expr<E>& mat)
@@ -87,8 +94,10 @@ public:
   { std::copy(std::begin(init), std::end(init), begin()); }
   bool operator==(const matrix<T,M,N>& rhs) const
   { return std::equal(cbegin(), cend(), rhs.cbegin()); }
-  bool operator!=(const matrix<T,M,N>& rhs) const { return !(*this == rhs);}
-  void fill(const T& val) { std::fill(std::begin(m_data), std::end(m_data), val);};
+  bool operator!=(const matrix<T,M,N>& rhs) const
+  { return !(*this == rhs);}
+  void fill(const T& val)
+  { std::fill(std::begin(m_data), std::end(m_data), val);};
 };
 
 template <typename T, std::size_t M, std::size_t N>
@@ -177,7 +186,8 @@ class matrix_scaled : public matrix_expr<matrix_scaled<E> > {
   : m_val(val)
   , m_v(v)
   {}
-  value_type operator()(size_type i, size_type j) const {return m_val * m_v(i, j);}
+  value_type operator()(size_type i, size_type j) const
+  {return m_val * m_v(i, j);}
 };
 
 template <typename E>
