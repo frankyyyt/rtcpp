@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <initializer_list>
 
-#include <rtcpp/memory/node_allocator.hpp>
+#include <rtcpp/memory/allocator_traits.hpp>
 
 #include "bst_iterator.hpp"
 
