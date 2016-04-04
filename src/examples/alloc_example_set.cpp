@@ -7,12 +7,11 @@
 
 int main()
 {
-  using node_type = typename rt::set<int>::node_type;
-  using alloc_type = rt::node_allocator<int, node_type>;
+  using alloc_type = rt::node_allocator<int, rt::set<int>::node_type>;
   using set_type = rt::set<int, std::less<int>, alloc_type>;
-  const auto r = alloc_type::reserved();
+  using node_type = typename set_type::node_type;
 
-  std::array<char, r + 10 * sizeof (set_type::node_type)> buffer = {{}};
+  std::array<node_type, 12> buffer = {{}};
   alloc_type alloc(buffer);
 
   set_type t1(alloc);

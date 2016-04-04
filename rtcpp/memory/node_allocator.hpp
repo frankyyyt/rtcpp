@@ -39,14 +39,15 @@ class node_allocator {
   node_stack m_stack;
   std::allocator<T> std_alloc; // Used for array allocations.
   public:
-  node_allocator(char* data, std::size_t size)
-  : m_data(data)
-  , m_size(size)
+  template <class U>
+  node_allocator(U* data, std::size_t size)
+  : m_data(reinterpret_cast<char*>(data))
+  , m_size(size * sizeof (U))
   {}
-  template <std::size_t I>
-  explicit node_allocator(std::array<char, I>& arr)
-  : node_allocator(&arr.front(), arr.size())
-  {}
+  template <class U, std::size_t I>
+  explicit node_allocator(std::array<U, I>& arr)
+  : node_allocator( reinterpret_cast<char*>(&arr.front())
+                  , arr.size() * sizeof (U)) {}
   template <typename Alloc>
   explicit node_allocator(std::vector<char, Alloc>& arr)
   : node_allocator(&arr.front(), arr.size())
