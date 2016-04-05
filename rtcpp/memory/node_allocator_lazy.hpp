@@ -56,16 +56,18 @@ class node_allocator_lazy {
     std::swap(m_size, other.m_size);
     std::swap(m_data, other.m_data);
   }
-  node_allocator_lazy(char* data, std::size_t size)
+  template <class U>
+  node_allocator_lazy(U* data, std::size_t size)
   : m_data(data)
-  , m_size(size)
+  , m_size(size * sizeof (U))
   {}
-  template <std::size_t N>
-  explicit node_allocator_lazy(std::array<char, N>& arr)
-  : node_allocator_lazy(&arr.front(), arr.size())
+  template <class U, std::size_t N>
+  explicit node_allocator_lazy(std::array<U, N>& arr)
+  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), N * sizeof (U))
   {}
-  explicit node_allocator_lazy(std::vector<char>& arr)
-  : node_allocator_lazy(&arr.front(), arr.size())
+  template <class U>
+  explicit node_allocator_lazy(std::vector<U>& arr)
+  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), arr.size() * sizeof (U))
   {}
   template<typename U>
   node_allocator_lazy(const node_allocator_lazy< U
@@ -106,17 +108,18 @@ class node_allocator_lazy<T, N, true> {
   public:
   // The following ctors only store the pointer and the size.  Use
   // them if you want linking to occurr inside the container.
-  node_allocator_lazy(char* data, std::size_t size)
+  template <class U>
+  node_allocator_lazy(U* data, std::size_t size)
   : m_data(data)
-  , m_size(size)
+  , m_size(size * sizeof (U))
   {}
-  template <std::size_t I>
-  explicit node_allocator_lazy(std::array<char, I>& arr)
-  : node_allocator_lazy(&arr.front(), arr.size())
+  template <class U, std::size_t I>
+  explicit node_allocator_lazy(std::array<U, I>& arr)
+  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), I * sizeof (U))
   {}
-  template <typename Alloc>
-  explicit node_allocator_lazy(std::vector<char, Alloc>& arr)
-  : node_allocator_lazy(&arr.front(), arr.size())
+  template <class U, class Alloc>
+  explicit node_allocator_lazy(std::vector<U, Alloc>& arr)
+  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), arr.size() * sizeof (U))
   {}
   // Copy constructor, always tries to link the stack. If it is already
   // linked ok. If it is linked to an incompatible size, throws.
