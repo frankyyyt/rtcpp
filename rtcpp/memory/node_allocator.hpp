@@ -9,10 +9,10 @@
 
 #include "node_stack.hpp"
 #include "node_traits.hpp"
+#include "node_alloc_header.hpp"
 
 /*
   This is the prototype allocator I have implemented for the proposal.
-
   Please, read the proposal in doc/proposal_allocator.pdf
 */
 
@@ -34,44 +34,27 @@ class node_allocator {
   template<class U>
   struct rebind { using other = node_allocator<U , NodeType>; };
   public:
-  char* m_data;
-  std::size_t m_size;
-  node_stack m_stack;
+  node_alloc_header* header;
+  node_stack stack;
   std::allocator<T> std_alloc; // Used for array allocations.
   public:
-  template <class U>
-  node_allocator(U* data, std::size_t size)
-  : m_data(reinterpret_cast<char*>(data))
-  , m_size(size * sizeof (U))
-  {}
-  template <class U, std::size_t I>
-  explicit node_allocator(std::array<U, I>& arr)
-  : node_allocator( reinterpret_cast<char*>(&arr.front())
-                  , arr.size() * sizeof (U)) {}
-  template <typename Alloc>
-  explicit node_allocator(std::vector<char, Alloc>& arr)
-  : node_allocator(&arr.front(), arr.size())
-  {}
+  node_allocator(node_alloc_header* p) : header(p) {}
   // Constructor for the node type with a different pointer type.
   template<typename U, typename K = T>
   node_allocator( const node_allocator<U, NodeType>& alloc
                 , typename std::enable_if<is_same_node_type<K, NodeType>::value, void*>::type p = 0)
-  : m_data(alloc.m_data)
-  , m_size(alloc.m_size)
-  , m_stack(m_data, m_size, sizeof (T))
-  {}
+  : header(alloc.header)
+  , stack(header->data, header->size, sizeof (T)) {}
   template<typename U, typename K = T>
   node_allocator( const node_allocator<U, NodeType>& alloc
                 , typename std::enable_if<!is_same_node_type<K, NodeType>::value, void*>::type p = 0)
-  : m_data(alloc.m_data)
-  , m_size(alloc.m_size)
-  {}
+  : header(alloc.header) {}
   template <typename U = T>
   typename std::enable_if<
     is_same_node_type<U, NodeType>::value, pointer>::type
   allocate_node()
   {
-    char* p = m_stack.pop(); 
+    char* p = stack.pop(); 
     if (!p)
       throw std::bad_alloc();
     return reinterpret_cast<pointer>(p); 
@@ -84,7 +67,7 @@ class node_allocator {
   template <typename U = T>
   typename std::enable_if<std::is_same<U, NodeType>::value>::type
   deallocate_node(pointer p)
-  { m_stack.push(reinterpret_cast<char*>(p)); }
+  { stack.push(reinterpret_cast<char*>(p)); }
   template <typename U = T>
   typename std::enable_if<!std::is_same<U, NodeType>::value>::type
   deallocate(pointer p, size_type n)
@@ -96,9 +79,8 @@ class node_allocator {
   {::new((void *)p) U(std::forward<Args>(args)...);}
   void swap(node_allocator& other) noexcept
   {
-    m_stack.swap(other.m_stack);
-    std::swap(m_data, other.m_data);
-    std::swap(m_size, other.m_size);
+    stack.swap(other.stack);
+    std::swap(header, other.header);
   }
   pointer address(reference x) const noexcept { return std::addressof(x); }
   const_pointer address(const_reference x) const noexcept
@@ -108,7 +90,7 @@ class node_allocator {
 template <typename T, typename K, typename U, typename V>
 bool operator==( const node_allocator<T, K>& alloc1
                , const node_allocator<U, V>& alloc2)
-{return alloc1.m_stack == alloc2.m_stack;}
+{return alloc1.stack == alloc2.stack;}
 
 template <typename T, typename K, typename U, typename V>
 bool operator!=( const node_allocator<T, K>& alloc1

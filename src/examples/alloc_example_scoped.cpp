@@ -17,9 +17,11 @@ int main()
 
   std::array<char, 2000> buffer1 = {{}};
   std::array<char, 2000> buffer2 = {{}};
+  rt::node_alloc_header header1(buffer1);
+  rt::node_alloc_header header2(buffer2);
 
-  inner_alloc_type alloc1(buffer1);
-  rt::node_allocator_lazy<inner_list_type> alloc2(buffer2);
+  inner_alloc_type alloc1(&header1);
+  rt::node_allocator_lazy<inner_list_type> alloc2(&header2);
 
   outer_alloc_type alloc(alloc2, alloc1);
 

@@ -213,9 +213,11 @@ bool run_tests_all()
   // Tow buffers for two allocators.
   std::vector<char> buffer1(2 * bsize);
   std::vector<char> buffer2(4 * bsize);
+  rt::node_alloc_header header1(buffer1);
+  rt::node_alloc_header header2(buffer2);
 
-  rt::node_allocator_lazy<T> alloc1(buffer1);
-  rt::node_allocator_lazy<T> alloc2(buffer2);
+  rt::node_allocator_lazy<T> alloc1(&header1);
+  rt::node_allocator_lazy<T> alloc2(&header2);
 
   rt::set<T> t1;
   rt::set<T, std::less<T>, rt::node_allocator_lazy<T>> t2(std::less<T>(), alloc1);

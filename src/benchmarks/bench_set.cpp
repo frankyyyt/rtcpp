@@ -76,7 +76,8 @@ int main(int argc, char* argv[])
     const std::size_t n = N + i * S;
     std::cout << n << " ";
     std::vector<char> buffer((n + 2) * 40, 0);
-    rt::node_allocator_lazy<int> alloc(buffer);
+    rt::node_alloc_header header(buffer);
+    rt::node_allocator_lazy<int> alloc(&header);
     typedef std::set<int, std::less<int>, rt::node_allocator_lazy<int>> set_type2;
     set_type2 s(std::less<int>(), alloc); // Uses a vector as buffer.
     print_set_bench(s, std::begin(data), n);

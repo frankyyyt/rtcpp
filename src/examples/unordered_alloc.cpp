@@ -31,7 +31,8 @@ int main()
   // Buffer for 100 elements
   std::array<char, 100 * sizeof (node_type2)> buffer = {{}};
 
-  alloc_type alloc(buffer); // User allocator instance.
+  rt::node_alloc_header header(buffer);
+  alloc_type alloc(&header); // User allocator instance.
 
   // Not node_type2, array allocation is fine.
   auto a = alloc.allocate(10); // Ok

@@ -7,7 +7,8 @@
 #include <exception>
 #include <type_traits>
 
-#include <rtcpp/memory/node_stack.hpp>
+#include "node_stack.hpp"
+#include "node_alloc_header.hpp"
 
 /*
   Implementation of a node allocator.  It performs constant time
@@ -33,8 +34,7 @@ template < typename T
          >
 class node_allocator_lazy {
   public:
-  char* m_data;
-  std::size_t m_size;
+  node_alloc_header* header;
   public:
   static constexpr std::size_t memory_use = node_stack::memory_use;
   using use_node_allocation = std::true_type;
@@ -53,29 +53,13 @@ class node_allocator_lazy {
   };
   void swap(node_allocator_lazy& other) noexcept
   {
-    std::swap(m_size, other.m_size);
-    std::swap(m_data, other.m_data);
+    std::swap(header, other.header);
   }
-  template <class U>
-  node_allocator_lazy(U* data, std::size_t size)
-  : m_data(data)
-  , m_size(size * sizeof (U))
-  {}
-  template <class U, std::size_t N>
-  explicit node_allocator_lazy(std::array<U, N>& arr)
-  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), N * sizeof (U))
-  {}
-  template <class U>
-  explicit node_allocator_lazy(std::vector<U>& arr)
-  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), arr.size() * sizeof (U))
-  {}
+  node_allocator_lazy(node_alloc_header* p) : header(p) {}
   template<typename U>
-  node_allocator_lazy(const node_allocator_lazy< U
-                                               , sizeof (U)
-                                               , !(sizeof (U) < sizeof (char*))>& alloc)
-  : m_data(alloc.m_data)
-  , m_size(alloc.m_size)
-  {}
+  node_allocator_lazy(const node_allocator_lazy< U, sizeof (U)
+                           , !(sizeof (U) < sizeof (char*))>& alloc)
+  : header(alloc.header) {}
   template<typename U>
   void destroy(U* p) {p->~U();}
   template< typename U, typename... Args>
@@ -102,38 +86,20 @@ class node_allocator_lazy<T, N, true> {
                                      , !(sizeof (U) < sizeof (char*))>;
   };
   public:
-  char* m_data;
-  std::size_t m_size;
-  node_stack m_stack;
+  node_alloc_header* header;
+  node_stack stack;
   public:
-  // The following ctors only store the pointer and the size.  Use
-  // them if you want linking to occurr inside the container.
-  template <class U>
-  node_allocator_lazy(U* data, std::size_t size)
-  : m_data(data)
-  , m_size(size * sizeof (U))
-  {}
-  template <class U, std::size_t I>
-  explicit node_allocator_lazy(std::array<U, I>& arr)
-  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), I * sizeof (U))
-  {}
-  template <class U, class Alloc>
-  explicit node_allocator_lazy(std::vector<U, Alloc>& arr)
-  : node_allocator_lazy(reinterpret_cast<char*>(&arr.front()), arr.size() * sizeof (U))
-  {}
-  // Copy constructor, always tries to link the stack. If it is already
-  // linked ok. If it is linked to an incompatible size, throws.
+  node_allocator_lazy(node_alloc_header* p) : header(p) {}
   template<typename U>
   node_allocator_lazy(const node_allocator_lazy< U
                                                , sizeof (U)
                                                , !(sizeof (U) < sizeof (char*))>& alloc)
-  : m_data(alloc.m_data)
-  , m_size(alloc.m_size)
-  , m_stack(m_data, m_size, N)
+  : header(alloc.header)
+  , stack(header->data, header->size, N)
   {}
   pointer allocate_node()
   {
-    char* p = m_stack.pop(); 
+    char* p = stack.pop(); 
     if (!p)
       throw std::bad_alloc();
     return reinterpret_cast<pointer>(p); 
@@ -143,7 +109,7 @@ class node_allocator_lazy<T, N, true> {
     return allocate_node();
   }
   void deallocate_node(pointer p)
-  { m_stack.push(reinterpret_cast<char*>(p)); }
+  { stack.push(reinterpret_cast<char*>(p)); }
   void deallocate(pointer p, size_type)
   { deallocate_node(p); }
   template<typename U>
@@ -153,9 +119,8 @@ class node_allocator_lazy<T, N, true> {
   {::new((void *)p) U(std::forward<Args>(args)...);}
   void swap(node_allocator_lazy& other) noexcept
   {
-    m_stack.swap(other.m_stack);
-    std::swap(m_data, other.m_data);
-    std::swap(m_size, other.m_size);
+    std::swap(header, other.header);
+    stack.swap(other.stack);
   }
   pointer address(reference x) const noexcept { return std::addressof(x); }
   const_pointer address(const_reference x) const noexcept
@@ -166,7 +131,7 @@ class node_allocator_lazy<T, N, true> {
 template <typename T>
 bool operator==( const node_allocator_lazy<T>& alloc1
                , const node_allocator_lazy<T>& alloc2)
-{return alloc1.m_stack == alloc2.m_stack;}
+{return alloc1.stack == alloc2.stack;}
 
 template <typename T>
 bool operator!=( const node_allocator_lazy<T>& alloc1
@@ -202,8 +167,7 @@ struct allocator_traits<rt::node_allocator_lazy<T>> {
   {return a.allocate_node();}
   static pointer allocate_node(allocator_type& a)
   {return a.allocate_node();}
-  static void deallocate( allocator_type& a
-                        , pointer p
+  static void deallocate( allocator_type& a, pointer p
                         , size_type) {a.deallocate_node(p);}
   static void deallocate_node( allocator_type& a
                         , pointer p) {a.deallocate_node(p);}

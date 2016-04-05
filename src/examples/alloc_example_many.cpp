@@ -23,8 +23,9 @@
 int main()
 {
   std::array<char, 10000> buffer = {{}};
+  rt::node_alloc_header header(buffer);
 
-  rt::node_allocator_lazy<int> alloc(buffer);
+  rt::node_allocator_lazy<int> alloc(&header);
 
   std::set<int, std::less<int>, rt::node_allocator_lazy<int>> t1(std::less<int>(), alloc);
 
