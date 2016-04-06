@@ -95,7 +95,7 @@ class node_allocator_lazy<T, N, true> {
                                                , sizeof (U)
                                                , !(sizeof (U) < sizeof (char*))>& alloc)
   : header(alloc.header)
-  , stack(header->data, header->size, N)
+  , stack(header, N)
   {}
   pointer allocate_node()
   {

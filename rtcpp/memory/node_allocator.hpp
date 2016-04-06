@@ -44,7 +44,7 @@ class node_allocator {
   node_allocator( const node_allocator<U, NodeType>& alloc
                 , typename std::enable_if<is_same_node_type<K, NodeType>::value, void*>::type p = 0)
   : header(alloc.header)
-  , stack(header->data, header->size, sizeof (T)) {}
+  , stack(header, sizeof (T)) {}
   template<typename U, typename K = T>
   node_allocator( const node_allocator<U, NodeType>& alloc
                 , typename std::enable_if<!is_same_node_type<K, NodeType>::value, void*>::type p = 0)
