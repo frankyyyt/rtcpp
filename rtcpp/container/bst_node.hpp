@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <ostream>
 
   /*
 
@@ -27,6 +28,7 @@ struct index_helper<1> {
 namespace detail {
   constexpr int rbit = 1;
   constexpr int lbit = 2;
+  constexpr int in_use_bit = 4;
 }
 
 template <typename T, typename Ptr>
@@ -41,6 +43,14 @@ struct bst_node {
   int tag;
   value_type key;
 };
+
+template <class T, class Ptr>
+std::ostream&
+operator<<(std::ostream& os, const bst_node<T, Ptr*>& o)
+{
+  os << o.key;
+  return os;
+}
 
 template <std::size_t I>
 struct set_link_null;
@@ -76,22 +86,60 @@ struct unset_link_null<1> {
   { p->tag &= ~detail::rbit; }
 };
 
+template <typename Node>
+void mark_in_use(Node* o)
+{ o->tag |= detail::in_use_bit; }
+
+template <typename Node>
+void mark_free(Node* o)
+{ o->tag &= ~detail::in_use_bit; }
+
+struct is_in_use {
+  template <typename Node>
+  bool operator()(const Node& o)
+  { return o.tag & detail::in_use_bit; }
+};
+
 template <std::size_t I>
 struct has_null_link;
 
 template <>
 struct has_null_link<0> {
   template <typename Ptr>
-  static constexpr int apply(Ptr p) noexcept
+  static constexpr bool apply(Ptr p) noexcept
   {return p->tag & detail::lbit;}
 };
 
 template <>
 struct has_null_link<1> {
   template <typename Ptr>
-  static constexpr int apply(Ptr p) noexcept
+  static constexpr bool apply(Ptr p) noexcept
   {return p->tag & detail::rbit;}
 };
+
+template <std::size_t I>
+struct get_null_link;
+
+template <>
+struct get_null_link<0> {
+  template <typename Ptr>
+  static constexpr int apply(Ptr p) noexcept
+  {
+    using namespace detail;
+    return p->tag & (lbit | in_use_bit);
+  }
+};
+
+template <>
+struct get_null_link<1> {
+  template <typename Ptr>
+  static constexpr int apply(Ptr p) noexcept
+  {
+    using namespace detail;
+    return p->tag & (rbit | in_use_bit);
+  }
+};
+
 
 template <std::size_t I, typename Ptr> 
 Ptr inorder(Ptr p) noexcept
@@ -149,9 +197,9 @@ void attach_node(Ptr p, Ptr q) noexcept
   // Attaches node q on the left of p. Does not check if pointers are valid.
   const std::size_t O = index_helper<I>::other;
   q->link[I] = p->link[I];
-  q->tag = has_null_link<O>::apply(q) | has_null_link<I>::apply(p);
+  q->tag = get_null_link<O>::apply(q) | get_null_link<I>::apply(p);
   p->link[I] = q;
-  p->tag = has_null_link<O>::apply(p);
+  p->tag = get_null_link<O>::apply(p);
   q->link[O] = p;
   set_link_null<O>::apply(q);
 

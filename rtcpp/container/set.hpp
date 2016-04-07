@@ -261,13 +261,17 @@ template <typename Alloc>
 typename rt::allocator_traits<Alloc>::pointer
 get_node_free(Alloc& alloc)
 {
-  return rt::allocator_traits<Alloc>::allocate_node(alloc);
+  using pointer = typename rt::allocator_traits<Alloc>::pointer;
+  auto p = reinterpret_cast<pointer>(rt::allocator_traits<Alloc>::allocate_node(alloc));
+  mark_in_use(p);
+  return p;
 }
 
 template <typename Alloc>
 void release_node_free(Alloc& alloc, typename rt::allocator_traits<Alloc>::pointer p)
 {
-  return rt::allocator_traits<Alloc>::deallocate_node(alloc, p);
+  mark_free(p);
+  rt::allocator_traits<Alloc>::deallocate_node(alloc, p);
 }
 
 } // detail
