@@ -44,6 +44,7 @@ add_executable(alloc_example_set src/examples/alloc_example_set.cpp)
 add_executable(matrix_example1 src/examples/matrix_example1.cpp)
 add_executable(bench_list_frag src/benchmarks/bench_list_frag.cpp)
 add_executable(bench_find src/benchmarks/bench_find.cpp)
+add_executable(bench_traverse src/benchmarks/bench_traverse.cpp)
 
 if (Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIR})

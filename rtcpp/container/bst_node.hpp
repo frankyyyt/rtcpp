@@ -94,6 +94,10 @@ template <typename Node>
 void mark_free(Node* o)
 { o->tag &= ~detail::in_use_bit; }
 
+template <typename Node>
+inline bool test_in_use(const Node& o)
+{ return o.tag & detail::in_use_bit; }
+
 struct is_in_use {
   template <typename Node>
   bool operator()(const Node& o)

@@ -24,9 +24,10 @@ struct node_alloc_header {
   : node_alloc_header( reinterpret_cast<char*>(&arr.front())
                      , arr.size() * sizeof (U)) {}
 
-  template <typename Alloc>
-  explicit node_alloc_header(std::vector<char, Alloc>& arr)
-  : node_alloc_header(&arr.front(), arr.size()) {}
+  template <class U, typename Alloc>
+  explicit node_alloc_header(std::vector<U, Alloc>& arr)
+  : node_alloc_header( reinterpret_cast<char*>(&arr.front())
+                     , arr.size() * sizeof (U)) {}
 
   node_alloc_header() : data(0) , size(0) , n_alloc(0) {}
 };
