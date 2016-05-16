@@ -14,8 +14,9 @@ class timer {
   ~timer()
   {
     std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end - m_start;
-    std::cout << elapsed_seconds.count() << " ";
+    auto diff = end - m_start;
+    auto diff2 = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
+    std::cout << diff2.count() << " ";
   }
 };
 
