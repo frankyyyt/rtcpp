@@ -10,17 +10,19 @@ namespace rt
 // std::distance(begin, last) is assumed to be at least 1.
 // HAS A BUG.
 
-template <typename Iter, typename T>
-Iter find_intrusive(Iter begin, Iter end, const T& v)
+template <typename ForwardIter, typename T>
+ForwardIter
+find_intrusive(ForwardIter begin, ForwardIter end, const T& v)
 {
-  auto data_end = std::prev(end);
-  if (begin == data_end) // Empty range.
+  if (begin == end) // Empty range.
     return end;
 
-  while (*begin != v)
-    ++begin;
+  if (*begin == v)
+    return begin;
 
-  if (begin == data_end)
+  while (*++begin != v);
+
+  if (begin == std::prev(end))
     return end;
 
   return begin;
