@@ -8,7 +8,7 @@
 int main()
 {
   std::vector<int> data =
-    rt::make_rand_data<int>(10000, 1, std::numeric_limits<int>::max());
+    rt::make_rand_data<int>(1000, 1, std::numeric_limits<int>::max());
 
   rt::bubble_sort(std::begin(data), std::end(data));
 

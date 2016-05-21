@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iterator>
-
 namespace rt
 {
 
@@ -17,10 +15,8 @@ find_intrusive(ForwardIter begin, ForwardIter end, const T& v)
   if (begin == end) // Empty range.
     return end;
 
-  if (*begin == v)
-    return begin;
-
-  while (*++begin != v);
+  while (*begin != v)
+    ++begin;
 
   if (begin == std::prev(end))
     return end;

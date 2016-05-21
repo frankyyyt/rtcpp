@@ -6,7 +6,7 @@
 
 int main()
 {
-  const std::size_t N = 2000000;
+  const std::size_t N = 200000;
   const int A = -20;
   const int B = 200;
   std::vector<int> data = rt::make_rand_data<int>(N ,A ,B);

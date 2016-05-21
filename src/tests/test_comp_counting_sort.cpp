@@ -7,7 +7,7 @@
 int main()
 {
   std::vector<int> data =
-    rt::make_rand_data<int>( 10000
+    rt::make_rand_data<int>( 1000
                            , 1
                            , std::numeric_limits<int>::max());
 
