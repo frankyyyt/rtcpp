@@ -1,4 +1,4 @@
-#include <rtcpp/algorithm/max_element.hpp>
+#include <rtcpp/algorithm/algorithm.hpp>
 
 namespace rt
 {

@@ -5,7 +5,7 @@
 
 #include <rtcpp/utility/make_rand_data.hpp>
 #include <rtcpp/algorithm/insertion_sort.hpp>
-#include <rtcpp/algorithm/binary_search.hpp>
+#include <rtcpp/algorithm/algorithm.hpp>
 
 int main()
 {
