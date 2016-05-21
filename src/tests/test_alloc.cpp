@@ -12,10 +12,8 @@
 bool test_buffer_size()
 {
   std::array<char, 1> buffer = {{}};
-  rt::node_alloc_header header(buffer);
-  rt::node_allocator_lazy<int> alloc(&header);
   try {
-    std::set<int, std::less<int>, rt::node_allocator_lazy<int>> t1(std::less<int>(), alloc);
+    rt::node_alloc_header header(buffer);
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
     return true;

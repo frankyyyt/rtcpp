@@ -17,7 +17,10 @@ struct node_alloc_header {
   , size(size * sizeof (U))
   , n_alloc(0)
   , block_size(0)
-  {}
+  {
+    if (size < sizeof (char*))
+      throw std::runtime_error("node_alloc_header: There is not enough space in the buffer.");
+  }
 
   template <class U, std::size_t I>
   explicit node_alloc_header(std::array<U, I>& arr)
@@ -29,7 +32,8 @@ struct node_alloc_header {
   : node_alloc_header( reinterpret_cast<char*>(&arr.front())
                      , arr.size() * sizeof (U)) {}
 
-  node_alloc_header() : data(0) , size(0) , n_alloc(0) {}
+  node_alloc_header() : data(0) , size(0) , n_alloc(0)
+  { }
 };
 
 }
