@@ -201,7 +201,7 @@ bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
 template <typename T>
 bool run_tests_all()
 {
-  const T size = 10000;
+  const T size = 5000;
   const int a = 1;
   const int b = std::numeric_limits<int>::max();
 

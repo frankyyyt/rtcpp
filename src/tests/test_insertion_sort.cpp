@@ -9,7 +9,7 @@
 
 int main()
 {
-  const int N = 10000;
+  const int N = 1000;
   std::vector<int> data1 =
     rt::make_rand_data<int>(N, 1, std::numeric_limits<int>::max());
 

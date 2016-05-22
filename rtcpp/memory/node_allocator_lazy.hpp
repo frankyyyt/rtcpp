@@ -28,13 +28,17 @@
 
 namespace rt {
 
-template < typename T
-         , std::size_t S = sizeof (T)
-         , bool B = !(S < sizeof (char*))
-         >
+template <typename T>
+struct is_node {
+  static const bool value = !(sizeof (T) < sizeof (char*)) && !std::is_pointer<T>::value;
+};
+
+template <typename T, std::size_t S = sizeof (T),
+          bool B = is_node<T>::value >
 class node_allocator_lazy {
   public:
   node_alloc_header* header;
+  std::allocator<T> alloc;
   public:
   static constexpr std::size_t memory_use = node_stack::memory_use;
   using use_node_allocation = std::true_type;
@@ -47,9 +51,7 @@ class node_allocator_lazy {
   using difference_type = std::ptrdiff_t;
   template<typename U>
   struct rebind {
-    using other = node_allocator_lazy< U
-                                     , sizeof (U)
-                                     , !(sizeof (U) < sizeof (char*))>;
+    using other = node_allocator_lazy<U, sizeof (U), is_node<U>::value>;
   };
   void swap(node_allocator_lazy& other) noexcept
   {
@@ -58,17 +60,18 @@ class node_allocator_lazy {
   node_allocator_lazy(node_alloc_header* p) : header(p) {}
   template<typename U>
   node_allocator_lazy(const node_allocator_lazy< U, sizeof (U)
-                           , !(sizeof (U) < sizeof (char*))>& alloc)
+                           , is_node<U>::value>& alloc)
   : header(alloc.header) {}
   template<typename U>
   void destroy(U* p) {p->~U();}
   template< typename U, typename... Args>
   void construct(U* p, Args&&... args)
   {::new((void *)p) U(std::forward<Args>(args)...);}
+  pointer allocate(size_type n) { return alloc.allocate(n); }
+  void deallocate(pointer p, size_type n) { alloc.deallocate(p, 1); }
 };
 
-template < typename T
-         , std::size_t N>
+template <typename T , std::size_t N>
 class node_allocator_lazy<T, N, true> {
   public:
   using use_node_allocation = std::true_type;
@@ -81,9 +84,7 @@ class node_allocator_lazy<T, N, true> {
   using difference_type = std::ptrdiff_t;
   template<class U>
   struct rebind {
-    using other = node_allocator_lazy< U
-                                     , sizeof (U)
-                                     , !(sizeof (U) < sizeof (char*))>;
+    using other = node_allocator_lazy<U, sizeof (U), is_node<U>::value>;
   };
   public:
   node_alloc_header* header;
@@ -91,12 +92,9 @@ class node_allocator_lazy<T, N, true> {
   public:
   node_allocator_lazy(node_alloc_header* p) : header(p) {}
   template<typename U>
-  node_allocator_lazy(const node_allocator_lazy< U
-                                               , sizeof (U)
-                                               , !(sizeof (U) < sizeof (char*))>& alloc)
-  : header(alloc.header)
-  , stack(header, N)
-  {}
+  node_allocator_lazy(const node_allocator_lazy<U, sizeof (U),
+                      is_node<U>::value>& alloc)
+  : header(alloc.header), stack(header, N) {}
   pointer allocate_node()
   {
     char* p = stack.pop(); 
@@ -104,14 +102,9 @@ class node_allocator_lazy<T, N, true> {
       throw std::bad_alloc();
     return reinterpret_cast<pointer>(p); 
   }
-  pointer allocate(size_type)
-  {
-    return allocate_node();
-  }
-  void deallocate_node(pointer p)
-  { stack.push(reinterpret_cast<char*>(p)); }
-  void deallocate(pointer p, size_type)
-  { deallocate_node(p); }
+  pointer allocate(size_type) { return allocate_node(); }
+  void deallocate_node(pointer p) { stack.push(reinterpret_cast<char*>(p)); }
+  void deallocate(pointer p, size_type) { deallocate_node(p); }
   template<typename U>
   void destroy(U* p) {p->~U();}
   template< typename U, typename... Args>
@@ -164,11 +157,11 @@ struct allocator_traits<rt::node_allocator_lazy<T>> {
     select_on_container_copy_construction(const allocator_type& a)
     {return a;}
   static pointer allocate(allocator_type& a, size_type)
-  {return a.allocate_node();}
+  {return a.allocate(1);}
   static pointer allocate_node(allocator_type& a)
   {return a.allocate_node();}
   static void deallocate( allocator_type& a, pointer p
-                        , size_type) {a.deallocate_node(p);}
+                        , size_type) {a.deallocate(p, 1);}
   static void deallocate_node( allocator_type& a
                         , pointer p) {a.deallocate_node(p);}
   template<class U>
