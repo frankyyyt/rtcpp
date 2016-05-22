@@ -2,22 +2,34 @@
 
 #include <iterator>
 
+#include "algorithm.hpp"
+
 namespace rt
 {
+
+template <class Iter>
+void rotate(Iter begin, Iter end)
+{
+  auto prev = std::prev(end);
+  while (end != begin) {
+    *end = *prev;
+    --end;
+    --prev;
+  }
+}
 
 template <class Iter, class Comp>
 void insertion_sort(Iter begin, Iter end, Comp comp)
 {
-  const auto rend = std::prev(begin);
-  for (Iter iter = ++begin; iter != end; ++iter) {
-    Iter prev = std::prev(iter, 1);
-    const auto K = *iter;
-    while (comp(K, *prev)) {
-      *std::next(prev, 1) = *prev;
-      if (--prev == rend)
-        break;
-    }
-    *std::next(prev, 1) = K;
+  if (begin == end)
+    return;
+
+  auto iter = begin;
+  for (++iter; iter != end; ++iter) {
+    auto l = rt::lower_bound(begin, iter, *iter);
+    auto K = *iter;
+    rotate(l, iter);
+    *l = K;
   }
 }
 
