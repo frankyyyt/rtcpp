@@ -68,7 +68,7 @@ class node_allocator_lazy {
   void construct(U* p, Args&&... args)
   {::new((void *)p) U(std::forward<Args>(args)...);}
   pointer allocate(size_type n) { return alloc.allocate(n); }
-  void deallocate(pointer p, size_type n) { alloc.deallocate(p, 1); }
+  void deallocate(pointer p, size_type n) { alloc.deallocate(p, n); }
 };
 
 template <typename T , std::size_t N>
@@ -156,12 +156,12 @@ struct allocator_traits<rt::node_allocator_lazy<T>> {
   static allocator_type
     select_on_container_copy_construction(const allocator_type& a)
     {return a;}
-  static pointer allocate(allocator_type& a, size_type)
-  {return a.allocate(1);}
+  static pointer allocate(allocator_type& a, size_type n)
+  {return a.allocate(n);}
   static pointer allocate_node(allocator_type& a)
   {return a.allocate_node();}
   static void deallocate( allocator_type& a, pointer p
-                        , size_type) {a.deallocate(p, 1);}
+                        , size_type n) {a.deallocate(p, n);}
   static void deallocate_node( allocator_type& a
                         , pointer p) {a.deallocate_node(p);}
   template<class U>
