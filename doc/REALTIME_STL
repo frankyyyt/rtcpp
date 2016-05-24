@@ -2,69 +2,93 @@
 Using STL on embedded systems
 ===========================================================
 
-  - STL stands for "Standard template library"
-  - Privides users with *data structures* and *algorithms*.
+  - STL stands for "Standard Template Library"
+  - Generic interface for *data structures* and *algorithms*.
   - *Data structures* are presented in the form of containers.
+  - *Algorithms* are usually free functions that act on iterators.
+  - Containers provide iterators to be used with algorithms.
 
-  (A) Sequential memory allocation (almost for std::deque)
+  STL = containers + iterators + algorithms.
 
-  std::vector - std::array - std::deque
-  ===> std::flat_set, std::flat_map, etc. (likely to be aceepted)
+  Example: Sort a vector
 
-  (B) Linked allocation
+  std::vector<int> v = {6, 3, 2, 4, 15, 1, 7, 1, 9, 80};
 
-  std::list - std::forward_list
-  std::set - std::multiset - std::unordere_set - std::unordered_multiset
-  std::map - std::multimap - std::unordere_map - std::unordered_multimap
+  std::sort(std::begin(v), std::end(v));
+  bool b = std::binary_search(std::begin(v), std::end(v), 9);
+  ...
+
+===========================================================
+
+  Containers are divided in many groups according to their properties.
+
+  (A) Sequence containers
+
+  std::vector - std::array - std::deque - std::list - std::forward_list.
+
+  (B) Associative containers
+
+  std::set - std::multiset - std::map - std::multimap
+
+  (C) Unordered associative containers
+
+  - std::unordere_set - std::unordere_map -std::unordered_multiset
+    std::unordered_multimap
 
 ===========================================================
 
 How are containers implemented?
 
-- Not specified by the standard. Only complexity guarantees
-  for its member functions are provided (Bit O). For example,
-  The complexity guarantees of insertion operation at an arbitrary
-  position are:
+  - Not specified by the standard. Only complexity guarantees
+    for its member functions are provided (Bit O).
+    
+  - Take insertion at an arbitrary position as an example.
 
-  - std::list: O(1)
-  - std::map: O(log(n))
-  - std::vector: O(n)
-
-- Important: The memory use complexity is not specified
-  (Bad for embedded developers).
+    - std::list: O(1)
+    - std::map: O(log(n))
+    - std::vector: O(n)
 
 ===========================================================
 
-Algorithms
+The other important part are algorithms.
 
-- The other important part are algorithms.
-- They do not operate on containers, but on iterators.
-- Depending on the kind of iterators they are called with,
-  performance it improved. Example
-
-  auto iter = std::binary_search(std::begin(l), std::end(l));
-
-  is faster is l is a std::vector instead of a list.
-
-- So what kind of iterators there are?
-  - input and output: iostreams.
-  - Forward: std::forward_list, std::unordered_set, etc.
-  - Bidirectional: std::list, std::set, ...
-  - Random access:: std::vector, std::array, std::deque.
-
-===========================================================
-
-Examples
+  - They do not operate on containers, but on iterators.
+  - Depending on the kind of iterators they are called with,
+    performance it improved. Example
+  
+    auto iter = std::binary_search(std::begin(l), std::end(l));
+  
+    is faster if l is a std::vector instead of a list.
+  
+  - So what kind of iterators there are?
+    - input and output: iostreams.
+    - Forward: std::forward_list, std::unordered_set, etc.
+    - Bidirectional: std::list, std::set, ...
+    - Random access:: std::vector, std::array, std::deque.
 
 ===========================================================
 
-Seems enough to 
+Should you use STL for development? Why?
+
+  - Yes, by default.
+  - Makes your intentions obvious.
+    
+
+    int n = std::count(std::begin(v), std::end(v), 10);
+    auto m = std::max_element(std::begin(v), std::end(v), 10);
+
+  - Designed by experts, high quality implementations, tested.
+  - You do not want to reinvent the square will.
+  - It is very unlikely you need a general purpose algorithm
+    that is not here.
 
 ===========================================================
 
+Realtime guarantees - Where the problem begins.
+
+===========================================================
 
 Memory in a program (simplified)
-===========================================================
 
   There are two main "places" in a program where we can store our data
   during program execution:
