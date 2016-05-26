@@ -1,9 +1,11 @@
 #include <set>
 #include <vector>
-#include <iostream>
+#include <tuple>
 #include <iterator>
+#include <iostream>
 #include <algorithm>
 #include <functional>
+#include <unordered_set>
 
 #include <config.h>
 
@@ -20,6 +22,33 @@
 #include "heap_frag.hpp"
 #include "print_set_bench.hpp"
 
+// WARNING: The number bellow is the container node size in bytes.
+// I do not have access to this information and therefore have to
+// hard code its values making it non-portable. It may have a
+// different value on your machine. You can easily find out by 
+// printing its value with cout on node_stack constructor.
+
+//const int node_size = 40; // std::set
+const int node_size = 16; // std::unordered_set
+
+// Comment and uncomment the desired type (the same for the node size)
+//template <class Allocator>
+//using set_type = std::set<int, std::less<int>, Allocator>;
+
+// List of set types with different allocators.
+template <class Allocator>
+using set_type = std::unordered_set<int, std::hash<int>,
+                 std::equal_to<int>,Allocator>;
+
+using type1 = set_type<std::allocator<int>>;
+using type2 = set_type<rt::node_allocator_lazy<int>>;
+
+#ifdef GNU_FOUND
+using type3 = set_type<__gnu_cxx::__pool_alloc<int>>;
+using type4 = set_type<__gnu_cxx::bitmap_allocator<int>>;
+using type5 = set_type<__gnu_cxx::__mt_alloc<int>>;
+#endif
+
 int main(int argc, char* argv[])
 {
   if ((argc != 5) && (argc != 6)) {
@@ -29,10 +58,9 @@ int main(int argc, char* argv[])
     "S: The step size.\n"
     "K: How many steps.\n"
     "B: Chars between.\n"
-    "F: Optional. If provided will not fragment the heap before benchmarks.\n"
-    << std::endl;
-    std::cout <<
-    "The program output has the following layout: \n"
+    "F: Optional (any value). If provided will not fragment the\n"
+    "   heap before benchmarks.\n\n";
+    "The program outputs has the following layout: \n"
     "(0) (1) (2) (3) (4) (5): \n"
     "Where: \n"
     "(0)  Number of elements.\n"
@@ -40,23 +68,20 @@ int main(int argc, char* argv[])
     "(2)  std::set<rt::alloc>\n"
     "(3)  std::set<__gnu_cxx::__pool_alloc>\n"
     "(4)  std::set<__gnu_cxx::bitmap_alloc>\n"
-    "(5)  std::set<__mt_alloc>\n"
-    << std::endl;
-
+    "(5)  std::set<__mt_alloc>\n\n";
     return 0;
   }
 
   using namespace rt;
 
-  const std::size_t N = to_number<std::size_t>(argv[1]);
-  const std::size_t S = to_number<std::size_t>(argv[2]);
-  const std::size_t K = to_number<std::size_t>(argv[3]);
-  const std::size_t B = to_number<std::size_t>(argv[4]);
+  const int N = to_number<int>(argv[1]);
+  const int S = to_number<int>(argv[2]);
+  const int K = to_number<int>(argv[3]);
+  const int B = to_number<int>(argv[4]);
   const bool frag = !(argc == 6);
 
   const std::vector<int> data =
-    rt::make_rand_data<int>( N + (K - 1) * S
-                           , 1
+    rt::make_rand_data<int>( N + (K - 1) * S, 1
                            , std::numeric_limits<int>::max());
 
   std::vector<char*> pointers;
@@ -64,57 +89,48 @@ int main(int argc, char* argv[])
     pointers = heap_frag<std::set<int>>(B, data);
 
   std::cout << "(1)" << std::endl;
-  for (std::size_t i = 0; i < K; ++i) {
-    const std::size_t n = N + i * S;
+  for (int i = 0; i < K; ++i) {
+    const int n = N + i * S;
     std::cout << n << " ";
-    print_set_bench( std::set<int, std::less<int>, std::allocator<int>>()
-                   , std::begin(data), n); // (1)
+    print_set_bench(type1(), std::begin(data), n); // (1)
     std::cout << std::endl;
   }
   std::cout << "(2)" << std::endl;
-  for (std::size_t i = 0; i < K; ++i) {
-    const std::size_t n = N + i * S;
+  for (int i = 0; i < K; ++i) {
+    const int n = N + i * S;
     std::cout << n << " ";
-    std::vector<char> buffer((n + 2) * 40, 0);
+    std::vector<char> buffer((n + 2) * node_size, 0);
     rt::node_alloc_header header(buffer);
-    rt::node_allocator_lazy<int> alloc(&header);
-    typedef std::set<int, std::less<int>, rt::node_allocator_lazy<int>> set_type2;
-    set_type2 s(std::less<int>(), alloc); // Uses a vector as buffer.
+    typename type2::allocator_type alloc(&header);
+    type2 s(alloc);
     print_set_bench(s, std::begin(data), n);
     std::cout << std::endl;
   }
 #ifdef GNU_FOUND
   std::cout << "(3)" << std::endl;
-  for (std::size_t i = 0; i < K; ++i) {
-    const std::size_t n = N + i * S;
+  for (int i = 0; i < K; ++i) {
+    const int n = N + i * S;
     std::cout << n << " ";
-    typedef std::set<int, std::less<int>, __gnu_cxx::__pool_alloc<int>> set_type3;
-    set_type3 s;
-    print_set_bench(s, std::begin(data), n);
+    print_set_bench(type3(), std::begin(data), n);
     std::cout << std::endl;
   }
   std::cout << "(4)" << std::endl;
-  for (std::size_t i = 0; i < K; ++i) {
-    const std::size_t n = N + i * S;
+  for (int i = 0; i < K; ++i) {
+    const int n = N + i * S;
     std::cout << n << " ";
-    typedef std::set<int, std::less<int>, __gnu_cxx::bitmap_allocator<int>> set_type4;
-    set_type4 s;
-    print_set_bench(s, std::begin(data), n);
+    print_set_bench(type4(), std::begin(data), n);
     std::cout << std::endl;
   }
   std::cout << "(5)" << std::endl;
-  for (std::size_t i = 0; i < K; ++i) {
-    const std::size_t n = N + i * S;
+  for (int i = 0; i < K; ++i) {
+    const int n = N + i * S;
     std::cout << n << " ";
-    typedef std::set<int, std::less<int>, __gnu_cxx::__mt_alloc<int>> set_type5;
-    set_type5 s;
-    print_set_bench(s, std::begin(data), n);
+    print_set_bench(type5(), std::begin(data), n);
     std::cout << std::endl;
   }
 #endif
   std::cout << std::endl;
-  std::for_each( std::begin(pointers)
-               , std::end(pointers)
+  std::for_each( std::begin(pointers), std::end(pointers)
                , [](char* p){ delete p;});
   return 0;
 }
