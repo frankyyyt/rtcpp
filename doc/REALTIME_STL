@@ -1,5 +1,6 @@
+WARNING: Under construction
 
-Using STL on embedded systems
+STL on embedded/realtime systems
 ===========================================================
 
   - STL stands for "Standard Template Library"
@@ -8,7 +9,7 @@ Using STL on embedded systems
   - *Algorithms* are usually free functions that act on iterators.
   - Containers provide iterators to be used with algorithms.
 
-  STL = containers + iterators + algorithms.
+  STL = containers + iterators + algorithms + ....
 
   Example: Sort a vector
 
@@ -40,7 +41,7 @@ Using STL on embedded systems
 How are containers implemented?
 
   - Not specified by the standard. Only complexity guarantees
-    for its member functions are provided (Bit O).
+    for its member functions are provided (Big O).
     
   - Take insertion at an arbitrary position as an example.
 
@@ -50,9 +51,9 @@ How are containers implemented?
 
 ===========================================================
 
-The other important part are algorithms.
+Algorithms
 
-  - They do not operate on containers, but on iterators.
+  - Do not operate on containers, but rather on iterators.
   - Depending on the kind of iterators they are called with,
     performance it improved. Example
   
@@ -118,7 +119,7 @@ Memory allocation on the stack and heap
 
   Example:
 
-  int a; // This allocates space for an integer on the stack.
+  int a; // Allocates space for an integer on the stack.
 
   B) Heap.
   
