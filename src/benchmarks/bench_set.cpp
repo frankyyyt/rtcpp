@@ -74,6 +74,12 @@ int main(int argc, char* argv[])
 
   using namespace rt;
 
+  std::cout << argv[0] << " "
+            << argv[1] << " "
+            << argv[2] << " "
+            << argv[3] << " "
+            << argv[4] << "\n";
+            
   const int N = to_number<int>(argv[1]);
   const int S = to_number<int>(argv[2]);
   const int K = to_number<int>(argv[3]);

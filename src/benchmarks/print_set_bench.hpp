@@ -14,7 +14,7 @@ void print_set_bench(C c, Iter begin, std::size_t n)
 
   const std::size_t s = n / 2;
   int sum = 0;
-  int repeat = 30;
+  int repeat = 10;
   c.insert(begin, begin + s); // Inserts the first half of the data.
   {
     rt::timer t;
