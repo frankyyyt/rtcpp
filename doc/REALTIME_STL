@@ -3,7 +3,15 @@ WARNING: Under construction
 STL on embedded/realtime systems
 ===========================================================
 
-  - STL stands for "Standard Template Library"
+Target audience
+
+  - Embedded/Realtime developers
+  - High performance, high availability.
+
+STL on embedded/realtime systems
+===========================================================
+
+  - Stands for "Standard Template Library"
 
   - Generic interface for *data structures* and *algorithms*.
 
@@ -14,10 +22,10 @@ STL on embedded/realtime systems
   - *Algorithms* are provided as member and non-member functions.
 
     Member: std::list<int>::sort, std::set<int>::find, etc.
-    Non-Free: std::sort, std::find, etc.
+    Non-Member: std::sort, std::find, etc.
 
   - Non-member algorithms do not interact directly with containers,
-    they act on iterators.
+    they act on ranges specified by iterators.
 
     std::sort(std::begin(v), std::end(v));
 
@@ -29,22 +37,22 @@ STL on embedded/realtime systems
 
 ===========================================================
 
-  Containers are group together according to their properties.
+  Containers are grouped together according to their properties.
   Most important properties:
 
-  (A) Elements ordering and access
+  (A) Elements ordering and access.
   (B) Iterators they provide.
   (C) Memory use: Linked or sequential allocation.
 
-  Sequence containers
+  Sequence containers (sequential access)
 
     std::vector - std::array - std::deque - std::list - std::forward_list.
 
-  Ordered associative containers
+  Ordered associative containers (quick search - O(lon(n)))
 
     std::set - std::multiset - std::map - std::multimap
 
-  Unordered associative containers
+  Unordered associative containers (hashed, O(n) search)
 
     std::unordere_set - std::unordere_map -std::unordered_multiset
     std::unordered_multimap
@@ -55,7 +63,7 @@ Containers classified according to the iterators they provide.
 
   Input/Output ===> Most important for streams.
 
-  Forward: *p, ++p;
+  Forward: ++p;
 
     std::forward_list
     std::unordere_set
@@ -63,7 +71,7 @@ Containers classified according to the iterators they provide.
     std::unordered_multiset
     std::unordered_multimap
 
-  Bidirectional: *p, ++p, --p.
+  Bidirectional: ++p, --p.
 
     std::list
     std::set
@@ -71,7 +79,7 @@ Containers classified according to the iterators they provide.
     std::map
     std::multimap
 
-  Random Access. *p, ++p, --p, p[n].
+  Random Access. ++p, --p, p[n].
 
     std::vector
     std::array
@@ -81,9 +89,8 @@ Containers classified according to the iterators they provide.
 
 Memory use: Linked or sequential allocation.
 
-  A) Sequential allocation.
-
-    Consecutive elements are in consecutive memory addresses.
+  A) Sequential allocation. Consecutive elements are in consecutive memory
+     addresses.
 
     Example
 
@@ -104,7 +111,7 @@ How are containers implemented?
   Not specified by the standard. Only complexity guarantees
   for its member functions are provided (Big O).
     
-  Take insertion at an arbitrary position as an example.
+  Take insertion as an example.
 
     - std::list: O(1)
     - std::map: O(log(n))
@@ -131,6 +138,79 @@ Should you use STL for development? Why?
 ===========================================================
 
 Realtime guarantees - Where the problem begins.
+
+  - Realtime does not mean fast.
+  - Realtime is about time guarantees.
+  - Not all operations in the STL are realtime.
+
+  Source of problems
+
+  - Dynamic memory allocations.
+  - Memory fragmentation.
+
+  Fortunately enough, STL containers offers control over
+  containers memory use: Allocators.
+
+  When you use std::vector<int> it means on reality
+
+  std::vector<int, std::allocator<int>>
+
+  The applies for all containers except std::array
+  whose arrays go necessarily on the stack.
+
+What are allocators
+===========================================================
+
+When a container needs memory it ALWAYS requests it from the
+allocator. Thats the entry point for customization of memory
+allocations.
+
+  Memory allocations in c++.
+
+  Static: Space for an int on the stack.
+
+  int a; 
+
+  Dynamic:
+
+  int* a = static_cast<int*>malloc(sizeof *a); // C-like, raw memory.
+  int* a = new int; // c++, calls constructors.
+
+  On containers
+
+  std::allocator<int> alloc;
+  int* a = alloc.allocate(1);
+
+You can write ou own allocator
+===========================================================
+
+  You can write your own allocators and pass them to containers.
+  std::vector<int, my::allocator<int>> a;
+
+  All internal memory allocators are requested from the allocator.
+
+  You may need some state on the allocator.
+
+  int buffer[100];
+  my::allocator<int> alloc(buffer);
+  std::vector<int, my::allocator<int>> a;
+
+  All allocations are performed inside the buffer.
+
+How do I write an allocator?
+===========================================================
+
+
+
+===========================================================
+
+Dynamic memory allocation with malloc.
+
+  - Malloc is a general purpose memory allocator suitable for
+    large memory blocks.
+  - Hundreds of lines of code with unpredictable behaviour.
+  - Performs system calls.
+  - Overused as there is no easy way to avoid it in the STL.
 
 ===========================================================
 
