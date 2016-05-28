@@ -28,17 +28,17 @@
 // different value on your machine. You can easily find out by 
 // printing its value with cout on node_stack constructor.
 
-//const int node_size = 40; // std::set
-const int node_size = 16; // std::unordered_set
+const int node_size = 40; // std::set
+//const int node_size = 16; // std::unordered_set
 
 // Comment and uncomment the desired type (the same for the node size)
-//template <class Allocator>
-//using set_type = std::set<int, std::less<int>, Allocator>;
+template <class Allocator>
+using set_type = std::set<int, std::less<int>, Allocator>;
 
 // List of set types with different allocators.
-template <class Allocator>
-using set_type = std::unordered_set<int, std::hash<int>,
-                 std::equal_to<int>,Allocator>;
+//template <class Allocator>
+//using set_type = std::unordered_set<int, std::hash<int>,
+//                 std::equal_to<int>,Allocator>;
 
 using type1 = set_type<std::allocator<int>>;
 using type2 = set_type<rt::node_allocator_lazy<int>>;

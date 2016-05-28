@@ -4,68 +4,115 @@ STL on embedded/realtime systems
 ===========================================================
 
   - STL stands for "Standard Template Library"
+
   - Generic interface for *data structures* and *algorithms*.
+
   - *Data structures* are presented in the form of containers.
-  - *Algorithms* are usually free functions that act on iterators.
-  - Containers provide iterators to be used with algorithms.
+
+    std::vector, std::list, std::map, std::set, etc.
+
+  - *Algorithms* are provided as member and non-member functions.
+
+    Member: std::list<int>::sort, std::set<int>::find, etc.
+    Non-Free: std::sort, std::find, etc.
+
+  - Non-member algorithms do not interact directly with containers,
+    they act on iterators.
+
+    std::sort(std::begin(v), std::end(v));
+
+  - There are five types of iterators: Input, output, forward,
+    bidirectional and random access iterators.
+    Think of them as generalization of pointers.
 
   STL = containers + iterators + algorithms + ....
 
-  Example: Sort a vector
+===========================================================
 
-  std::vector<int> v = {6, 3, 2, 4, 15, 1, 7, 1, 9, 80};
+  Containers are group together according to their properties.
+  Most important properties:
 
-  std::sort(std::begin(v), std::end(v));
-  bool b = std::binary_search(std::begin(v), std::end(v), 9);
-  ...
+  (A) Elements ordering and access
+  (B) Iterators they provide.
+  (C) Memory use: Linked or sequential allocation.
+
+  Sequence containers
+
+    std::vector - std::array - std::deque - std::list - std::forward_list.
+
+  Ordered associative containers
+
+    std::set - std::multiset - std::map - std::multimap
+
+  Unordered associative containers
+
+    std::unordere_set - std::unordere_map -std::unordered_multiset
+    std::unordered_multimap
 
 ===========================================================
 
-  Containers are divided in many groups according to their properties.
+Containers classified according to the iterators they provide.
 
-  (A) Sequence containers
+  Input/Output ===> Most important for streams.
 
-  std::vector - std::array - std::deque - std::list - std::forward_list.
+  Forward: *p, ++p;
 
-  (B) Associative containers
-
-  std::set - std::multiset - std::map - std::multimap
-
-  (C) Unordered associative containers
-
-  - std::unordere_set - std::unordere_map -std::unordered_multiset
+    std::forward_list
+    std::unordere_set
+    std::unordere_map
+    std::unordered_multiset
     std::unordered_multimap
+
+  Bidirectional: *p, ++p, --p.
+
+    std::list
+    std::set
+    std::multiset
+    std::map
+    std::multimap
+
+  Random Access. *p, ++p, --p, p[n].
+
+    std::vector
+    std::array
+    std::deque
+
+===========================================================
+
+Memory use: Linked or sequential allocation.
+
+  A) Sequential allocation.
+
+    Consecutive elements are in consecutive memory addresses.
+
+    Example
+
+    int a[10];             // Built in the language.
+    std::array<int, 10> a; // Library container. Fixed size.
+    std::vector<int> a;    // Library container. Variable size. 
+
+  B) Linked allocation. All other containers. 
+
+  - No ordering regarding memory addresses.
+  - Nodes pointing to each other.
+  - Allocate blocks that always have the same size.
 
 ===========================================================
 
 How are containers implemented?
 
-  - Not specified by the standard. Only complexity guarantees
-    for its member functions are provided (Big O).
+  Not specified by the standard. Only complexity guarantees
+  for its member functions are provided (Big O).
     
-  - Take insertion at an arbitrary position as an example.
+  Take insertion at an arbitrary position as an example.
 
     - std::list: O(1)
     - std::map: O(log(n))
     - std::vector: O(n)
 
-===========================================================
+  Memory use not specified.
 
-Algorithms
-
-  - Do not operate on containers, but rather on iterators.
-  - Depending on the kind of iterators they are called with,
-    performance it improved. Example
-  
-    auto iter = std::binary_search(std::begin(l), std::end(l));
-  
-    is faster if l is a std::vector instead of a list.
-  
-  - So what kind of iterators there are?
-    - input and output: iostreams.
-    - Forward: std::forward_list, std::unordered_set, etc.
-    - Bidirectional: std::list, std::set, ...
-    - Random access:: std::vector, std::array, std::deque.
+  - Does std::sort allocates auxiliary buffers?
 
 ===========================================================
 
@@ -73,10 +120,8 @@ Should you use STL for development? Why?
 
   - Yes, by default.
   - Makes your intentions obvious.
-    
 
     int n = std::count(std::begin(v), std::end(v), 10);
-    auto m = std::max_element(std::begin(v), std::end(v), 10);
 
   - Designed by experts, high quality implementations, tested.
   - You do not want to reinvent the square will.
@@ -133,27 +178,6 @@ Memory allocation on the stack and heap
   Example:
 
   T* t = new T; // find space for sizeof (T) on the heap.
-
-Back to c++ containers
-===========================================================
-
-There are two main types of container in c++.
-
-  A) Sequential allocation.
-
-    Consecutive elements are in consecutive memory addresses.
-
-    Example:
-
-    int a[10];             // Built in the language.
-    std::array<int, 10> a; // Library container. Fixed size.
-    std::vector<int> a;    // Library container. Variable size. 
-
-  B) Linked allocation.
-
-  All other containers. There is no ordering regarding memory addresses.  They
-  can be divided in many categories according to operations and complexity
-  guarantees they provide.
 
 Where do containers store their elements?
 ===========================================================
