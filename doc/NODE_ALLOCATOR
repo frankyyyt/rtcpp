@@ -1,19 +1,21 @@
-Splitting node and array allocation in C++
+WARNING: Under construction
 
-Author: Marcelo Zimbres
+TITLE: Splitting node and array allocation in C++
+
+AUTHOR: Marcelo Zimbres
 
 Target audience
 
   - Realtime/embedded programming.
-  - Games, high performace.
+  - Games, high performace, 24/7 availability.
   - Should be usefull for c++ programmers in general.
 
-Implementation available on github
+Implementation available on github.
 
 Allocators
 ======================================================================
 
-  - Provide an abstraction to memory allocation inside containers.
+  - Abstraction to memory allocation inside containers.
   - All standard containers with the exception of std::array request
     memory from their allocator internally.
 
@@ -26,50 +28,47 @@ Allocator interface used by the container
   int* p = alloc.allocate(n);
   alloc.deallocate(p, n);
 
-Node-based containers
+Splitting containers according to their allocation properties
 ======================================================================
 
-The standard library offers 13 containers which can conviniently
-be devide according to how they use their allocators
+If we exclude std::array that does not use an allocator, we can divide
+containers in two groups.
 
-No dynamic memory allocation (1)
+(A) Array allocation: arbitrary n
+
+  alloc.allocate(n);
+
+  std::vector - std::deque - std::unordered_set
+  std::unordered_map - std::unordered_multiset
+  std::unordered_multimap
   
-  (A) std::array 
+(B) Node allocation: n = 1
 
-Blocks with arbitrary size (6)
+  alloc.allocate(1);
 
-  alloc.allocate(n) with n = arbitrary
+  std::list - std::forward_list - std::set - std::multiset
+  std::map - std::multimap - std::deque - std::unordered_set
+  std::unordered_map - std::unordered_multiset
+  std::unordered_multimap
 
-  (B) std::vector - std::deque - std::unordered_set
-      std::unordered_map - std::unordered_multiset
-      std::unordered_multimap
-  
-Same size blocks (8)
+From 12 containers
 
-  alloc.allocate(1); // node-based containers.
-  alloc.allocate(n); // n fixed, std::deque.
+  - 10 perform node allocation (excluding std::deque).
+  - 6 perform exclusively node-allocation.
+  - 4 perform both node and array allcation.
 
-  (C) std::list - std::forward_list - std::set
-      std::deque - std::unordered_set - std::unordered_map
-      std::unordered_multiset - std::unordered_multimap
+Seems like node-allocation is important concept in containers,
+but how is this information useful?
 
-Conclusion: Majority of containers request always blocks with the
-same size!?
-
-Why is this important?
+Node allcation
 ======================================================================
-
-Array allocation
-
-  - Complex.
-  - Has to handle different sizes.
-  - Many possible strategies.
-  - No silver bullet. Every problem may demand a different solution.
-  - Users do not want to care about this unless there is need.
 
 Node allocation
 
   - Simple and straighforward implementation.
+  - Suitable for realtime/embedded.
+  - Reduces memory fragmentation.
+  - Basic building block used in array allcations as well.
 
   1 - Get a big block of memory.
   2 - Divide it in n small blocks.
@@ -83,26 +82,32 @@ Node allocation
      ||   
     Head
 
-Implementing allocators
+Array allocation
+
+  - Complex.
+  - Has to handle different sizes.
+  - Many possible strategies.
+  - No silver bullet. Every problem requires a different approach.
+  - Users do not want to care about this unless there is need.
+  - malloc: suitable for large memory blocks, overused, hundreds of
+    loc, system calls, etc.
+  - May use node allocation as a building block.
+
+Avoiding (or preventing) array allocation.
 ======================================================================
 
-  - I lied when I told some containers ask blocks with the same size.
-  - Not guaranteed by the standard.
+It is actually not totally true that containers ask blocks with the
+same size.
 
-Containers can use the following interface.
+  - Not guaranteed by the standard.
+  - We do not know what a container will do with the allocator
+    and have to plan for everything (bad).
+  - Allocator interface allow them if they want
 
    Allocator::allocate(n);
    Allocator::deallocate(p, n);
 
-  - Even though unlikely, containers can pass arbitrary n.
-  - User do not know how the allocator is going to be used and have
-    to always provide array allocation.
-
-Possible solution
-======================================================================
-
-Why not check n in runtime and fall back to array allocation if
-needed? Example
+Possible solution: Check n every allocation
 
   pointer allocate(size_type n)
   {
@@ -111,22 +116,17 @@ needed? Example
     return allocate(n);
   }
 
-  - Have to implement array allocation even though it may
-    never be used. Most libraries use indeed n = 1.
-
+  - If n != 1 always. No node allocation takes place.
   - Runtime condition if (n == 1) is most of the time useless.
+  - If I (as user) want array allocation, I can built it up
+    on the allocator where I have control and not on the containers
+    where I do not.
+  - Users should be able to prevent it from happening. Example
 
-Why do you want to prevent array allocation is a std::list?
-
-  - I can do it myself inside the allocator if I feel the need,
-    where I have control and not on containers where I do not.
-
-Example: List with 10 elements (Suppose list node have n bytes)
-
-  std::array<char, 10 * n> arena = {{}};
-  my::allocator<int> alloc(arena);
-  std::forward_list<int> l(alloc);
-  l = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    std::array<char, 10 * n> arena = {{}};
+    my::allocator<int> alloc(arena);
+    std::forward_list<int> l(alloc);
+    l = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
   I do not know how to implement this if array allocation takes place. 
 
@@ -136,7 +136,8 @@ Other solutions
 Why not simply assert(n == 1) or throw?
 
   - Unportable code. May work with some libraries and not
-  - Throw: 
+  - Throw: Should be used if I ran out of memory not if allocator
+    does not provide array allocation.
 
 Proposed solution
 ======================================================================
