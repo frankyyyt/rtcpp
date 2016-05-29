@@ -1,0 +1,162 @@
+Splitting node and array allocation in C++
+
+Author: Marcelo Zimbres
+
+Target audience
+
+  - Realtime/embedded programming.
+  - Games, high performace.
+  - Should be usefull for c++ programmers in general.
+
+Implementation available on github
+
+Allocators
+======================================================================
+
+  - Provide an abstraction to memory allocation inside containers.
+  - All standard containers with the exception of std::array request
+    memory from their allocator internally.
+
+    template<class T, class Allocator = std::allocator<T>>
+    class list;
+
+Allocator interface used by the container
+
+  std::allocator<int> alloc;
+  int* p = alloc.allocate(n);
+  alloc.deallocate(p, n);
+
+Node-based containers
+======================================================================
+
+The standard library offers 13 containers which can conviniently
+be devide according to how they use their allocators
+
+No dynamic memory allocation (1)
+  
+  (A) std::array 
+
+Blocks with arbitrary size (6)
+
+  alloc.allocate(n) with n = arbitrary
+
+  (B) std::vector - std::deque - std::unordered_set
+      std::unordered_map - std::unordered_multiset
+      std::unordered_multimap
+  
+Same size blocks (8)
+
+  alloc.allocate(1); // node-based containers.
+  alloc.allocate(n); // n fixed, std::deque.
+
+  (C) std::list - std::forward_list - std::set
+      std::deque - std::unordered_set - std::unordered_map
+      std::unordered_multiset - std::unordered_multimap
+
+Conclusion: Majority of containers request always blocks with the
+same size!?
+
+Why is this important?
+======================================================================
+
+Array allocation
+
+  - Complex.
+  - Has to handle different sizes.
+  - Many possible strategies.
+  - No silver bullet. Every problem may demand a different solution.
+  - Users do not want to care about this unless there is need.
+
+Node allocation
+
+  - Simple and straighforward implementation.
+
+  1 - Get a big block of memory.
+  2 - Divide it in n small blocks.
+  3 - Link the blocks. (Forward list).
+        _____   _____   _____   _____   _____   _____    _____   
+       |     | |     | |     | |     | |     | |     |  |     |     
+       |     V |     V |     V |     V |     V |     V  |     V   
+  |_______|_______|_______|_______|_______|_______|_______|   0
+     /\    
+     ||      
+     ||   
+    Head
+
+Implementing allocators
+======================================================================
+
+  - I lied when I told some containers ask blocks with the same size.
+  - Not guaranteed by the standard.
+
+Containers can use the following interface.
+
+   Allocator::allocate(n);
+   Allocator::deallocate(p, n);
+
+  - Even though unlikely, containers can pass arbitrary n.
+  - User do not know how the allocator is going to be used and have
+    to always provide array allocation.
+
+Possible solution
+======================================================================
+
+Why not check n in runtime and fall back to array allocation if
+needed? Example
+
+  pointer allocate(size_type n)
+  {
+    if (n == 1)
+      return allocate_node();
+    return allocate(n);
+  }
+
+  - Have to implement array allocation even though it may
+    never be used. Most libraries use indeed n = 1.
+
+  - Runtime condition if (n == 1) is most of the time useless.
+
+Why do you want to prevent array allocation is a std::list?
+
+  - I can do it myself inside the allocator if I feel the need,
+    where I have control and not on containers where I do not.
+
+Example: List with 10 elements (Suppose list node have n bytes)
+
+  std::array<char, 10 * n> arena = {{}};
+  my::allocator<int> alloc(arena);
+  std::forward_list<int> l(alloc);
+  l = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+  I do not know how to implement this if array allocation takes place. 
+
+Other solutions
+======================================================================
+
+Why not simply assert(n == 1) or throw?
+
+  - Unportable code. May work with some libraries and not
+  - Throw: 
+
+Proposed solution
+======================================================================
+
+ - Split the concept of node allocation from array allocation.
+ - std::allocator_traits offers interface for both.
+
+   allocate(n); // arbitray n
+   deallocate(p, n); // arbitray n
+
+   allocate_node(n);
+   deallocate_node(p, n);
+
+   // Ensures array allocation does not take place in that allocator.
+   node_allocation_only = std::true_type.
+
+Benefits
+======================================================================
+
+Performance, realtime, low-fragmentation.
+
+
+
