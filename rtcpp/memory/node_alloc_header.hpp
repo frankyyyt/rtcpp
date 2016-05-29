@@ -6,20 +6,20 @@
 namespace rt {
 
 struct node_alloc_header {
-  char* data;
-  std::size_t size;
-  std::size_t n_alloc;
-  std::size_t block_size;
+  char* buffer;
+  std::size_t buffer_size; // In bytes
+  std::size_t n_alloc; // Number of allocators using this header.
+  std::size_t block_size; // Size of blocks returned by allocate_node
 
   template <class U>
   node_alloc_header(U* data, std::size_t size)
-  : data(reinterpret_cast<char*>(data))
-  , size(size * sizeof (U))
+  : buffer(reinterpret_cast<char*>(data))
+  , buffer_size(size * sizeof (U))
   , n_alloc(0)
   , block_size(0)
   {
-    if (size < sizeof (char*))
-      throw std::runtime_error("node_alloc_header: There is not enough space in the buffer.");
+    if (buffer_size < sizeof (char*))
+      throw std::runtime_error("node_alloc_header: Incompatible buffer size.");
   }
 
   template <class U, std::size_t I>
@@ -32,8 +32,7 @@ struct node_alloc_header {
   : node_alloc_header( reinterpret_cast<char*>(&arr.front())
                      , arr.size() * sizeof (U)) {}
 
-  node_alloc_header() : data(0) , size(0) , n_alloc(0)
-  { }
+  node_alloc_header() : buffer(0) , buffer_size(0) , n_alloc(0) {}
 };
 
 }

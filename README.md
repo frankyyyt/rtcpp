@@ -15,9 +15,6 @@ http://open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0310r0.pdf
 
 or more easily here doc/proposal_allocator.pdf.
 
-I am implementing this proposal on libstdc++, for that I have made a
-branch of the gcc compiler that you can find on my github page.
-
 #### Matrix and vector operation suitable for 3D math/physics.
 
 This is a very simple matrix class that offers most usable operators

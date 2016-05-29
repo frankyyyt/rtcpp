@@ -23,7 +23,6 @@ class node_allocator {
   static_assert( ((sizeof (NodeType)) >= (sizeof (char*)))
                , "node_allocator: incompatible node size.");
   public:
-  static constexpr std::size_t reserved() {return node_stack::memory_use;}
   using size_type = std::size_t;
   using node_allocation_only = std::true_type;
   using pointer = T*;

@@ -18,7 +18,7 @@ To generate the dependency graph:
 $ cmake --graphviz=foo.graph ${RTCPP_SOURCE}
 $ dot -Tpng foo.graph.foo > fig.png 
 
-I have tested this software with GCC 4.7 and 5.0, Clang 3.4
+I have tested this software with GCC 4.7, 5.0 and 6.0, Clang 3.4
 and 3.8, both with libstd++. Please let me know if you failed
 to build this project.
 

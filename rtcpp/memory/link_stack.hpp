@@ -4,19 +4,19 @@
 
 namespace rt {
 
-  /*_________________________________________________________
+  /*
 
-  This function takes a pointer p to an array of n bytes.
-  The address to which p points is expected to be aligned on
-  a sizeof (char*) boundary. The minimum value of n expected
-  is 2 * S. The buffer is split into blocks of size S and
-  the blocks are linked in a LIFO fashion. The address of
-  the next block is recorded in the first bytes of the
-  block. The block sizes S are expected to be at least the size
-  of a pointer.
+  This function takes a pointer p to an array of n bytes.  The address
+  to which p points is expected to be aligned on a N = sizeof (char*)
+  boundary. The minimum value of n expected is 2 * S, where S >= N.
+  The buffer is split into blocks of size S and the blocks are linked
+  in a LIFO fashion (stack). The address of the next block is recorded
+  in the first N bytes of the block. The block sizes S are expected to
+  be at least the size of a pointer.
 
   returns a pointer to the top of the stack.
-  ___________________________________________________________*/
+
+  */
 
 inline
 char* link_stack(char* p, std::size_t n, std::size_t S)

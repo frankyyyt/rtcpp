@@ -30,7 +30,8 @@ namespace rt {
 
 template <typename T>
 struct is_node {
-  static const bool value = !(sizeof (T) < sizeof (char*)) && !std::is_pointer<T>::value;
+  static const bool value =
+    !(sizeof (T) < sizeof (char*)) && !std::is_pointer<T>::value;
 };
 
 template <typename T, std::size_t S = sizeof (T),
@@ -40,8 +41,6 @@ class node_allocator_lazy {
   node_alloc_header* header;
   std::allocator<T> alloc;
   public:
-  static constexpr std::size_t memory_use = node_stack::memory_use;
-  using use_node_allocation = std::true_type;
   using value_type = T;
   using pointer = T*;
   using const_pointer = const T*;
@@ -74,7 +73,6 @@ class node_allocator_lazy {
 template <typename T , std::size_t N>
 class node_allocator_lazy<T, N, true> {
   public:
-  using use_node_allocation = std::true_type;
   using value_type = T;
   using pointer = T*;
   using const_pointer = const T*;
@@ -115,7 +113,8 @@ class node_allocator_lazy<T, N, true> {
     std::swap(header, other.header);
     stack.swap(other.stack);
   }
-  pointer address(reference x) const noexcept { return std::addressof(x); }
+  pointer address(reference x) const noexcept
+  { return std::addressof(x); }
   const_pointer address(const_reference x) const noexcept
   { return std::addressof(x); }
   constexpr std::size_t max_size() const {return 1;}
@@ -137,7 +136,6 @@ namespace std {
 
 template <typename T>
 struct allocator_traits<rt::node_allocator_lazy<T>> {
-  using use_node_allocation = typename rt::node_allocator_lazy<T>::use_node_allocation;
   using is_always_equal = std::false_type;
   using allocator_type = typename rt::node_allocator_lazy<T>;
   using size_type = typename allocator_type::size_type;

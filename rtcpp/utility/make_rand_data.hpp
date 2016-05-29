@@ -7,7 +7,8 @@
 namespace rt {
 
 template <typename T>
-std::vector<T> make_rand_data(std::size_t size, int first, int last, int type = 2)
+std::vector<T> make_rand_data(std::size_t size, int first,
+                              int last, int type = 2)
 {
   // Generates a uniform distribution of integers in the range [first, last]
   // with size size.
@@ -20,14 +21,14 @@ std::vector<T> make_rand_data(std::size_t size, int first, int last, int type = 
   std::uniform_int_distribution<> dis(first, last);
 
   std::vector<T> data;
-  std::generate_n( std::back_inserter(data)
-                 , size
-                 , [&](){return dis(gen);});
+  std::generate_n( std::back_inserter(data), size,
+    [&](){return dis(gen);});
   if (type == 1)
     return data;
 
   std::sort(std::begin(data), std::end(data));
-  data.erase(std::unique(std::begin(data), std::end(data)), std::end(data));
+  data.erase(std::unique(std::begin(data), std::end(data)),
+             std::end(data));
   shuffle(std::begin(data), std::end(data), gen);
   return data;
 }
