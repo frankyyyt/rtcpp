@@ -41,6 +41,9 @@ struct allocator_traits {
     !has_allocate_node<Alloc2>::value, pointer>::type
   allocate_node(Alloc2& a) {return a.allocate(1);}
 
+  static pointer allocate(Alloc& a, size_type n)
+  {return a.allocate(n);}
+
   template <typename Alloc2 = allocator_type>
   static typename
   std::enable_if<rt::has_allocate_node<Alloc2>::value>::type
@@ -50,6 +53,9 @@ struct allocator_traits {
   static typename
   std::enable_if<!rt::has_allocate_node<Alloc2>::value>::type
   deallocate_node(Alloc2& a, pointer p) {a.deallocate(p, 1);}
+
+  static void deallocate(Alloc& a, pointer p, size_type n)
+  {a.deallocate(p, n);}
 
   template<class U>
   static void destroy(allocator_type& a, U* p) {a.destroy(p);}

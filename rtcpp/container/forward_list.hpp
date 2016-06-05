@@ -3,6 +3,8 @@
 #include <iterator>
 #include <memory>
 
+#include <rtcpp/memory/allocator_traits.hpp>
+
   /*
 
   Work in progress.
@@ -11,21 +13,22 @@
 
 namespace rt {
 
-template <typename T>
+template <class T, class Ptr>
 struct forward_list_node {
+  using pointer = typename std::pointer_traits<Ptr>::template
+    rebind<forward_list_node<T, Ptr>>;
   T info;
-  forward_list_node* llink;
+  pointer llink;
 };
 
-template <typename T>
+template <class T, class Ptr>
 class forward_list_iterator : public std::iterator<std::forward_iterator_tag, T> {
   public:
-  typedef forward_list_node<T> node_type;
-  typedef node_type* node_pointer;
+  typedef forward_list_node<T, Ptr> node_type;
   private:
-  node_pointer head;
+  Ptr head;
   public:
-  forward_list_iterator(node_pointer h)
+  forward_list_iterator(Ptr h)
   : head(h)
   {}
   forward_list_iterator& operator++()
@@ -40,36 +43,43 @@ class forward_list_iterator : public std::iterator<std::forward_iterator_tag, T>
     return tmp;
   }
   T operator*() const { return head->info; }
-  bool operator==(const forward_list_iterator<T>& rhs) {return head == rhs.head;}
-  bool operator!=(const forward_list_iterator<T>& rhs) {return !(*this == rhs);}
+  bool operator==(const forward_list_iterator<T, Ptr>& rhs)
+  {return head == rhs.head;}
+  bool operator!=(const forward_list_iterator<T, Ptr>& rhs)
+  {return !(*this == rhs);}
 };
 
 template <typename T, typename Allocator = std::allocator<T>>
 class forward_list {
+  private:
+  using allocator_type = Allocator;
+  using alloc_traits_type = rt::allocator_traits<allocator_type>;
+  using void_pointer = typename alloc_traits_type::void_pointer;
   public:
-  typedef forward_list_node<T> node_type;
-  typedef Allocator allocator_type;
-  typedef node_type* node_pointer;
-  typedef forward_list_iterator<T> iterator;
+  using node_type = forward_list_node<T, void_pointer>;
+  using inner_alloc_type =
+    typename alloc_traits_type::template rebind_alloc<node_type>;
+  using inner_alloc_traits_type = typename
+    rt::allocator_traits<inner_alloc_type>;
+  using node_pointer = typename inner_alloc_traits_type::pointer;
+  typedef forward_list_iterator<T, node_pointer> iterator;
   typedef T value_type;
   private:
-  typedef typename std::allocator_traits<Allocator>::template
-    rebind_alloc<node_type> inner_allocator_type;
-  inner_allocator_type m_inner_alloc;
+  inner_alloc_type m_inner_alloc;
   node_pointer head;
   node_pointer tail;
   public:
   iterator begin() {return iterator(head);}
   iterator end() {return iterator(0);}
-  forward_list(const std::allocator<T>& alloc = std::allocator<T>())
+  forward_list(const Allocator& alloc = Allocator())
   : m_inner_alloc(alloc)
-  , head(0)
-  , tail(0)
+  , head(nullptr)
+  , tail(nullptr)
   { }
   node_pointer add_node(T data)
   {
-    node_pointer q = std::allocator_traits<inner_allocator_type>::allocate(m_inner_alloc, 1);
-    std::allocator_traits<inner_allocator_type>::construct(m_inner_alloc, std::addressof(q->info), data);
+    node_pointer q = inner_alloc_traits_type::allocate(m_inner_alloc, 1);
+    inner_alloc_traits_type::construct(m_inner_alloc, std::addressof(q->info), data);
     q->info = data;
     return q;
   }
@@ -94,8 +104,8 @@ class forward_list {
     while (p2) {
       if (p2->info == value) {
         node_pointer tmp = p2->llink;
-        std::allocator_traits<inner_allocator_type>::destroy(m_inner_alloc, &p2->info);
-        std::allocator_traits<inner_allocator_type>::deallocate(m_inner_alloc, p2, 1);
+        inner_alloc_traits_type::destroy(m_inner_alloc, p2);
+        inner_alloc_traits_type::deallocate(m_inner_alloc, p2, 1);
         p2 = tmp;
         *p1 = p2;
         continue;

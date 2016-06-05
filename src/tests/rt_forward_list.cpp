@@ -19,7 +19,8 @@ int main()
 
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::generate_n(std::back_inserter(l), size, std::bind(std::uniform_int_distribution<>(a, b), gen));
+  std::generate_n(std::back_inserter(l), size,
+    std::bind(std::uniform_int_distribution<>(a, b), gen));
 
   std::copy(std::begin(l), std::end(l), std::ostream_iterator<int>(std::cout, " "));
   std::cout << std::endl;

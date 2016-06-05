@@ -91,8 +91,10 @@ class set {
   public:
   using node_type = bst_node<value_type, void_pointer>;
   private:
-  using inner_allocator_type = typename alloc_traits_type::template rebind_alloc<node_type>;
-  using inner_alloc_traits_type = rt::allocator_traits<inner_allocator_type>;
+  using inner_allocator_type =
+    typename alloc_traits_type::template rebind_alloc<node_type>;
+  using inner_alloc_traits_type =
+    rt::allocator_traits<inner_allocator_type>;
   using node_pointer = typename inner_alloc_traits_type::pointer;
   using const_node_pointer = typename inner_alloc_traits_type::const_pointer;
   public:
