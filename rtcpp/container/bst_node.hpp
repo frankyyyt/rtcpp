@@ -144,7 +144,6 @@ struct get_null_link<1> {
   }
 };
 
-
 template <std::size_t I, typename Ptr> 
 Ptr inorder(Ptr p) noexcept
 {

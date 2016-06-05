@@ -13,9 +13,7 @@
 #include <ext/bitmap_allocator.h>
 #endif
 
-#include <rtcpp/container/set.hpp>
 #include <rtcpp/utility/to_number.hpp>
-#include <rtcpp/container/bst_node.hpp>
 #include <rtcpp/memory/node_allocator_lazy.hpp>
 #include <rtcpp/utility/make_rand_data.hpp>
 

@@ -9,7 +9,7 @@
 
 #include <rtcpp/memory/allocator_traits.hpp>
 
-#include "bst_iterator.hpp"
+#include "bst_node.hpp"
 
 /*
   Implements an std::set as a threaded binary search tree. That means it does
@@ -22,6 +22,53 @@
 */
 
 namespace rt {
+
+template <typename T, typename Ptr>
+class bst_iterator :
+  public std::iterator<std::bidirectional_iterator_tag, const T> {
+  public:
+  Ptr m_p;
+  bst_iterator() noexcept : m_p(0) {}
+  bst_iterator(Ptr root) noexcept : m_p(root) {}
+
+  bst_iterator& operator++() noexcept
+  {
+    m_p = inorder<1>(m_p);
+    return *this;
+  }
+
+  bst_iterator operator++(int) noexcept
+  {
+    bst_iterator tmp(*this);
+    operator++();
+    return tmp;
+  }
+
+  bst_iterator& operator--() noexcept
+  {
+    m_p = inorder<0>(m_p);
+    return *this;
+  }
+
+  bst_iterator operator--(int) noexcept
+  {
+    bst_iterator tmp(*this);
+    operator--();
+    return tmp;
+  }
+
+  T operator*() const noexcept {return m_p->key;}
+};
+
+template <typename T, typename Ptr>
+bool operator==( const bst_iterator<T, Ptr>& rhs
+               , const bst_iterator<T, Ptr>& lhs) noexcept
+{ return lhs.m_p == rhs.m_p; }
+
+template <typename T, typename Ptr>
+bool operator!=( const bst_iterator<T, Ptr>& rhs
+               , const bst_iterator<T, Ptr>& lhs) noexcept
+{ return !(lhs == rhs); }
 
 template < typename T
          , typename Compare = std::less<T>
@@ -425,10 +472,7 @@ bool operator==( const set<Key, Compare, Alloc>& lhs
 {
   const bool b1 = lhs.size() == rhs.size();
   const bool b2 = std::equal(std::begin(lhs), std::end(lhs), std::begin(rhs));
-  if (b1 && b2)
-    return true;
-
-  return false;
+  return b1 && b2;
 }
 
 template<typename Key, typename Compare, typename Alloc>
