@@ -9,7 +9,7 @@
 
 #include <rtcpp/memory/allocator_traits.hpp>
 
-#include "bst_node.hpp"
+#include "tbst.hpp"
 
 /*
   Implements an std::set as a threaded binary search tree. That means it does
