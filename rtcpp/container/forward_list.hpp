@@ -55,11 +55,13 @@ class forward_list {
   using void_pointer = typename alloc_traits_type::void_pointer;
   public:
   using node_type = forward_list_node<T, void_pointer>;
+  private:
   using inner_alloc_type =
     typename alloc_traits_type::template rebind_alloc<node_type>;
   using inner_alloc_traits_type = typename
     rt::allocator_traits<inner_alloc_type>;
   using node_pointer = typename inner_alloc_traits_type::pointer;
+  public:
   typedef forward_list_iterator<T, node_pointer> iterator;
   typedef T value_type;
   private:

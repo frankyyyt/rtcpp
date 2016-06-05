@@ -198,7 +198,7 @@ set<T, Compare, Allocator>& set<T, Compare, Allocator>::operator=(const set<T, C
     return *this;
 
   clear();
-  if (rt::allocator_traits<Allocator>::propagate_on_container_copy_assignment::value)
+  if (alloc_traits_type::propagate_on_container_copy_assignment::value)
     m_inner_alloc = rhs.m_inner_alloc;
 
   rhs.copy(*this);
@@ -216,7 +216,7 @@ set<T, Compare, Allocator>& set<T, Compare, Allocator>::operator=(std::initializ
 
 template <typename T, typename Compare, typename Allocator>
 set<T, Compare, Allocator>::set(const set<T, Compare, Allocator>& rhs) noexcept
-: m_inner_alloc(rt::allocator_traits<inner_allocator_type>::select_on_container_copy_construction(rhs.m_inner_alloc))
+: m_inner_alloc(inner_alloc_traits_type::select_on_container_copy_construction(rhs.m_inner_alloc))
 , m_head(get_node())
 {
   m_head->link[0] = m_head;
@@ -228,7 +228,7 @@ set<T, Compare, Allocator>::set(const set<T, Compare, Allocator>& rhs) noexcept
 
 template <typename T, typename Compare, typename Allocator>
 set<T, Compare, Allocator>::set(const Compare& comp, const Allocator& alloc)
-: m_inner_alloc(rt::allocator_traits<Allocator>::select_on_container_copy_construction(alloc))
+: m_inner_alloc(alloc_traits_type::select_on_container_copy_construction(alloc))
 , m_head(get_node())
 , m_comp(comp)
 {
@@ -240,7 +240,7 @@ set<T, Compare, Allocator>::set(const Compare& comp, const Allocator& alloc)
 template <typename T, typename Compare, typename Allocator>
 template <typename InputIt>
 set<T, Compare, Allocator>::set(InputIt begin, InputIt end, const Compare& comp, const Allocator& alloc)
-: m_inner_alloc(rt::allocator_traits<Allocator>::select_on_container_copy_construction(alloc))
+: m_inner_alloc(alloc_traits_type::select_on_container_copy_construction(alloc))
 , m_head(get_node())
 , m_comp(comp)
 {
@@ -257,7 +257,7 @@ void set<T, Compare, Allocator>::clear() noexcept
   for (;;) {
     node_pointer q = inorder<1>(p);
     if (p != m_head) {
-      rt::allocator_traits<inner_allocator_type>::destroy(m_inner_alloc, &q->key);
+      inner_alloc_traits_type::destroy(m_inner_alloc, &q->key);
       release_node(p);
     }
     if (q == m_head)
@@ -303,47 +303,31 @@ void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noe
   }
 }
 
-namespace detail
-{
-
-template <typename Alloc>
-typename rt::allocator_traits<Alloc>::pointer
-get_node_free(Alloc& alloc)
-{
-  using pointer = typename rt::allocator_traits<Alloc>::pointer;
-  auto p = reinterpret_cast<pointer>(rt::allocator_traits<Alloc>::allocate_node(alloc));
+template <typename T, typename Compare, typename Allocator>
+typename set<T, Compare, Allocator>::node_pointer
+set<T, Compare, Allocator>::get_node() const
+{ 
+  auto p = inner_alloc_traits_type::allocate_node(m_inner_alloc);
   mark_in_use(p);
   return p;
 }
 
-template <typename Alloc>
-void release_node_free(Alloc& alloc, typename rt::allocator_traits<Alloc>::pointer p)
-{
+template <typename T, typename Compare, typename Allocator>
+void set<T, Compare, Allocator>::release_node(
+  typename set<T, Compare, Allocator>::node_pointer p) const
+{ 
   mark_free(p);
-  rt::allocator_traits<Alloc>::deallocate_node(alloc, p);
-}
-
-} // detail
-
-template <typename T, typename Compare, typename Allocator>
-typename set<T, Compare, Allocator>::node_pointer set<T, Compare, Allocator>::get_node() const
-{ 
-  return detail::get_node_free(m_inner_alloc);
-}
-
-template <typename T, typename Compare, typename Allocator>
-void set<T, Compare, Allocator>::release_node(typename set<T, Compare, Allocator>::node_pointer p) const
-{ 
-  detail::release_node_free(m_inner_alloc, p);
+  inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
 }
 
 template <typename T, typename Compare, typename Allocator>
 void
-set<T, Compare, Allocator>::safe_construct( typename set<T, Compare, Allocator>::node_pointer p
-                                          , const typename set<T, Compare, Allocator>::value_type& key) const
+set<T, Compare, Allocator>::safe_construct(
+  typename set<T, Compare, Allocator>::node_pointer p
+  , const typename set<T, Compare, Allocator>::value_type& key) const
 {
   try {
-    rt::allocator_traits<inner_allocator_type>::construct(m_inner_alloc, std::addressof(p->key), key);
+    inner_alloc_traits_type::construct(m_inner_alloc, std::addressof(p->key), key);
   } catch (...) {
     release_node(p);
     throw;
