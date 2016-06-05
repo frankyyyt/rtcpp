@@ -45,7 +45,7 @@ bool binary_search(RandomAccessIter begin, RandomAccessIter end, const T& K)
 
 // Assumes the range is not empty.
 template<class ForwardIt, class Compare>
-constexpr ForwardIt
+ForwardIt
 min_or_max_unchecked(ForwardIt first, ForwardIt last, Compare comp)
 {
   auto max = first;
