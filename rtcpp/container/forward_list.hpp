@@ -5,11 +5,11 @@
 
 #include <rtcpp/memory/allocator_traits.hpp>
 
-  /*
+/*
 
   Work in progress.
 
-  */
+*/
 
 namespace rt {
 

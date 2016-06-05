@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     "K: How many steps.\n"
     "B: Chars between.\n"
     "F: Optional (any value). If provided will not fragment the\n"
-    "   heap before benchmarks.\n\n";
+    "   heap before benchmarks.\n\n"
     "The program outputs has the following layout: \n"
     "(0) (1) (2) (3) (4) (5): \n"
     "Where: \n"

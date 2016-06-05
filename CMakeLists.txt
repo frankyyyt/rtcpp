@@ -26,6 +26,7 @@ install( DIRECTORY ${PROJECT_SOURCE_DIR}/rtcpp
          DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 add_executable(rt_set src/tests/rt_set.cpp)
+add_executable(rt_list src/tests/rt_list.cpp)
 add_executable(rt_forward_list src/tests/rt_forward_list.cpp)
 add_executable(rt_align src/tests/rt_align.cpp)
 add_executable(rt_reverse src/tests/rt_reverse.cpp)
@@ -57,6 +58,7 @@ if (Boost_FOUND)
 endif()
 
 add_test(NAME rt_set COMMAND rt_set)
+add_test(NAME rt_list COMMAND rt_list)
 add_test(NAME rt_align COMMAND rt_align)
 add_test(NAME rt_alloc COMMAND rt_alloc)
 add_test(NAME rt_matrix COMMAND rt_matrix)
