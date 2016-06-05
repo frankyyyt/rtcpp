@@ -4,14 +4,14 @@
 #include <algorithm>
 #include <functional>
 
-#include <rtcpp/container/flist.hpp>
+#include <rtcpp/container/forward_list.hpp>
 
 int main()
 {
   using namespace rt;
 
   const std::size_t size = 40;
-  flist<int> l;
+  forward_list<int> l;
 
   // Random number range.
   const int a = 1;

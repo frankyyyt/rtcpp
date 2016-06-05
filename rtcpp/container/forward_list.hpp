@@ -1,11 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <iterator>
 #include <memory>
-
-#include "flist_node.hpp"
-#include "flist_iterator.hpp"
 
   /*
 
@@ -15,13 +11,46 @@
 
 namespace rt {
 
-template <typename T, typename Allocator = std::allocator<T>>
-class flist {
+template <typename T>
+struct forward_list_node {
+  T info;
+  forward_list_node* llink;
+};
+
+template <typename T>
+class forward_list_iterator : public std::iterator<std::forward_iterator_tag, T> {
   public:
-  typedef flist_node<T> node_type;
+  typedef forward_list_node<T> node_type;
+  typedef node_type* node_pointer;
+  private:
+  node_pointer head;
+  public:
+  forward_list_iterator(node_pointer h)
+  : head(h)
+  {}
+  forward_list_iterator& operator++()
+  {
+    head = head->llink;
+    return *this;
+  }
+  forward_list_iterator operator++(int)
+  {
+    forward_list_iterator tmp(*this);
+    operator++();
+    return tmp;
+  }
+  T operator*() const { return head->info; }
+  bool operator==(const forward_list_iterator<T>& rhs) {return head == rhs.head;}
+  bool operator!=(const forward_list_iterator<T>& rhs) {return !(*this == rhs);}
+};
+
+template <typename T, typename Allocator = std::allocator<T>>
+class forward_list {
+  public:
+  typedef forward_list_node<T> node_type;
   typedef Allocator allocator_type;
   typedef node_type* node_pointer;
-  typedef flist_iterator<T> iterator;
+  typedef forward_list_iterator<T> iterator;
   typedef T value_type;
   private:
   typedef typename std::allocator_traits<Allocator>::template
@@ -32,7 +61,7 @@ class flist {
   public:
   iterator begin() {return iterator(head);}
   iterator end() {return iterator(0);}
-  flist(const std::allocator<T>& alloc = std::allocator<T>())
+  forward_list(const std::allocator<T>& alloc = std::allocator<T>())
   : m_inner_alloc(alloc)
   , head(0)
   , tail(0)
