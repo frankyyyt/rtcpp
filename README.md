@@ -1,8 +1,10 @@
 ### Realtime C++
 
 I began this project to experiment on realtime data structures and
-algorithms in C++. Many interesting things came up of this research,
-below I will list the most important achievements.
+algorithms in C++. Many interesting things arose from this research.
+My intentions is to end-up with a realtime version of the Standard
+Template Library (STL), suitable for hard-realtime, low-latency and
+high-availability.
 
 #### Splitting node and array allocation in allocators
 
@@ -14,6 +16,14 @@ can be found here
 http://open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0310r0.pdf
 
 or more easily here doc/proposal_allocator.pdf.
+
+#### Alternative to traverse linked data structures.
+
+A big concern today in the use of linked data structures is related
+to their cache-unfriendliness. The proposal mentioned above plus some small
+additions offer a strong alternative to traversal where we instead of
+chasing pointers, we can traverse the buffers where the nodes have been
+allocated. Benchmarks a quite impressive.
 
 #### Matrix and vector operation suitable for 3D math/physics.
 
