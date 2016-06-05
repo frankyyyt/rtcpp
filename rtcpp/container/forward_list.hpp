@@ -18,7 +18,7 @@ struct forward_list_node {
   using pointer = typename std::pointer_traits<Ptr>::template
     rebind<forward_list_node<T, Ptr>>;
   T info;
-  pointer llink;
+  pointer next;
 };
 
 template <class T, class Ptr>
@@ -28,12 +28,10 @@ class forward_list_iterator : public std::iterator<std::forward_iterator_tag, T>
   private:
   Ptr head;
   public:
-  forward_list_iterator(Ptr h)
-  : head(h)
-  {}
+  forward_list_iterator(Ptr h) : head(h) {}
   forward_list_iterator& operator++()
   {
-    head = head->llink;
+    head = head->next;
     return *this;
   }
   forward_list_iterator operator++(int)
@@ -66,16 +64,15 @@ class forward_list {
   typedef T value_type;
   private:
   inner_alloc_type m_inner_alloc;
-  node_pointer head;
-  node_pointer tail;
+  node_type head;
   public:
-  iterator begin() {return iterator(head);}
-  iterator end() {return iterator(0);}
+  iterator begin() {return iterator(head.next);}
+  iterator end() {return iterator(&head);}
   forward_list(const Allocator& alloc = Allocator())
   : m_inner_alloc(alloc)
-  , head(nullptr)
-  , tail(nullptr)
-  { }
+  {
+    head.next = &head;
+  }
   node_pointer add_node(T data)
   {
     node_pointer q = inner_alloc_traits_type::allocate(m_inner_alloc, 1);
@@ -83,36 +80,27 @@ class forward_list {
     q->info = data;
     return q;
   }
-  bool push_back(const T& data)
+  bool push_front(const T& data)
   {
-    if (!head) {
-      head = add_node(data);
-      tail = head;
-      return true;
-    }
-    const node_pointer q = add_node(data);
-    if (!q)
-      return false;
-    tail->llink = q;
-    tail = q;
-    return true;
+    auto q = add_node(data);
+    q->next = head.next;
+    head.next = q;
   }
   void remove_if(T value)
   {
-    node_pointer* p1 = &head;
-    node_pointer p2 = head->llink;
-    while (p2) {
+    node_pointer* p1 = &head.next;
+    node_pointer p2 = head.next;
+    while (p2 != &head) {
       if (p2->info == value) {
-        node_pointer tmp = p2->llink;
+        node_pointer tmp = p2->next;
         inner_alloc_traits_type::destroy(m_inner_alloc, p2);
         inner_alloc_traits_type::deallocate(m_inner_alloc, p2, 1);
         p2 = tmp;
         *p1 = p2;
         continue;
       }
-      tail = p2;
-      p1 = &p2->llink;
-      p2 = p2->llink;
+      p1 = &p2->next;
+      p2 = p2->next;
     }
   }
 };
