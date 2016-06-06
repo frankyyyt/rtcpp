@@ -10,7 +10,7 @@ int main()
 {
   using namespace rt;
 
-  list l;
+  list<int> l;
   l.push_front(1);
   l.push_front(2);
   l.push_front(3);

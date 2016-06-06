@@ -105,6 +105,17 @@ class forward_list {
       p2 = p2->next;
     }
   }
+  void reverse()
+  {
+    node_pointer prev = &head;
+    while (head.next != &head) {
+      node_pointer middle = head.next;
+      head.next = middle->next;
+      middle->next = prev;
+      prev = middle;
+    }
+    head.next = prev;
+  }
 };
 
 }

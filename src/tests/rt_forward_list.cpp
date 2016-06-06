@@ -10,19 +10,24 @@ int main()
 {
   using namespace rt;
 
-  const std::size_t size = 40;
+  const std::size_t size = 10;
   forward_list<int> l;
 
   // Random number range.
   const int a = 1;
-  const int b = 4;
+  const int b = 10;
 
   std::random_device rd;
   std::mt19937 gen(rd());
   std::generate_n(std::front_inserter(l), size,
     std::bind(std::uniform_int_distribution<>(a, b), gen));
 
-  std::copy(std::begin(l), std::end(l), std::ostream_iterator<int>(std::cout, " "));
+  std::copy(std::begin(l), std::end(l),
+    std::ostream_iterator<int>(std::cout, " "));
+  std::cout << std::endl;
+  l.reverse();
+  std::copy(std::begin(l), std::end(l),
+    std::ostream_iterator<int>(std::cout, " "));
   std::cout << std::endl;
   l.remove_if(1);
   l.remove_if(2);
