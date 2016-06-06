@@ -17,6 +17,8 @@ http://open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0310r0.pdf
 
 or more easily here doc/proposal_allocator.pdf.
 
+A benchmark graph can be found here: doc/fig/unordered_set_with_frag.pdf
+
 #### Alternative to traverse linked data structures.
 
 A big concern today in the use of linked data structures is related
