@@ -10,8 +10,8 @@ template <typename T>
 std::vector<T> make_rand_data(std::size_t size, int first,
                               int last, int type = 2)
 {
-  // Generates a uniform distribution of integers in the range [first, last]
-  // with size size.
+  // Generates a uniform distribution of integers in the range
+  // [first, last] with size size.
   // The following options for the argument type are available.
   // 1 - The returned vector can have repeated elements.
   // 2 - All elements appear only once. The vector can have size less the "size".

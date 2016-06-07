@@ -22,7 +22,8 @@ struct forward_list_node {
 };
 
 template <class T, class Ptr>
-class forward_list_iterator : public std::iterator<std::forward_iterator_tag, T> {
+class forward_list_iterator :
+  public std::iterator<std::forward_iterator_tag, T> {
   public:
   typedef forward_list_node<T, Ptr> node_type;
   private:
@@ -61,15 +62,21 @@ class forward_list {
   using inner_alloc_traits_type = typename
     rt::allocator_traits<inner_alloc_type>;
   using node_pointer = typename inner_alloc_traits_type::pointer;
+  using const_node_pointer = typename
+    inner_alloc_traits_type::const_pointer;
   public:
-  typedef forward_list_iterator<T, node_pointer> iterator;
-  typedef T value_type;
+  using iterator = forward_list_iterator<T, node_pointer>;
+  using const_iterator = forward_list_iterator<T, const_node_pointer>;
+  using value_type = T;
   private:
   inner_alloc_type m_inner_alloc;
   node_type head;
   public:
   iterator begin() {return iterator(head.next);}
   iterator end() {return iterator(&head);}
+
+  const_iterator begin() const {return const_iterator(head.next);}
+  const_iterator end() const {return const_iterator(&head);}
   forward_list(const Allocator& alloc = Allocator())
   : m_inner_alloc(alloc)
   {

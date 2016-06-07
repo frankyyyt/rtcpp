@@ -4,38 +4,48 @@
 #include <algorithm>
 #include <functional>
 
+#include <rtcpp/utility/make_rand_data.hpp>
+#include <rtcpp/utility/print.hpp>
 #include <rtcpp/container/forward_list.hpp>
 
 int main()
 {
   using namespace rt;
 
-  const std::size_t size = 10;
+  const int size = 1000;
+
+  const int a = 1;
+  const int b = size;
+
+  const auto data = make_rand_data<int>(size, a, b, 1);
+  print(data);
   forward_list<int> l;
 
-  // Random number range.
-  const int a = 1;
-  const int b = 10;
+  std::copy(std::begin(data), std::end(data), std::front_inserter(l));
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::generate_n(std::front_inserter(l), size,
-    std::bind(std::uniform_int_distribution<>(a, b), gen));
+  print(l);
+  const bool b1 = std::equal(std::rbegin(data), std::rend(data),
+                             std::begin(l));
+  if (!b1)
+    return 1;
 
-  std::copy(std::begin(l), std::end(l),
-    std::ostream_iterator<int>(std::cout, " "));
-  std::cout << std::endl;
   l.reverse();
-  std::copy(std::begin(l), std::end(l),
-    std::ostream_iterator<int>(std::cout, " "));
-  std::cout << std::endl;
+  print(l);
+  const bool b2 = std::equal(std::begin(data), std::end(data),
+                             std::begin(l));
+  if (!b2)
+    return 1;
+
+  l.reverse();
+  print(l);
+  const bool b3 = std::equal(std::rbegin(data), std::rend(data),
+                             std::begin(l));
+  if (!b3)
+    return 1;
+
   l.remove_if(1);
   l.remove_if(2);
-  std::copy(std::begin(l), std::end(l), std::ostream_iterator<int>(std::cout, " "));
-  std::cout << std::endl;
   l.remove_if(4);
-  std::copy(std::begin(l), std::end(l), std::ostream_iterator<int>(std::cout, " "));
-  std::cout << std::endl;
   return 0;
 }
 
