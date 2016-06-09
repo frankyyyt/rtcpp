@@ -123,6 +123,29 @@ class forward_list {
     }
     head.next = prev;
   }
+  void insertion_sort()
+  {
+    node_pointer a = head.next;
+    node_pointer b = a->next;
+    while (b != &head) {
+      node_pointer p = head.next;
+      node_pointer q = &head;
+      auto K = b->info;
+      while (p != b) {
+        if (K <= p->info) {
+          q->next = b;
+          a->next = b->next;
+          b->next = p;
+          b = a;
+          break;
+        }
+        q = p;
+        p = q->next;
+      }
+      a = b;
+      b = a->next;
+    }
+  }
 };
 
 }
