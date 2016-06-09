@@ -79,7 +79,7 @@ Coding Standards
 * Use two spaces for indentation. Tabs are not allowed.
 * Do not end a line with spaces.
 * All files must end with a newline.
-* Limit line length to 79 characters.
+* Limit line length to 71 characters.
 * Avoid use multiple inheritance.
 * Avoid use non-public inheritance.
 * Make runtime state obvious to the programmer.

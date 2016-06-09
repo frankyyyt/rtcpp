@@ -84,9 +84,8 @@ class forward_list {
   }
   node_pointer add_node(T data)
   {
-    node_pointer q = inner_alloc_traits_type::allocate(m_inner_alloc, 1);
-    inner_alloc_traits_type::construct(m_inner_alloc, std::addressof(q->info), data);
-    q->info = data;
+    node_pointer q = inner_alloc_traits_type::allocate_node(m_inner_alloc);
+    safe_construct(q, data);
     return q;
   }
   bool push_front(const T& data)
@@ -95,6 +94,17 @@ class forward_list {
     q->next = head.next;
     head.next = q;
   }
+  void safe_construct(node_pointer p, const value_type& key)
+  {
+    try {
+      inner_alloc_traits_type::construct(m_inner_alloc,
+        std::addressof(p->info), key);
+    } catch (...) {
+      inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
+      throw;
+    }
+  }
+
   void remove_if(T value)
   {
     node_pointer* p1 = &head.next;
@@ -103,7 +113,7 @@ class forward_list {
       if (p2->info == value) {
         node_pointer tmp = p2->next;
         inner_alloc_traits_type::destroy(m_inner_alloc, p2);
-        inner_alloc_traits_type::deallocate(m_inner_alloc, p2, 1);
+        inner_alloc_traits_type::deallocate_node(m_inner_alloc, p2);
         p2 = tmp;
         *p1 = p2;
         continue;
@@ -130,9 +140,8 @@ class forward_list {
     while (b != &head) {
       node_pointer p = head.next;
       node_pointer q = &head;
-      auto K = b->info;
       while (p != b) {
-        if (K <= p->info) {
+        if (b->info < p->info) {
           q->next = b;
           a->next = b->next;
           b->next = p;

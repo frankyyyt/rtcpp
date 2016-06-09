@@ -83,7 +83,8 @@ class set {
   using reference = value_type&;
   using const_reference = const value_type&;
   using pointer = typename rt::allocator_traits<Allocator>::pointer;
-  using const_pointer = typename rt::allocator_traits<Allocator>::const_pointer;
+  using const_pointer = typename
+    rt::allocator_traits<Allocator>::const_pointer;
   using difference_type = std::ptrdiff_t;
   private:
   using alloc_traits_type = rt::allocator_traits<Allocator>;
@@ -96,11 +97,13 @@ class set {
   using inner_alloc_traits_type =
     rt::allocator_traits<inner_allocator_type>;
   using node_pointer = typename inner_alloc_traits_type::pointer;
-  using const_node_pointer = typename inner_alloc_traits_type::const_pointer;
+  using const_node_pointer =
+    typename inner_alloc_traits_type::const_pointer;
   public:
   using iterator = bst_iterator<T, node_pointer>;
   using const_iterator = iterator;
-  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+  using const_reverse_iterator =
+    std::reverse_iterator<const_iterator>;
   private:
   mutable inner_allocator_type m_inner_alloc;
   node_pointer m_head;
