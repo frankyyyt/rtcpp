@@ -50,7 +50,8 @@ class node_allocator_lazy {
   using difference_type = std::ptrdiff_t;
   template<typename U>
   struct rebind {
-    using other = node_allocator_lazy<U, sizeof (U), is_node<U>::value>;
+    using other = node_allocator_lazy<U, sizeof (U),
+      is_node<U>::value>;
   };
   void swap(node_allocator_lazy& other) noexcept
   {

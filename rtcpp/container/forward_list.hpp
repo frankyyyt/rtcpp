@@ -68,13 +68,14 @@ class forward_list {
   using iterator = forward_list_iterator<T, node_pointer>;
   using const_iterator = forward_list_iterator<T, const_node_pointer>;
   using value_type = T;
+  using size_type = typename Allocator::size_type;
   private:
   inner_alloc_type m_inner_alloc;
   node_type head;
   public:
   iterator begin() {return iterator(head.next);}
   iterator end() {return iterator(&head);}
-
+  size_type max_size() const { m_inner_alloc.max_size();}
   const_iterator begin() const {return const_iterator(head.next);}
   const_iterator end() const {return const_iterator(&head);}
   forward_list(const Allocator& alloc = Allocator())
@@ -82,9 +83,12 @@ class forward_list {
   {
     head.next = &head;
   }
+  ~forward_list() { clear(); }
+  bool empty() const {return head.next == &head;}
   node_pointer add_node(T data)
   {
-    node_pointer q = inner_alloc_traits_type::allocate_node(m_inner_alloc);
+    node_pointer q =
+      inner_alloc_traits_type::allocate_node(m_inner_alloc);
     safe_construct(q, data);
     return q;
   }
@@ -133,6 +137,29 @@ class forward_list {
     }
     head.next = prev;
   }
+  void sorted_insertion(const T& K)
+  {
+    node_pointer p = head.next;
+    node_pointer q = &head;
+    while (p != &head) {
+      if (K < p->info) {
+        insert_after(q, K);
+        break;
+      }
+      q = p;
+      p = q->next;
+    }
+
+    if (p == &head)
+      insert_after(q, K);
+  }
+  void insert_after(node_pointer q, const T& K)
+  {
+      auto p = q->next;
+      auto u = add_node(K);
+      q->next = u;
+      u->next = p;
+  }
   void insertion_sort()
   {
     node_pointer a = head.next;
@@ -153,6 +180,15 @@ class forward_list {
       }
       a = b;
       b = a->next;
+    }
+  }
+  void clear()
+  {
+    while (head.next != &head) {
+      auto p = head.next;
+      head.next = p->next;
+      inner_alloc_traits_type::destroy(m_inner_alloc, p);
+      inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
     }
   }
 };
