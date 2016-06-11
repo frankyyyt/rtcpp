@@ -6,9 +6,7 @@
 #include <rtcpp/memory/allocator_traits.hpp>
 
 /*
-
   Work in progress.
-
 */
 
 namespace rt {
@@ -185,7 +183,10 @@ class forward_list {
       q->next = u;
       u->next = p;
   }
-  void insertion_sort()
+  void sort() { insertion_sort(std::less<T>()); }
+  void insertion_sort() { insertion_sort(std::less<T>()); }
+  template <class Compare>
+  void insertion_sort(Compare comp)
   {
     node_pointer a = head.next;
     node_pointer b = a->next;
@@ -193,7 +194,7 @@ class forward_list {
       node_pointer p = head.next;
       node_pointer q = &head;
       while (p != b) {
-        if (b->info < p->info) {
+        if (comp(b->info, p->info)) {
           q->next = b;
           a->next = b->next;
           b->next = p;
