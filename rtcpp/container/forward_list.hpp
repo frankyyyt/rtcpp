@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iterator>
+#include <type_traits>
 #include <memory>
 
 #include <rtcpp/memory/allocator_traits.hpp>
@@ -20,27 +21,56 @@ struct forward_list_node {
 };
 
 template <class T, class Ptr>
-class forward_list_iterator :
+class flist_iter :
   public std::iterator<std::forward_iterator_tag, T> {
   private:
   Ptr head;
   public:
-  forward_list_iterator(Ptr h) : head(h) {}
-  forward_list_iterator& operator++()
+  // Make this private.
+  Ptr get_internal_ptr() const {return head;}
+  flist_iter(Ptr h) : head(h) {}
+  flist_iter& operator++()
   {
     head = head->next;
     return *this;
   }
-  forward_list_iterator operator++(int)
+  flist_iter operator++(int)
   {
-    forward_list_iterator tmp(*this);
+    flist_iter tmp(*this);
     operator++();
     return tmp;
   }
-  T operator*() const { return head->info; }
-  bool operator==(const forward_list_iterator<T, Ptr>& rhs)
+  T& operator*() const { return head->info; }
+  bool operator==(const flist_iter<T, Ptr>& rhs)
   {return head == rhs.head;}
-  bool operator!=(const forward_list_iterator<T, Ptr>& rhs)
+  bool operator!=(const flist_iter<T, Ptr>& rhs)
+  {return !(*this == rhs);}
+};
+
+template <class T, class Ptr>
+class flist_const_iter :
+  public std::iterator<std::forward_iterator_tag, T> {
+  private:
+  Ptr head;
+  public:
+  // Make this private.
+  Ptr get_internal_ptr() const {return head;}
+  flist_const_iter(Ptr h) : head(h) {}
+  const flist_const_iter& operator++()
+  {
+    head = head->next;
+    return *this;
+  }
+  flist_const_iter operator++(int)
+  {
+    flist_const_iter tmp(*this);
+    operator++();
+    return tmp;
+  }
+  const T& operator*() const { return head->info; }
+  bool operator==(const flist_const_iter<T, Ptr>& rhs)
+  {return head == rhs.head;}
+  bool operator!=(const flist_const_iter<T, Ptr>& rhs)
   {return !(*this == rhs);}
 };
 
@@ -64,8 +94,8 @@ class forward_list {
     rt::allocator_traits<inner_alloc_type>;
   using node_pointer = typename inner_alloct_type::pointer;
   using const_node_pointer = typename inner_alloct_type::const_pointer;
-  using iterator = forward_list_iterator<T, node_pointer>;
-  using const_iterator = forward_list_iterator<T, const_node_pointer>;
+  using iterator = flist_iter<T, node_pointer>;
+  using const_iterator = flist_const_iter<T, const_node_pointer>;
   private:
   inner_alloc_type m_inner_alloc;
   node_type head; // Not requested from the allocator.
@@ -80,8 +110,7 @@ class forward_list {
   size_type max_size() const noexcept { m_inner_alloc.max_size();}
   const_iterator begin() const noexcept
   {return const_iterator(head.next);}
-  const_iterator end() const noexcept
-  {return const_iterator(&head);}
+  const_iterator end() const noexcept {return const_iterator(&head);}
   const_iterator cbegin() const noexcept
   {return const_iterator(head.next);}
   const_iterator cend() const noexcept {return const_iterator(&head);}
@@ -166,7 +195,7 @@ class forward_list {
     node_pointer q = &head;
     while (p != &head) {
       if (K < p->info) {
-        insert_after(q, K);
+        insert_after(const_iterator(q), K);
         break;
       }
       q = p;
@@ -174,14 +203,15 @@ class forward_list {
     }
 
     if (p == &head)
-      insert_after(q, K);
+      insert_after(const_iterator(q), K);
   }
-  void insert_after(node_pointer q, const T& K)
+  void insert_after(const_iterator pos, const T& K)
   {
-      auto p = q->next;
-      auto u = add_node(K);
-      q->next = u;
-      u->next = p;
+    auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+    auto p = q->next;
+    auto u = add_node(K);
+    q->next = u;
+    u->next = p;
   }
   void sort() { insertion_sort(std::less<T>()); }
   void insertion_sort() { insertion_sort(std::less<T>()); }
