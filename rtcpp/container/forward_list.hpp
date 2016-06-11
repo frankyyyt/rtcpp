@@ -101,12 +101,9 @@ class forward_list {
   private:
   inner_alloc_type m_inner_alloc;
   node_type head; // Not requested from the allocator.
+  node_pointer create_node(const T& data);
   public:
-  forward_list(const Allocator& alloc = Allocator()) noexcept
-  : m_inner_alloc(alloc)
-  {
-    head.next = &head;
-  }
+  forward_list(const Allocator& alloc = Allocator()) noexcept;
   iterator begin() noexcept {return iterator(head.next);}
   iterator end() noexcept {return iterator(&head);}
   size_type max_size() const noexcept { m_inner_alloc.max_size();}
@@ -118,159 +115,216 @@ class forward_list {
   const_iterator cend() const noexcept {return const_iterator(&head);}
   ~forward_list() { clear(); }
   bool empty() const {return head.next == &head;}
-  node_pointer add_node(const T& data)
-  {
-    node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
-    safe_construct(q, data);
-    return q;
+  node_pointer create_node(T&& data);
+  void push_front(T&& data);
+  void push_front(const T& data);
+  void safe_construct(node_pointer p, const T& key);
+  void safe_construct(node_pointer p, T&& key);
+  void remove_if(T value);
+  void reverse();
+  void sorted_insertion(const T& K);
+  iterator insert_after(const_iterator pos, const T& K);
+  iterator insert_after(const_iterator pos, T&& K);
+  iterator insert_after(const_iterator pos, size_type n, const T& K);
+  void sort() { insertion_sort(std::less<T>()); }
+  void insertion_sort() { insertion_sort(std::less<T>()); }
+  template <class Compare>
+  void insertion_sort(Compare comp);
+  void clear();
+};
+
+template <typename T, typename Allocator>
+typename forward_list<T, Allocator>::node_pointer
+forward_list<T, Allocator>::create_node(const T& data)
+{
+  node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
+  safe_construct(q, data);
+  return q;
+}
+
+template <typename T, typename Allocator>
+typename forward_list<T, Allocator>::node_pointer
+forward_list<T, Allocator>::create_node(T&& data)
+{
+  node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
+  safe_construct(q, std::forward<T>(data));
+  return q;
+}
+
+template <typename T, typename Allocator>
+forward_list<T, Allocator>::
+forward_list(const Allocator& alloc) noexcept
+: m_inner_alloc(alloc)
+{
+  head.next = &head;
+}
+
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::push_front(T&& data)
+{
+  auto q = create_node(std::forward<T>(data));
+  q->next = head.next;
+  head.next = q;
+}
+
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::push_front(const T& data)
+{
+  auto q = create_node(data);
+  q->next = head.next;
+  head.next = q;
+}
+
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::safe_construct(node_pointer p,
+ const T& key)
+{
+  try {
+    inner_alloct_type::construct(m_inner_alloc,
+      std::addressof(p->info), key);
+  } catch (...) {
+    inner_alloct_type::deallocate_node(m_inner_alloc, p);
+    throw;
   }
-  node_pointer add_node(T&& data)
-  {
-    node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
-    safe_construct(q, std::forward<T>(data));
-    return q;
+}
+
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::safe_construct(
+typename forward_list<T, Allocator>::node_pointer p, T&& key)
+{
+  try {
+    inner_alloct_type::construct(m_inner_alloc,
+      std::addressof(p->info), std::forward<T>(key));
+  } catch (...) {
+    inner_alloct_type::deallocate_node(m_inner_alloc, p);
+    throw;
   }
-  bool push_front(T&& data)
-  {
-    auto q = add_node(std::forward<T>(data));
-    q->next = head.next;
-    head.next = q;
-  }
-  bool push_front(const T& data)
-  {
-    auto q = add_node(data);
-    q->next = head.next;
-    head.next = q;
-  }
-  void safe_construct(node_pointer p, const T& key)
-  {
-    try {
-      inner_alloct_type::construct(m_inner_alloc,
-        std::addressof(p->info), key);
-    } catch (...) {
-      inner_alloct_type::deallocate_node(m_inner_alloc, p);
-      throw;
+}
+
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::remove_if(T value)
+{
+  node_pointer* p1 = &head.next;
+  node_pointer p2 = head.next;
+  while (p2 != &head) {
+    if (p2->info == value) {
+      node_pointer tmp = p2->next;
+      inner_alloct_type::destroy(m_inner_alloc, p2);
+      inner_alloct_type::deallocate_node(m_inner_alloc, p2);
+      p2 = tmp;
+      *p1 = p2;
+      continue;
     }
+    p1 = &p2->next;
+    p2 = p2->next;
   }
-  void safe_construct(node_pointer p, T&& key)
-  {
-    try {
-      inner_alloct_type::construct(m_inner_alloc,
-        std::addressof(p->info), std::forward<T>(key));
-    } catch (...) {
-      inner_alloct_type::deallocate_node(m_inner_alloc, p);
-      throw;
+}
+
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::reverse()
+{
+  node_pointer prev = &head;
+  while (head.next != &head) {
+    node_pointer middle = head.next;
+    head.next = middle->next;
+    middle->next = prev;
+    prev = middle;
+  }
+  head.next = prev;
+}
+
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::sorted_insertion(const T& K)
+{
+  node_pointer p = head.next;
+  node_pointer q = &head;
+  while (p != &head) {
+    if (K < p->info) {
+      insert_after(const_iterator(q), K);
+      break;
     }
+    q = p;
+    p = q->next;
   }
 
-  void remove_if(T value)
-  {
-    node_pointer* p1 = &head.next;
-    node_pointer p2 = head.next;
-    while (p2 != &head) {
-      if (p2->info == value) {
-        node_pointer tmp = p2->next;
-        inner_alloct_type::destroy(m_inner_alloc, p2);
-        inner_alloct_type::deallocate_node(m_inner_alloc, p2);
-        p2 = tmp;
-        *p1 = p2;
-        continue;
-      }
-      p1 = &p2->next;
-      p2 = p2->next;
-    }
-  }
-  void reverse()
-  {
-    node_pointer prev = &head;
-    while (head.next != &head) {
-      node_pointer middle = head.next;
-      head.next = middle->next;
-      middle->next = prev;
-      prev = middle;
-    }
-    head.next = prev;
-  }
-  void sorted_insertion(const T& K)
-  {
+  if (p == &head)
+    insert_after(const_iterator(q), K);
+}
+
+template <typename T, typename Allocator>
+typename forward_list<T, Allocator>::iterator
+forward_list<T, Allocator>::insert_after(
+  typename forward_list<T, Allocator>::const_iterator pos, const T& K)
+{
+  auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  auto p = q->next;
+  auto u = create_node(K);
+  q->next = u;
+  u->next = p;
+  return iterator(u);
+}
+
+template <typename T, typename Allocator>
+typename forward_list<T, Allocator>::iterator
+forward_list<T, Allocator>::insert_after(
+ typename forward_list<T, Allocator>::const_iterator pos, T&& K)
+{
+  auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  auto p = q->next;
+  auto u = create_node(std::forward<T>(K));
+  q->next = u;
+  u->next = p;
+  return iterator(u);
+}
+
+template <typename T, typename Allocator>
+typename forward_list<T, Allocator>::iterator
+forward_list<T, Allocator>::insert_after(
+typename forward_list<T, Allocator>::const_iterator pos,
+ size_type n, const T& K)
+{
+  auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  iterator iter(q);
+  while (n--)
+    iter = insert_after(iter, K);
+  return iter;
+}
+
+template <typename T, typename Allocator>
+template <class Compare>
+void forward_list<T, Allocator>::insertion_sort(Compare comp)
+{
+  node_pointer a = head.next;
+  node_pointer b = a->next;
+  while (b != &head) {
     node_pointer p = head.next;
     node_pointer q = &head;
-    while (p != &head) {
-      if (K < p->info) {
-        insert_after(const_iterator(q), K);
+    while (p != b) {
+      if (comp(b->info, p->info)) {
+        q->next = b;
+        a->next = b->next;
+        b->next = p;
+        b = a;
         break;
       }
       q = p;
       p = q->next;
     }
+    a = b;
+    b = a->next;
+  }
+}
 
-    if (p == &head)
-      insert_after(const_iterator(q), K);
+template <typename T, typename Allocator>
+void forward_list<T, Allocator>::clear()
+{
+  while (head.next != &head) {
+    auto p = head.next;
+    head.next = p->next;
+    inner_alloct_type::destroy(m_inner_alloc, p);
+    inner_alloct_type::deallocate_node(m_inner_alloc, p);
   }
-  iterator insert_after(const_iterator pos, const T& K)
-  {
-    auto q = const_cast<node_pointer>(pos.get_internal_ptr());
-    auto p = q->next;
-    auto u = add_node(K);
-    q->next = u;
-    u->next = p;
-    return iterator(u);
-  }
-
-  iterator insert_after(const_iterator pos, T&& K)
-  {
-    auto q = const_cast<node_pointer>(pos.get_internal_ptr());
-    auto p = q->next;
-    auto u = add_node(std::forward<T>(K));
-    q->next = u;
-    u->next = p;
-    return iterator(u);
-  }
-
-  iterator insert_after(const_iterator pos, size_type n, const T& K)
-  {
-    auto q = const_cast<node_pointer>(pos.get_internal_ptr());
-    iterator iter(q);
-    while (n--)
-      iter = insert_after(iter, K);
-    return iter;
-  }
-
-  void sort() { insertion_sort(std::less<T>()); }
-  void insertion_sort() { insertion_sort(std::less<T>()); }
-  template <class Compare>
-  void insertion_sort(Compare comp)
-  {
-    node_pointer a = head.next;
-    node_pointer b = a->next;
-    while (b != &head) {
-      node_pointer p = head.next;
-      node_pointer q = &head;
-      while (p != b) {
-        if (comp(b->info, p->info)) {
-          q->next = b;
-          a->next = b->next;
-          b->next = p;
-          b = a;
-          break;
-        }
-        q = p;
-        p = q->next;
-      }
-      a = b;
-      b = a->next;
-    }
-  }
-  void clear()
-  {
-    while (head.next != &head) {
-      auto p = head.next;
-      head.next = p->next;
-      inner_alloct_type::destroy(m_inner_alloc, p);
-      inner_alloct_type::deallocate_node(m_inner_alloc, p);
-    }
-  }
-};
+}
 
 }
 
