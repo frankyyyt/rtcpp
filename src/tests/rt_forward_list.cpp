@@ -188,6 +188,13 @@ int main()
 
   if (!test_push_front_move())
     return 1;
+  
+  l.clear();
+  l.insert_after(l.begin(), 3, 10);
+  l.push_front(7);
+  l.insert_after(l.begin(), 3, 20);
+  l.push_front(7);
+  print(l);
 
   return 0;
 }

@@ -56,6 +56,8 @@ class flist_const_iter :
   // Make this private.
   Ptr get_internal_ptr() const {return head;}
   flist_const_iter(Ptr h) : head(h) {}
+  template <class P>
+  flist_const_iter(flist_iter<T, P> h) : head(h.get_internal_ptr()) {}
   const flist_const_iter& operator++()
   {
     head = head->next;
@@ -205,14 +207,35 @@ class forward_list {
     if (p == &head)
       insert_after(const_iterator(q), K);
   }
-  void insert_after(const_iterator pos, const T& K)
+  iterator insert_after(const_iterator pos, const T& K)
   {
     auto q = const_cast<node_pointer>(pos.get_internal_ptr());
     auto p = q->next;
     auto u = add_node(K);
     q->next = u;
     u->next = p;
+    return iterator(u);
   }
+
+  iterator insert_after(const_iterator pos, T&& K)
+  {
+    auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+    auto p = q->next;
+    auto u = add_node(std::forward<T>(K));
+    q->next = u;
+    u->next = p;
+    return iterator(u);
+  }
+
+  iterator insert_after(const_iterator pos, size_type n, const T& K)
+  {
+    auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+    iterator iter(q);
+    while (n--)
+      iter = insert_after(iter, K);
+    return iter;
+  }
+
   void sort() { insertion_sort(std::less<T>()); }
   void insertion_sort() { insertion_sort(std::less<T>()); }
   template <class Compare>
