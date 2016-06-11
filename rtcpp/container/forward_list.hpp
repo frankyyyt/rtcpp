@@ -24,8 +24,6 @@ struct forward_list_node {
 template <class T, class Ptr>
 class forward_list_iterator :
   public std::iterator<std::forward_iterator_tag, T> {
-  public:
-  typedef forward_list_node<T, Ptr> node_type;
   private:
   Ptr head;
   public:
@@ -50,47 +48,64 @@ class forward_list_iterator :
 
 template <typename T, typename Allocator = std::allocator<T>>
 class forward_list {
-  private:
-  using allocator_type = Allocator;
-  using alloc_traits_type = rt::allocator_traits<allocator_type>;
-  using void_pointer = typename alloc_traits_type::void_pointer;
   public:
-  using node_type = forward_list_node<T, void_pointer>;
-  private:
-  using inner_alloc_type =
-    typename alloc_traits_type::template rebind_alloc<node_type>;
-  using inner_alloc_traits_type = typename
-    rt::allocator_traits<inner_alloc_type>;
-  using node_pointer = typename inner_alloc_traits_type::pointer;
-  using const_node_pointer = typename
-    inner_alloc_traits_type::const_pointer;
-  public:
-  using iterator = forward_list_iterator<T, node_pointer>;
-  using const_iterator = forward_list_iterator<T, const_node_pointer>;
   using value_type = T;
   using size_type = typename Allocator::size_type;
+  using allocator_type = Allocator;
+  using difference_type = std::ptrdiff_t;
+  using reference = T&;
+  using const_reference = T const&;
+  using alloct_type = rt::allocator_traits<Allocator>;
+  using pointer = typename alloct_type::pointer;
+  using const_pointer = typename alloct_type::const_pointer;
+  using void_pointer = typename alloct_type::void_pointer;
+  using node_type = forward_list_node<T, void_pointer>;
+  using inner_alloc_type =
+    typename alloct_type::template rebind_alloc<node_type>;
+  using inner_alloct_type = typename
+    rt::allocator_traits<inner_alloc_type>;
+  using node_pointer = typename inner_alloct_type::pointer;
+  using const_node_pointer = typename inner_alloct_type::const_pointer;
+  using iterator = forward_list_iterator<T, node_pointer>;
+  using const_iterator = forward_list_iterator<T, const_node_pointer>;
   private:
   inner_alloc_type m_inner_alloc;
-  node_type head;
+  node_type head; // Not requested from the allocator.
   public:
-  iterator begin() {return iterator(head.next);}
-  iterator end() {return iterator(&head);}
-  size_type max_size() const { m_inner_alloc.max_size();}
-  const_iterator begin() const {return const_iterator(head.next);}
-  const_iterator end() const {return const_iterator(&head);}
-  forward_list(const Allocator& alloc = Allocator())
+  forward_list(const Allocator& alloc = Allocator()) noexcept
   : m_inner_alloc(alloc)
   {
     head.next = &head;
   }
+  iterator begin() noexcept {return iterator(head.next);}
+  iterator end() noexcept {return iterator(&head);}
+  size_type max_size() const noexcept { m_inner_alloc.max_size();}
+  const_iterator begin() const noexcept
+  {return const_iterator(head.next);}
+  const_iterator end() const noexcept
+  {return const_iterator(&head);}
+  const_iterator cbegin() const noexcept
+  {return const_iterator(head.next);}
+  const_iterator cend() const noexcept {return const_iterator(&head);}
   ~forward_list() { clear(); }
   bool empty() const {return head.next == &head;}
-  node_pointer add_node(T data)
+  node_pointer add_node(const T& data)
   {
-    node_pointer q =
-      inner_alloc_traits_type::allocate_node(m_inner_alloc);
+    node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
     safe_construct(q, data);
     return q;
+  }
+  node_pointer add_node(T&& data)
+  {
+    node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
+    safe_construct(q, std::forward<T>(data));
+    return q;
+  }
+  bool push_front(T&& data)
+  {
+    auto q = add_node(std::forward<T>(data));
+    q->next = head.next;
+    head.next = q;
   }
   bool push_front(const T& data)
   {
@@ -98,13 +113,23 @@ class forward_list {
     q->next = head.next;
     head.next = q;
   }
-  void safe_construct(node_pointer p, const value_type& key)
+  void safe_construct(node_pointer p, const T& key)
   {
     try {
-      inner_alloc_traits_type::construct(m_inner_alloc,
+      inner_alloct_type::construct(m_inner_alloc,
         std::addressof(p->info), key);
     } catch (...) {
-      inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
+      inner_alloct_type::deallocate_node(m_inner_alloc, p);
+      throw;
+    }
+  }
+  void safe_construct(node_pointer p, T&& key)
+  {
+    try {
+      inner_alloct_type::construct(m_inner_alloc,
+        std::addressof(p->info), std::forward<T>(key));
+    } catch (...) {
+      inner_alloct_type::deallocate_node(m_inner_alloc, p);
       throw;
     }
   }
@@ -116,8 +141,8 @@ class forward_list {
     while (p2 != &head) {
       if (p2->info == value) {
         node_pointer tmp = p2->next;
-        inner_alloc_traits_type::destroy(m_inner_alloc, p2);
-        inner_alloc_traits_type::deallocate_node(m_inner_alloc, p2);
+        inner_alloct_type::destroy(m_inner_alloc, p2);
+        inner_alloct_type::deallocate_node(m_inner_alloc, p2);
         p2 = tmp;
         *p1 = p2;
         continue;
@@ -187,8 +212,8 @@ class forward_list {
     while (head.next != &head) {
       auto p = head.next;
       head.next = p->next;
-      inner_alloc_traits_type::destroy(m_inner_alloc, p);
-      inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
+      inner_alloct_type::destroy(m_inner_alloc, p);
+      inner_alloct_type::deallocate_node(m_inner_alloc, p);
     }
   }
 };

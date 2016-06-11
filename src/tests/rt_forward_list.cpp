@@ -8,9 +8,124 @@
 #include <rtcpp/utility/print.hpp>
 #include <rtcpp/container/forward_list.hpp>
 
+using namespace rt;
+
+struct foo {
+  static int n_default_ctor;
+  static int n_dctor;
+  static int n_copy_ctor;
+  static int n_mv_ctor;
+  static int n_copy_assignment;
+  static int n_mv_assignment;
+  static void reset()
+  {
+    n_default_ctor = 0;
+    n_dctor = 0;
+    n_copy_ctor = 0;
+    n_mv_ctor = 0;
+    n_copy_assignment = 0;
+    n_mv_assignment = 0;
+  }
+  foo()
+  {
+    std::cout << "foo()" << std::endl;
+    ++n_default_ctor;
+  }
+
+  ~foo()
+  {
+    std::cout << "~foo()" << std::endl;
+    ++n_dctor;
+  }
+
+  foo(const foo&)
+  {
+    std::cout << "foo(const foo&)" << std::endl;
+    ++n_copy_ctor;
+  }
+
+  foo(foo&&)
+  {
+    std::cout << "foo(foo&&)" << std::endl;
+    ++n_mv_ctor;
+  }
+
+  foo& operator=(const foo&)
+  {
+    std::cout << "foo& operator=(const foo&)" << std::endl;
+    ++n_copy_assignment;
+    return *this;
+  }
+
+  foo& operator=(foo&&)
+  {
+    std::cout << "foo& operator=(foo&&)" << std::endl;
+    ++n_mv_assignment;
+    return *this;
+  }
+};
+
+int foo::n_default_ctor = 0;
+int foo::n_dctor = 0;
+int foo::n_copy_ctor = 0;
+int foo::n_mv_ctor = 0;
+int foo::n_copy_assignment = 0;
+int foo::n_mv_assignment = 0;
+
+bool test_push_front_copy()
+{
+  std::cout << "test_push_front_copy" << std::endl;
+  foo::reset();
+  forward_list<foo> l;
+  foo bar;
+  l.push_front(bar);
+  const foo bar2;
+  l.push_front(bar2);
+
+  if (foo::n_default_ctor != 3)
+    return false;
+  if (foo::n_copy_ctor != 2)
+    return false;
+  if (foo::n_mv_ctor != 0)
+    return false;
+  if (foo::n_copy_assignment != 0)
+    return false;
+  if (foo::n_mv_assignment != 0)
+    return false;
+  //if (foo::n_dctor != 5)
+  //  return false;
+  return true;
+}
+
+bool test_push_front_move()
+{
+  std::cout << "test_push_front_move" << std::endl;
+  foo::reset();
+  forward_list<foo> l;
+  foo bar;
+  l.push_front(std::move(bar));
+  foo bar1;
+  l.push_front(bar1);
+  l.push_front(foo());
+  const foo bar2;
+  l.push_front(bar2);
+  if (foo::n_default_ctor != 5)
+    return false;
+  if (foo::n_copy_ctor != 2)
+    return false;
+  if (foo::n_mv_ctor != 2)
+    return false;
+  if (foo::n_copy_assignment != 0)
+    return false;
+  if (foo::n_mv_assignment != 0)
+    return false;
+  //if (foo::n_dctor != 5)
+  //  return false;
+  return true;
+}
+
 int main()
 {
-  using namespace rt;
 
   const int size = 10;
 
@@ -66,6 +181,12 @@ int main()
 
   l.clear();
   if (!l.empty())
+    return 1;
+
+  if (!test_push_front_copy())
+    return 1;
+
+  if (!test_push_front_move())
     return 1;
 
   return 0;
