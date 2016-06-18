@@ -13,34 +13,32 @@
 
 namespace rt {
 
+template <class T>
 class node_stack {
-  // I do not know whether the standard guarantees the
-  // condition below, since I rely on it I will test it.
+  private:
   static_assert( !((sizeof (std::uintptr_t)) > (sizeof (char*)))
      , "node_stack: Unable to use this class in this platform.");
-  private:
   static const std::size_t ptr_size = sizeof (char*);
   node_alloc_header* header;
   // used only when default constructed. Will be soon removed.
   node_alloc_header header_dummy;
   public:
-  node_stack();
-  node_stack(node_alloc_header* header, std::size_t S);
-  char* pop() noexcept;
-  void push(char* p) noexcept;
+  using pointer = T*;
+  node_stack() : header(&header_dummy) {}
+  node_stack(node_alloc_header* header);
+  pointer pop() noexcept;
+  void push(pointer p) noexcept;
   bool operator==(const node_stack& rhs) const noexcept
   {return header == rhs.header;}
   void swap(node_stack& other) noexcept
   {std::swap(header, other.header);}
 };
 
-// Move this to cpp file.
-node_stack::node_stack() : header(&header_dummy) {}
-
-// Move this to cpp file.
-node_stack::node_stack(node_alloc_header* header, std::size_t S)
+template <class T>
+node_stack<T>::node_stack(node_alloc_header* header)
 : header(header)
 {
+  const std::size_t S = sizeof (T);
   std::size_t n = header->buffer_size;
   align_if_needed<ptr_size>(header->buffer, n);
   const std::size_t min_size = 2 * S;
@@ -57,18 +55,18 @@ node_stack::node_stack(node_alloc_header* header, std::size_t S)
   ++header->n_alloc;
 }
 
-inline
-char* node_stack::pop() noexcept
+template <class T>
+typename node_stack<T>::pointer node_stack<T>::pop() noexcept
 {
-  char* q = header->buffer;
+  pointer q = reinterpret_cast<pointer>(header->buffer);
   if (q)
     std::memcpy(&header->buffer, q, ptr_size);
 
   return q;
 }
 
-inline
-void node_stack::push(char* p) noexcept
+template <class T>
+void node_stack<T>::push(typename node_stack<T>::pointer p) noexcept
 {
   std::memcpy(p, &header->buffer, ptr_size);
   std::memcpy(&header->buffer, &p, ptr_size);

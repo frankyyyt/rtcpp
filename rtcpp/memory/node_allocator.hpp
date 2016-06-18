@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-#include <vector>
 #include <utility>
 #include <memory>
 #include <exception>
@@ -34,7 +32,7 @@ class node_allocator {
   struct rebind { using other = node_allocator<U , NodeType>; };
   public:
   node_alloc_header* header;
-  node_stack stack;
+  node_stack<T> stack;
   std::allocator<T> std_alloc; // Used for array allocations.
   public:
   node_allocator(node_alloc_header* p) : header(p) {}
@@ -43,7 +41,7 @@ class node_allocator {
   node_allocator( const node_allocator<U, NodeType>& alloc
                 , typename std::enable_if<is_same_node_type<K, NodeType>::value, void*>::type p = 0)
   : header(alloc.header)
-  , stack(header, sizeof (T)) {}
+  , stack(header) {}
   template<typename U, typename K = T>
   node_allocator( const node_allocator<U, NodeType>& alloc
                 , typename std::enable_if<!is_same_node_type<K, NodeType>::value, void*>::type p = 0)
@@ -53,10 +51,10 @@ class node_allocator {
     is_same_node_type<U, NodeType>::value, pointer>::type
   allocate_node()
   {
-    char* p = stack.pop(); 
+    pointer p = stack.pop(); 
     if (!p)
       throw std::bad_alloc();
-    return reinterpret_cast<pointer>(p); 
+    return p; 
   }
   template <typename U = T>
   typename std::enable_if<
@@ -66,7 +64,7 @@ class node_allocator {
   template <typename U = T>
   typename std::enable_if<std::is_same<U, NodeType>::value>::type
   deallocate_node(pointer p)
-  { stack.push(reinterpret_cast<char*>(p)); }
+  { stack.push(p); }
   template <typename U = T>
   typename std::enable_if<!std::is_same<U, NodeType>::value>::type
   deallocate(pointer p, size_type n)

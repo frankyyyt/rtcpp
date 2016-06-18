@@ -87,22 +87,22 @@ class node_allocator_lazy<T, N, true> {
   };
   public:
   node_alloc_header* header;
-  node_stack stack;
+  node_stack<T> stack;
   public:
   node_allocator_lazy(node_alloc_header* p) : header(p) {}
   template<typename U>
   node_allocator_lazy(const node_allocator_lazy<U, sizeof (U),
                       is_node<U>::value>& alloc)
-  : header(alloc.header), stack(header, N) {}
+  : header(alloc.header), stack(header) {}
   pointer allocate_node()
   {
-    char* p = stack.pop(); 
+    pointer p = stack.pop(); 
     if (!p)
       throw std::bad_alloc();
-    return reinterpret_cast<pointer>(p); 
+    return p; 
   }
   pointer allocate(size_type) { return allocate_node(); }
-  void deallocate_node(pointer p) { stack.push(reinterpret_cast<char*>(p)); }
+  void deallocate_node(pointer p) { stack.push(p); }
   void deallocate(pointer p, size_type) { deallocate_node(p); }
   template<typename U>
   void destroy(U* p) {p->~U();}
