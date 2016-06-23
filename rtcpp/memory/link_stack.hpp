@@ -26,11 +26,8 @@ void link_stack(char* p, std::size_t n)
   // Number of blocks of size S available.
   const std::size_t m = n / S;
 
-  // Index type size.
-  constexpr std::size_t s = sizeof (Index);
-
   // How many index types fits into size S;
-  constexpr std::size_t r = S / s;
+  constexpr std::size_t r = S / sizeof (Index);
 
   // Interprets the pointer p as if it were pointing to an array
   // of index types.

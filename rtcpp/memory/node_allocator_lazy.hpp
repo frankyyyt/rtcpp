@@ -109,8 +109,7 @@ class node_allocator_lazy<T, N, true> {
   {
     const auto a = reinterpret_cast<Index*>(stack.header->buffer);
     const auto b = reinterpret_cast<Index*>(p);
-    const auto i = b - a;
-    stack.push(i);
+    stack.push(b - a);
   }
   void deallocate(pointer p, size_type) { deallocate_node(p); }
   template<typename U>

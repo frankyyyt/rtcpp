@@ -55,16 +55,9 @@ node_stack<T, Index>::node_stack(node_alloc_header* header)
 template <class T, class Index>
 Index node_stack<T, Index>::pop() noexcept
 {
-  // Index type size.
-  constexpr std::size_t s = sizeof (Index);
-  constexpr std::size_t S = sizeof (T);
-
-  // How many index types fits into size S;
-  constexpr std::size_t r = S / s;
-
   auto p = reinterpret_cast<Index*>(header->buffer);
 
-  Index i = p[0]; // Index of the next free node.
+  const Index i = p[0]; // Index of the next free node.
 
   if (i)
     p[0] = p[i];
@@ -76,7 +69,6 @@ template <class T, class Index>
 void node_stack<T, Index>::push(Index idx) noexcept
 {
   auto p = reinterpret_cast<Index*>(header->buffer);
-
   p[idx] = p[0];
   p[0] = idx;
 }
