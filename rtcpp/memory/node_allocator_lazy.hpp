@@ -81,13 +81,14 @@ class node_allocator_lazy<T, N, true> {
   using const_reference = const T&;
   using size_type = std::size_t;
   using difference_type = std::ptrdiff_t;
+  using Index = std::size_t;
   template<class U>
   struct rebind {
     using other = node_allocator_lazy<U, sizeof (U), is_node<U>::value>;
   };
   public:
   node_alloc_header* header;
-  node_stack<T> stack;
+  node_stack<T, Index> stack;
   public:
   node_allocator_lazy(node_alloc_header* p) : header(p) {}
   template<typename U>
@@ -96,13 +97,21 @@ class node_allocator_lazy<T, N, true> {
   : header(alloc.header), stack(header) {}
   pointer allocate_node()
   {
-    pointer p = stack.pop(); 
-    if (!p)
+    const auto i = stack.pop(); 
+    if (!i)
       throw std::bad_alloc();
-    return p; 
+
+    const auto p = reinterpret_cast<Index*>(stack.header->buffer);
+    return reinterpret_cast<pointer>(&p[i]);
   }
   pointer allocate(size_type) { return allocate_node(); }
-  void deallocate_node(pointer p) { stack.push(p); }
+  void deallocate_node(pointer p)
+  {
+    const auto a = reinterpret_cast<Index*>(stack.header->buffer);
+    const auto b = reinterpret_cast<Index*>(p);
+    const auto i = b - a;
+    stack.push(i);
+  }
   void deallocate(pointer p, size_type) { deallocate_node(p); }
   template<typename U>
   void destroy(U* p) {p->~U();}

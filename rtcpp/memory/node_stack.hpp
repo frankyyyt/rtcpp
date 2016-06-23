@@ -13,32 +13,29 @@
 
 namespace rt {
 
-template <class T>
+template <class T, class Index>
 class node_stack {
-  private:
-  static_assert( !((sizeof (std::uintptr_t)) > (sizeof (char*)))
-     , "node_stack: Unable to use this class in this platform.");
+  public:
   static const std::size_t ptr_size = sizeof (char*);
   node_alloc_header* header;
   // used only when default constructed. Will be soon removed.
   node_alloc_header header_dummy;
   public:
-  using pointer = T*;
   node_stack() : header(&header_dummy) {}
   node_stack(node_alloc_header* header);
-  pointer pop() noexcept;
-  void push(pointer p) noexcept;
+  Index pop() noexcept;
+  void push(Index p) noexcept;
   bool operator==(const node_stack& rhs) const noexcept
   {return header == rhs.header;}
   void swap(node_stack& other) noexcept
   {std::swap(header, other.header);}
 };
 
-template <class T>
-node_stack<T>::node_stack(node_alloc_header* header)
+template <class T, class Index>
+node_stack<T, Index>::node_stack(node_alloc_header* header)
 : header(header)
 {
-  const std::size_t S = sizeof (T);
+  constexpr std::size_t S = sizeof (T);
   std::size_t n = header->buffer_size;
   align_if_needed<ptr_size>(header->buffer, n);
   const std::size_t min_size = 2 * S;
@@ -49,27 +46,39 @@ node_stack<T>::node_stack(node_alloc_header* header)
     if (header->block_size < S)
       throw std::runtime_error("node_stack: Avail stack already linked for node with incompatible size.");
   } else { // Links only once.
-    header->buffer = link_stack(header->buffer, n, S);
+    link_stack<S, Index>(header->buffer, n);
     header->block_size = S;
   }
   ++header->n_alloc;
 }
 
-template <class T>
-typename node_stack<T>::pointer node_stack<T>::pop() noexcept
+template <class T, class Index>
+Index node_stack<T, Index>::pop() noexcept
 {
-  pointer q = reinterpret_cast<pointer>(header->buffer);
-  if (q)
-    std::memcpy(&header->buffer, q, ptr_size);
+  // Index type size.
+  constexpr std::size_t s = sizeof (Index);
+  constexpr std::size_t S = sizeof (T);
 
-  return q;
+  // How many index types fits into size S;
+  constexpr std::size_t r = S / s;
+
+  auto p = reinterpret_cast<Index*>(header->buffer);
+
+  Index i = p[0]; // Index of the next free node.
+
+  if (i)
+    p[0] = p[i];
+
+  return i;
 }
 
-template <class T>
-void node_stack<T>::push(typename node_stack<T>::pointer p) noexcept
+template <class T, class Index>
+void node_stack<T, Index>::push(Index idx) noexcept
 {
-  std::memcpy(p, &header->buffer, ptr_size);
-  std::memcpy(&header->buffer, &p, ptr_size);
+  auto p = reinterpret_cast<Index*>(header->buffer);
+
+  p[idx] = p[0];
+  p[0] = idx;
 }
 
 }

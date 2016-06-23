@@ -32,7 +32,7 @@ class node_allocator {
   struct rebind { using other = node_allocator<U , NodeType>; };
   public:
   node_alloc_header* header;
-  node_stack<T> stack;
+  node_stack<T, std::size_t> stack;
   std::allocator<T> std_alloc; // Used for array allocations.
   public:
   node_allocator(node_alloc_header* p) : header(p) {}
@@ -51,10 +51,12 @@ class node_allocator {
     is_same_node_type<U, NodeType>::value, pointer>::type
   allocate_node()
   {
-    pointer p = stack.pop(); 
-    if (!p)
+    auto i = stack.pop(); 
+    if (!i)
       throw std::bad_alloc();
-    return p; 
+
+    const auto b = reinterpret_cast<pointer>(stack.header->buffer);
+    return b + i; 
   }
   template <typename U = T>
   typename std::enable_if<
@@ -64,7 +66,10 @@ class node_allocator {
   template <typename U = T>
   typename std::enable_if<std::is_same<U, NodeType>::value>::type
   deallocate_node(pointer p)
-  { stack.push(p); }
+  {
+    auto i = reinterpret_cast<char*>(p) - stack.header->buffer;
+    stack.push(i * sizeof (T));
+  }
   template <typename U = T>
   typename std::enable_if<!std::is_same<U, NodeType>::value>::type
   deallocate(pointer p, size_type n)

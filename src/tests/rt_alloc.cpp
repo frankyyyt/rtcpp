@@ -67,11 +67,12 @@ bool test_deallocate()
 {
   const std::size_t ptr_size = sizeof (char*);
   const std::size_t data_size = sizeof (std::size_t);
-  std::array<char, 2 * data_size> buffer = {{}};
+  std::array<char, 3 * data_size> buffer = {{}};
 
   rt::node_alloc_header header(buffer);
   rt::node_allocator_lazy<int> alloc1(&header);
-  rt::node_allocator_lazy<std::size_t> alloc2(alloc1); // links the node_allocator_lazy.
+  // links the node_allocator_lazy.
+  rt::node_allocator_lazy<std::size_t> alloc2(alloc1);
 
   std::size_t* p1 = alloc2.allocate_node();
   *p1 = 10; // To avoid a warning.

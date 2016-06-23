@@ -18,22 +18,27 @@ namespace rt {
 
   */
 
-inline
-char* link_stack(char* p, std::size_t n, std::size_t S)
+template <std::size_t S, class Index = std::size_t>
+void link_stack(char* p, std::size_t n)
 {
-  const std::size_t m = n / S; // Number of blocks of size S available.
-  if (m < 2) // The minimum number of blocks we need is 2.
-    return 0;
+  // TODO: check alignment of pointers.
 
-  const std::size_t ptr_size = sizeof (char*);
-  for (std::size_t i = 1; i < m; ++i) {
-    char* pp = p + (i - 1) * S; // Pointer to the previous block.
-    char* pn = p + i * S; // Pointer to the next block.
-    std::memcpy(pn, &pp, ptr_size);
-  }
+  // Number of blocks of size S available.
+  const std::size_t m = n / S;
 
-  std::memset(p, 0, ptr_size);
-  return p + (m - 1) * S; // Pointer to the top of the stack.
+  // Index type size.
+  constexpr std::size_t s = sizeof (Index);
+
+  // How many index types fits into size S;
+  constexpr std::size_t r = S / s;
+
+  // Interprets the pointer p as if it were pointing to an array
+  // of index types.
+  auto idx = reinterpret_cast<Index*>(p);
+
+  idx[0] = (m - 1) * r;
+  for (std::size_t i = 1; i < m; ++i)
+    idx[i * r] = (i - 1) * r;
 }
 
 }

@@ -201,18 +201,19 @@ bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
 template <typename T>
 bool run_tests_all()
 {
-  const T size = 5000;
+  const T size = 3;
   const int a = 1;
   const int b = std::numeric_limits<int>::max();
 
   // Random unique integers in the range [a,b].
   std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
 
-  const T bsize = 3 * (tmp.size() + 2) * 25; // Should be enough for rt::set.
+  // Should be enough for rt::set.
+  const T bsize = 3 * (tmp.size() + 3) * 25;
 
   // Tow buffers for two allocators.
   std::vector<char> buffer1(2 * bsize);
-  std::vector<char> buffer2(4 * bsize);
+  std::vector<char> buffer2(5 * bsize);
   rt::node_alloc_header header1(buffer1);
   rt::node_alloc_header header2(buffer2);
 

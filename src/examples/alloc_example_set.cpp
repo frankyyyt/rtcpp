@@ -11,7 +11,7 @@ int main()
   using set_type = rt::set<int, std::less<int>, alloc_type>;
   using node_type = typename set_type::node_type;
 
-  std::array<node_type, 11> buffer = {{}};
+  std::array<node_type, 13> buffer = {{}};
   rt::node_alloc_header header(buffer);
 
   for (auto a: buffer)

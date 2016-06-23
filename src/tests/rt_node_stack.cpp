@@ -13,30 +13,45 @@ int main()
   using T = std::size_t;
   const std::size_t N = sizeof (T);
   static_assert((sizeof N) == sizeof (char*));
-  const T n = 10;
+  constexpr T n = 10;
   std::array<T, n> arr = {{}};
 
   node_alloc_header header(arr);
 
-  node_stack<T> stack(&header);
+  using Index = std::size_t;
+  node_stack<T, Index> stack(&header);
 
-  //print(arr);
-  node_stack<T>::pointer p;
+  print(arr);
   for (T i = n; i != 0; --i) {
-    p = stack.pop();
-    if (p)
-      *p = i;
+    Index idx = stack.pop();
+    if (idx)
+      arr[idx] = i + 20;
   }
+  stack.push(3);
+  stack.push(2);
+  stack.push(1);
+  stack.push(9);
+  stack.push(7);
+  stack.push(5);
+  stack.push(6);
+  stack.push(4);
+  stack.push(8);
 
-  std::array<T, n> check = {1,2,3,4,5,6,7,8,9,10};
+  print(arr);
+  for (T i = n; i != 0; --i) {
+    Index idx = stack.pop();
+    if (idx)
+      arr[idx] = i + 20;
+  }
+  std::array<T, n> check = {0,24,23,22,29,27,28,26,30,25};
 
   print(arr);
   if (!std::equal(std::begin(check), std::end(check), std::begin(arr)))
     return 1;
 
   try {
-    p = stack.pop();
-    if (p)
+    Index i = stack.pop();
+    if (i)
       return 1; 
   } catch (const std::bad_alloc& e) {
   }
