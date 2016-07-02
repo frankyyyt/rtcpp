@@ -113,7 +113,6 @@ class set {
   void release_node(node_pointer p) const;
   void safe_construct(node_pointer p, const value_type& key) const;
   public:
-  static std::size_t reserve_to_alloc(std::size_t n) {return sizeof ((node_type) + 1) * n;}
   set(const Compare& comp, const Allocator& alloc = Allocator());
   explicit set(const Allocator& alloc = Allocator())
   : set(Compare(), alloc) {}

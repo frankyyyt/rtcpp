@@ -30,31 +30,22 @@ bool test_move()
 
   return true;
 }
-template <typename T>
-bool test_iterator()
+bool test_reverse_traversal()
 {
-  std::array<T, 5> arr = {{5, 10, -3, 32, 41}};
-  rt::set<T> t1(std::begin(arr), std::end(arr));
+  constexpr int size = 10;
+  constexpr std::array<int, size> o = {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}};
+  constexpr std::array<int, size> arr = {{o[5], o[2], o[7], o[9], o[8], o[3], o[0], o[4], o[6], o[1]}};
+  rt::set<int> t1(std::begin(arr), std::end(arr));
 
   // Now the tree has three items 3, 2, 4. Lets test if the iterators can get
   // us to the right point.
   auto iter = t1.end();
 
   // We should be now at the rbegin.
-  if (*--iter != 41)
-    return false;
 
-  if (*--iter != 32)
-    return false;
-
-  if (*--iter != 10)
-    return false;
-
-  if (*--iter != 5)
-    return false;
-
-  if (*--iter != -3)
-    return false;
+  for (int i = size - 1; i != -1; --i )
+    if (*--iter != o[i])
+      return false;
 
   return true;
 }
@@ -189,7 +180,7 @@ bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
   if (!test_swap<value_type>(tmp))
     return false;
 
-  if (!test_iterator<value_type>())
+  if (!test_reverse_traversal())
     return false;
 
   if (!test_move())
@@ -201,7 +192,7 @@ bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
 template <typename T>
 bool run_tests_all()
 {
-  const T size = 3;
+  const T size = 1000;
   const int a = 1;
   const int b = std::numeric_limits<int>::max();
 
@@ -223,16 +214,10 @@ bool run_tests_all()
   rt::set<T> t1;
   rt::set<T, std::less<T>, rt::node_allocator_lazy<T>> t2(std::less<T>(), alloc1);
   rt::set<T, std::less<T>, rt::node_allocator_lazy<T>> t3(std::less<T>(), alloc1);
-  rt::set<T, std::less<T>, __gnu_cxx::__pool_alloc<T>> t4;
-  rt::set<T, std::less<T>, __gnu_cxx::bitmap_allocator<T>> t5;
-  rt::set<T, std::less<T>, __gnu_cxx::__mt_alloc<T>> t6;
 
   std::set<T> t7;
   std::set<T, std::less<T>, rt::node_allocator_lazy<T>> t8(std::less<T>(), alloc2);
   std::set<T, std::less<T>, rt::node_allocator_lazy<T>> t9(std::less<T>(), alloc2);
-  std::set<T, std::less<T>, __gnu_cxx::__pool_alloc<T>> t10;
-  std::set<T, std::less<T>, __gnu_cxx::bitmap_allocator<T>> t11;
-  std::set<T, std::less<T>, __gnu_cxx::__mt_alloc<T>> t12;
 
   if (!run_tests(t1, tmp))
     return false;
@@ -243,15 +228,6 @@ bool run_tests_all()
   if (!run_tests(t3, tmp))
     return false;
 
-  if (!run_tests(t4, tmp))
-    return false;
-
-  if (!run_tests(t5, tmp))
-    return false;
-
-  if (!run_tests(t6, tmp))
-    return false;
-
   if (!run_tests(t7, tmp))
     return false;
 
@@ -259,15 +235,6 @@ bool run_tests_all()
     return false;
 
   if (!run_tests(t9, tmp))
-    return false;
-
-  if (!run_tests(t10, tmp))
-    return false;
-
-  if (!run_tests(t11, tmp))
-    return false;
-
-  if (!run_tests(t12, tmp))
     return false;
 
   return true;
