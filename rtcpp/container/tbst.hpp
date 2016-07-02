@@ -40,7 +40,7 @@ struct bst_node {
   struct rebind { using other = bst_node<U , K>; };
 
   pointer link[2];
-  int tag;
+  unsigned char tag;
   value_type key;
 };
 
