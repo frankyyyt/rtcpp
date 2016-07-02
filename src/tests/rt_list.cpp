@@ -24,7 +24,7 @@ int main()
   l.reverse();
   l.print();
   std::cout << "________" << std::endl;
-  //l.sort();
+  l.sort();
   l.print();
   std::cout << "________" << std::endl;
 
