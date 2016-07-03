@@ -140,5 +140,6 @@ void list<T, A>::sort()
     p = p->next;
   }
 }
+
 }
 

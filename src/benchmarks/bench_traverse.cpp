@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
   std::cout << v << std::endl;
 
   auto func = [](int init, const node_type& node)
-  { return rt::test_in_use(node) ? init + node.key : init; };
+  { return rt::tbst::test_in_use(node) ? init + node.key : init; };
 
   std::cout << "Traversing std::vector<node_type>: ";
   {

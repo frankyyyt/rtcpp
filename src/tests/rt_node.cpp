@@ -79,7 +79,7 @@ namespace std
 {
 
 template <class T, class Ptr>
-struct pointer_traits<rt::bst_node<T, Ptr>> {
+struct pointer_traits<rt::tbst::node<T, Ptr>> {
   template <class U, class Ptr2>
   using rebind = rt::index_ptr<U, typename Ptr2::index_type, true>;
   using element_type = T;
@@ -104,27 +104,27 @@ int main()
 
   void print_data_type_size();
 
-  constexpr std::size_t S1 = sizeof (bst_node<unsigned char, void*>);
-  constexpr std::size_t S2 = sizeof (bst_node<short    , void*>);
-  constexpr std::size_t S3 = sizeof (bst_node<int      , void*>);
-  constexpr std::size_t S4 = sizeof (bst_node<long long, void*>);
-  constexpr std::size_t S5 = sizeof (bst_node<char*    , void*>);
+  constexpr std::size_t S1 = sizeof (tbst::node<unsigned char, void*>);
+  constexpr std::size_t S2 = sizeof (tbst::node<short    , void*>);
+  constexpr std::size_t S3 = sizeof (tbst::node<int      , void*>);
+  constexpr std::size_t S4 = sizeof (tbst::node<long long, void*>);
+  constexpr std::size_t S5 = sizeof (tbst::node<char*    , void*>);
 
   std::cout << "_____" << std::endl;
 
-  std::cout << "bst_node<uchar    , void*>: " << S1 << std::endl;
-  std::cout << "bst_node<short    , void*>: " << S2 << std::endl;
-  std::cout << "bst_node<int      , void*>: " << S3 << std::endl;
-  std::cout << "bst_node<long long, void*>: " << S4 << std::endl;
-  std::cout << "bst_node<char*    , void*>: " << S5 << std::endl;
+  std::cout << "tbst::node<uchar    , void*>: " << S1 << std::endl;
+  std::cout << "tbst::node<short    , void*>: " << S2 << std::endl;
+  std::cout << "tbst::node<int      , void*>: " << S3 << std::endl;
+  std::cout << "tbst::node<long long, void*>: " << S4 << std::endl;
+  std::cout << "tbst::node<char*    , void*>: " << S5 << std::endl;
 
   std::cout << "_____" << std::endl;
 
-  using node1 = bst_node<unsigned char, index_ptr<void, unsigned char>>;
-  using node2 = bst_node<short        , index_ptr<void, short>        >;
-  using node3 = bst_node<int          , index_ptr<void, int>          >;
-  using node4 = bst_node<long long    , index_ptr<void, long long>    >;
-  using node5 = bst_node<char*        , index_ptr<void, char*>        >;
+  using node1 = tbst::node<unsigned char, index_ptr<void, unsigned char>>;
+  using node2 = tbst::node<short        , index_ptr<void, short>        >;
+  using node3 = tbst::node<int          , index_ptr<void, int>          >;
+  using node4 = tbst::node<long long    , index_ptr<void, long long>    >;
+  using node5 = tbst::node<char*        , index_ptr<void, char*>        >;
 
   constexpr std::size_t U1 = sizeof (node1);
   constexpr std::size_t U2 = sizeof (node2);
@@ -132,19 +132,22 @@ int main()
   constexpr std::size_t U4 = sizeof (node4);
   constexpr std::size_t U5 = sizeof (node5);
 
-  std::cout << "bst_node<uchar    , index_ptr<uchar>>     : " << U1 << std::endl;
-  std::cout << "bst_node<short    , index_ptr<short>>     : " << U2 << std::endl;
-  std::cout << "bst_node<int      , index_ptr<int>>       : " << U3 << std::endl;
-  std::cout << "bst_node<long long, index_ptr<long long>> : " << U4 << std::endl;
-  std::cout << "bst_node<char*    , index_ptr<char*>>     : " << U5 << std::endl;
+  std::cout << "tbst::node<uchar    , index_ptr<uchar>>     : " << U1 << std::endl;
+  std::cout << "tbst::node<short    , index_ptr<short>>     : " << U2 << std::endl;
+  std::cout << "tbst::node<int      , index_ptr<int>>       : " << U3 << std::endl;
+  std::cout << "tbst::node<long long, index_ptr<long long>> : " << U4 << std::endl;
+  std::cout << "tbst::node<char*    , index_ptr<char*>>     : " << U5 << std::endl;
 
-  using node_type = bst_node<unsigned, index_ptr<void, unsigned>>;
+  using value_type = unsigned char;
+  using index_type = unsigned char;
+  using node_type = tbst::node<value_type, index_ptr<void, index_type>>;
   using node_self_pointer = typename node_type::self_pointer;
-  //using node_pointer = typename node_type::pointer;
-  //index_ptr<node, unsigned> p;
-  //node_type q;
-
-  //p = q.link[0];
+  using node_pointer = index_ptr<node_type, index_type>;
+  node_type node;
+  node_self_pointer p;
+  node_pointer q;
+  p = q;
+  q = p;
 
   return 0;
 }

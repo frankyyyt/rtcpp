@@ -10,7 +10,7 @@
 
   */
 
-namespace rt {
+namespace rt { namespace tbst {
 
 template <std::size_t I>
 struct index_helper;
@@ -32,12 +32,12 @@ namespace detail {
 }
 
 template <typename T, typename Ptr>
-struct bst_node {
+struct node {
   typedef T value_type;
   using self_pointer = typename std::pointer_traits<Ptr>::template
-    rebind<bst_node<T, Ptr>>;
+    rebind<node<T, Ptr>>;
   template<class U, class K>
-  struct rebind { using other = bst_node<U , K>; };
+  struct rebind { using other = node<U , K>; };
 
   self_pointer link[2];
   unsigned char tag;
@@ -46,7 +46,7 @@ struct bst_node {
 
 template <class T, class Ptr>
 std::ostream&
-operator<<(std::ostream& os, const bst_node<T, Ptr*>& o)
+operator<<(std::ostream& os, const node<T, Ptr*>& o)
 {
   os << o.key;
   return os;
@@ -291,5 +291,6 @@ Ptr erase_node(Ptr pq, Ptr q) noexcept
   return q;
 }
 
+}
 }
 

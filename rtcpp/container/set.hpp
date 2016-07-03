@@ -33,7 +33,7 @@ class bst_iterator :
 
   bst_iterator& operator++() noexcept
   {
-    m_p = inorder<1>(m_p);
+    m_p = tbst::inorder<1>(m_p);
     return *this;
   }
 
@@ -46,7 +46,7 @@ class bst_iterator :
 
   bst_iterator& operator--() noexcept
   {
-    m_p = inorder<0>(m_p);
+    m_p = tbst::inorder<0>(m_p);
     return *this;
   }
 
@@ -90,7 +90,7 @@ class set {
   using alloc_traits_type = rt::allocator_traits<Allocator>;
   using void_pointer = typename alloc_traits_type::void_pointer;
   public:
-  using node_type = bst_node<value_type, void_pointer>;
+  using node_type = tbst::node<value_type, void_pointer>;
   private:
   using inner_allocator_type =
     typename alloc_traits_type::template rebind_alloc<node_type>;
@@ -132,7 +132,8 @@ class set {
   ~set() noexcept;
   void clear() noexcept;
   std::pair<iterator, bool> insert(const value_type& key) noexcept;
-  const_iterator begin() const noexcept {return const_iterator(inorder<1>(m_head));}
+  const_iterator begin() const noexcept
+  {return const_iterator(tbst::inorder<1>(m_head));}
   const_iterator end() const noexcept {return const_iterator(m_head);}
   const_reverse_iterator rbegin() const noexcept {return const_reverse_iterator(end());}
   const_reverse_iterator rend() const noexcept {return const_reverse_iterator(begin());}
@@ -163,7 +164,7 @@ set<T, Compare, Allocator>::set(set<T, Compare, Allocator>&& rhs)
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = detail::lbit;
+  m_head->tag = tbst::detail::lbit;
   std::swap(m_inner_alloc, rhs.m_inner_alloc);
   std::swap(m_head, rhs.m_head);
 }
@@ -179,7 +180,7 @@ set<T, Compare, Allocator>::erase(const K& key)
   if (q == m_head)
     return 0;
 
-  node_pointer r = erase_node<1>(const_cast<node_pointer>(pq), const_cast<node_pointer>(q));
+  node_pointer r = tbst::erase_node<1>(const_cast<node_pointer>(pq), const_cast<node_pointer>(q));
   release_node(r);
   return 1;
 }
@@ -223,7 +224,7 @@ set<T, Compare, Allocator>::set(const set<T, Compare, Allocator>& rhs) noexcept
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = detail::lbit;
+  m_head->tag = tbst::detail::lbit;
   clear();
   rhs.copy(*this);
 }
@@ -236,7 +237,7 @@ set<T, Compare, Allocator>::set(const Compare& comp, const Allocator& alloc)
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = detail::lbit;
+  m_head->tag = tbst::detail::lbit;
 }
 
 template <typename T, typename Compare, typename Allocator>
@@ -248,7 +249,7 @@ set<T, Compare, Allocator>::set(InputIt begin, InputIt end, const Compare& comp,
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = detail::lbit;
+  m_head->tag = tbst::detail::lbit;
   insert(begin, end);
 }
 
@@ -257,7 +258,7 @@ void set<T, Compare, Allocator>::clear() noexcept
 {
   node_pointer p = m_head;
   for (;;) {
-    node_pointer q = inorder<1>(p);
+    node_pointer q = tbst::inorder<1>(p);
     if (p != m_head) {
       inner_alloc_traits_type::destroy(m_inner_alloc, &q->key);
       release_node(p);
@@ -268,7 +269,7 @@ void set<T, Compare, Allocator>::clear() noexcept
   }
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = detail::lbit;
+  m_head->tag = tbst::detail::lbit;
 }
 
 template <typename T, typename Compare, typename Allocator>
@@ -285,20 +286,20 @@ void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noe
   node_pointer q = rhs.m_head;
 
   for (;;) {
-    if (!has_null_link<0>::apply(p)) {
+    if (!tbst::has_null_link<0>::apply(p)) {
       node_pointer tmp = get_node();
-      attach_node<0>(q, tmp);
+      tbst::attach_node<0>(q, tmp);
     }
 
-    p = preorder_successor(p);
-    q = preorder_successor(q);
+    p = tbst::preorder_successor(p);
+    q = tbst::preorder_successor(q);
 
     if (p == m_head)
       break;
 
-    if (!has_null_link<1>::apply(p)) {
+    if (!tbst::has_null_link<1>::apply(p)) {
       node_pointer tmp = get_node();
-      attach_node<1>(q, tmp);
+      tbst::attach_node<1>(q, tmp);
     }
 
     q->key = p->key;
@@ -310,7 +311,7 @@ typename set<T, Compare, Allocator>::node_pointer
 set<T, Compare, Allocator>::get_node() const
 { 
   auto p = inner_alloc_traits_type::allocate_node(m_inner_alloc);
-  mark_in_use(p);
+  tbst::mark_in_use(p);
   return p;
 }
 
@@ -318,7 +319,7 @@ template <typename T, typename Compare, typename Allocator>
 void set<T, Compare, Allocator>::release_node(
   typename set<T, Compare, Allocator>::node_pointer p) const
 { 
-  mark_free(p);
+  tbst::mark_free(p);
   inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
 }
 
@@ -340,31 +341,31 @@ template <typename T, typename Compare, typename Allocator>
 std::pair<typename set<T, Compare, Allocator>::iterator, bool>
 set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::value_type& key) noexcept
 {
-  if (has_null_link<0>::apply(m_head)) { // The tree is empty
+  if (tbst::has_null_link<0>::apply(m_head)) { // The tree is empty
     node_pointer q = get_node();
     safe_construct(q, key);
-    attach_node<0>(m_head, q);
+    tbst::attach_node<0>(m_head, q);
     return std::make_pair(const_iterator(q), true);
   }
 
   node_pointer p = m_head->link[0];
   for (;;) {
     if (m_comp(key, p->key)) {
-      if (!has_null_link<0>::apply(p)) {
+      if (!tbst::has_null_link<0>::apply(p)) {
         p = p->link[0];
       } else {
         node_pointer q = get_node();
         safe_construct(q, key);
-        attach_node<0>(p, q);
+        tbst::attach_node<0>(p, q);
         return std::make_pair(q, true);
       }
     } else if (m_comp(p->key, key)) {
-      if (!has_null_link<1>::apply(p)) {
+      if (!tbst::has_null_link<1>::apply(p)) {
         p = p->link[1];
       } else {
         node_pointer q = get_node();
         safe_construct(q, key);
-        attach_node<1>(p, q);
+        tbst::attach_node<1>(p, q);
         return std::make_pair(q, true);
       }
     } else {
@@ -378,18 +379,18 @@ template <typename K>
 typename set<T, Compare, Allocator>::size_type
 set<T, Compare, Allocator>::count(const K& key) const noexcept
 {
-  if (has_null_link<0>::apply(m_head)) // The tree is empty
+  if (tbst::has_null_link<0>::apply(m_head)) // The tree is empty
     return 0;
 
   node_pointer p = m_head->link[0];
   for (;;) {
     if (m_comp(key, p->key)) {
-      if (!has_null_link<0>::apply(p))
+      if (!tbst::has_null_link<0>::apply(p))
         p = p->link[0];
       else
         return 0;
     } else if (m_comp(p->key, key)) {
-      if (!has_null_link<1>::apply(p))
+      if (!tbst::has_null_link<1>::apply(p))
         p = p->link[1];
       else
         return 0;
@@ -417,21 +418,21 @@ std::pair< typename set<T, Compare, Allocator>::node_pointer
          , typename set<T, Compare, Allocator>::node_pointer>
 set<T, Compare, Allocator>::find_parent(const K& key) const
 {
-  if (has_null_link<0>::apply(m_head)) // The tree is empty
+  if (tbst::has_null_link<0>::apply(m_head)) // The tree is empty
     return std::make_pair(m_head, m_head); // end iterator.
 
   node_pointer u = m_head; // pointer to the parent pointer.
   node_pointer p = m_head->link[0];
   for (;;) {
     if (m_comp(key, p->key)) {
-      if (!has_null_link<0>::apply(p)) {
+      if (!tbst::has_null_link<0>::apply(p)) {
         u = p;
         p = p->link[0];
       } else {
         return std::make_pair(m_head, m_head);
       }
     } else if (m_comp(p->key, key)) {
-      if (!has_null_link<1>::apply(p)) {
+      if (!tbst::has_null_link<1>::apply(p)) {
         u = p;
         p = p->link[1];
       } else {
