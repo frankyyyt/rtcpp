@@ -14,10 +14,10 @@ namespace rt {
 
 template <class T, class Ptr>
 struct forward_list_node {
-  using pointer = typename std::pointer_traits<Ptr>::template
+  using self_pointer = typename std::pointer_traits<Ptr>::template
     rebind<forward_list_node<T, Ptr>>;
   T info;
-  pointer next;
+  self_pointer next;
 };
 
 template <class T, class Ptr>

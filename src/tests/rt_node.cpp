@@ -139,7 +139,7 @@ int main()
   std::cout << "bst_node<char*    , index_ptr<char*>>     : " << U5 << std::endl;
 
   using node_type = bst_node<unsigned, index_ptr<void, unsigned>>;
-  using node_self_pointer = typename node_type::pointer;
+  using node_self_pointer = typename node_type::self_pointer;
   //using node_pointer = typename node_type::pointer;
   //index_ptr<node, unsigned> p;
   //node_type q;

@@ -21,16 +21,16 @@ template <typename ...> using void_type = void;
   struct has_##TYPE<T, void_type<typename T::TYPE>>\
   : std::true_type {};
 
-RTCPP_HAS_NESTED_TYPE(pointer)
+RTCPP_HAS_NESTED_TYPE(self_pointer)
 RTCPP_HAS_NESTED_TYPE(value_type)
 
 template <typename T>
 struct is_node_type {
   static const bool value = has_value_type<T>::value &&
-    has_pointer<T>::value;
+    has_self_pointer<T>::value;
 };
 
-// Does not require node pointer to be the same.
+// Does not require node self_pointer to be the same.
 template < typename N1
          , typename N2
          , bool IsNode = is_node_type<N2>::value &&
