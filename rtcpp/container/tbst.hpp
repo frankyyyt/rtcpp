@@ -291,6 +291,37 @@ Ptr erase_node(Ptr pq, Ptr q) noexcept
   return q;
 }
 
+template <class Ptr, class K, class Comp>
+std::pair<Ptr, Ptr>
+find_with_parent(Ptr head, const K& key, const Comp& comp)
+{
+  if (has_null_link<0>::apply(head)) // The tree is empty
+    return std::make_pair(head, head); // end iterator.
+
+  Ptr u = head; // pointer to the parent pointer.
+  Ptr p = head->link[0];
+  for (;;) {
+    if (comp(key, p->key)) {
+      if (!has_null_link<0>::apply(p)) {
+        u = p;
+        p = p->link[0];
+      } else {
+        return std::make_pair(head, head);
+      }
+    } else if (comp(p->key, key)) {
+      if (!has_null_link<1>::apply(p)) {
+        u = p;
+        p = p->link[1];
+      } else {
+        return std::make_pair(head, head);
+      }
+    } else {
+      return std::make_pair(p, u); // equivalent element.
+    }
+  }
+}
+
+
 }
 }
 

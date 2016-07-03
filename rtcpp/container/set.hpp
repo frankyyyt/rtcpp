@@ -12,13 +12,13 @@
 #include "tbst.hpp"
 
 /*
-  Implements an std::set as a threaded binary search tree. That means it does
-  not guarantee logarithmic search time. It is however often faster than a
-  balanced implementation as a degenerate tree is very rare and there is no
-  balancing overhead.
+  Implements a std::set as a threaded binary search tree. That means
+  it does not guarantee logarithmic search time. It is however often
+  faster than a balanced implementation as a degenerate tree is very
+  rare and there is no balancing overhead.
 
-  NEWS: It supports allocators that can serve only one object at a time:
-  allocator_type::allocate_node();
+  NEWS: It supports allocators that can serve only one object at a
+  time: allocator_type::allocate_node();
 */
 
 namespace rt {
@@ -147,7 +147,6 @@ class set {
   template<typename K>
   iterator find(const K& x) const;
   template<typename K>
-  std::pair<node_pointer, node_pointer> find_parent(const K& x) const;
   size_type max_size() const noexcept { return std::numeric_limits<size_type>::max(); }
   template<typename InputIt>
   void insert(InputIt begin, InputIt end) noexcept;
@@ -174,7 +173,7 @@ template <typename K>
 typename set<T, Compare, Allocator>::size_type
 set<T, Compare, Allocator>::erase(const K& key)
 {
-  auto pair = find_parent(key);
+  auto pair = find_with_parent(m_head, key, m_comp);
   const_node_pointer q = pair.first;
   const_node_pointer pq = pair.second;
   if (q == m_head)
@@ -408,40 +407,7 @@ set<T, Compare, Allocator>::find(const K& key) const
   // The function below is not the most efficient because it
   // has an additional pointer to chase the parent pointer.
   // However maintaining two functions is not desirable
-  auto p = find_parent(key);
-  return p.first;
-}
-
-template <typename T, typename Compare, typename Allocator>
-template <typename K>
-std::pair< typename set<T, Compare, Allocator>::node_pointer
-         , typename set<T, Compare, Allocator>::node_pointer>
-set<T, Compare, Allocator>::find_parent(const K& key) const
-{
-  if (tbst::has_null_link<0>::apply(m_head)) // The tree is empty
-    return std::make_pair(m_head, m_head); // end iterator.
-
-  node_pointer u = m_head; // pointer to the parent pointer.
-  node_pointer p = m_head->link[0];
-  for (;;) {
-    if (m_comp(key, p->key)) {
-      if (!tbst::has_null_link<0>::apply(p)) {
-        u = p;
-        p = p->link[0];
-      } else {
-        return std::make_pair(m_head, m_head);
-      }
-    } else if (m_comp(p->key, key)) {
-      if (!tbst::has_null_link<1>::apply(p)) {
-        u = p;
-        p = p->link[1];
-      } else {
-        return std::make_pair(m_head, m_head);
-      }
-    } else {
-      return std::make_pair(p, u); // equivalent element.
-    }
-  }
+  return find_with_parent(m_head, key, m_comp).first;
 }
 
 template <typename T, typename Compare, typename Allocator>
