@@ -38,15 +38,11 @@ class index_ptr {
   }
   index_ptr& operator=(const index_ptr<T, Index, false>& rhs)
   {
-    //if (this == &rhs)
-    //  return *this;
-
     idx = rhs.idx;
     p = rhs.p;
-
     return *this;
   }
-  private:
+  //private:
   Index* p{nullptr};
   Index idx{};
 };
@@ -57,15 +53,24 @@ class index_ptr<T, Index, true> {
   using index_type = Index;
   using element_type = T;
   template <class U>
-  using rebind = index_ptr<U, Index, is_node_type<U>::value>;
+  using rebind = index_ptr<U, Index, false>;
   template <bool InNode>
   index_ptr& operator=(const index_ptr<T, Index, InNode>& rhs)
   {
     idx = rhs.idx;
     return *this;
   }
-  private:
+  //private:
   index_type idx;
+};
+
+template <class Index>
+class index_ptr<void, Index, false> {
+  public:
+  using index_type = Index;
+  using element_type = void;
+  template <class U>
+  using rebind = index_ptr<U, Index, true>;
 };
 
 }
@@ -75,7 +80,8 @@ namespace std
 
 template <class T, class Ptr>
 struct pointer_traits<rt::bst_node<T, Ptr>> {
-  using rebind = rt::index_ptr<T, typename Ptr::index_type, false>;
+  template <class U, class Ptr2>
+  using rebind = rt::index_ptr<U, typename Ptr2::index_type, true>;
   using element_type = T;
 };
 
@@ -114,11 +120,11 @@ int main()
 
   std::cout << "_____" << std::endl;
 
-  using node1 = bst_node<unsigned char, index_ptr<int, unsigned char>>;
-  using node2 = bst_node<short        , index_ptr<int, short>        >;
-  using node3 = bst_node<int          , index_ptr<int, int>          >;
-  using node4 = bst_node<long long    , index_ptr<int, long long>    >;
-  using node5 = bst_node<char*        , index_ptr<int, char*>        >;
+  using node1 = bst_node<unsigned char, index_ptr<void, unsigned char>>;
+  using node2 = bst_node<short        , index_ptr<void, short>        >;
+  using node3 = bst_node<int          , index_ptr<void, int>          >;
+  using node4 = bst_node<long long    , index_ptr<void, long long>    >;
+  using node5 = bst_node<char*        , index_ptr<void, char*>        >;
 
   constexpr std::size_t U1 = sizeof (node1);
   constexpr std::size_t U2 = sizeof (node2);
@@ -132,11 +138,13 @@ int main()
   std::cout << "bst_node<long long, index_ptr<long long>> : " << U4 << std::endl;
   std::cout << "bst_node<char*    , index_ptr<char*>>     : " << U5 << std::endl;
 
-  using node = bst_node<unsigned, index_ptr<unsigned, unsigned>>;
-  index_ptr<node, unsigned> p;
-  node q;
+  using node_type = bst_node<unsigned, index_ptr<void, unsigned>>;
+  using node_self_pointer = typename node_type::pointer;
+  //using node_pointer = typename node_type::pointer;
+  //index_ptr<node, unsigned> p;
+  //node_type q;
 
-  p = q.link[0];
+  //p = q.link[0];
 
   return 0;
 }
