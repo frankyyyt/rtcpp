@@ -7,70 +7,71 @@
 namespace rt
 {
 
-template <class T, class Index, bool InNode = false>
-class index_ptr {
+template <class, class>
+class link_ptr;
+
+template <class T, class Index>
+class idx_ptr {
+  private:
+  Index* p {nullptr};
+  Index idx {};
+
   public:
+  template <class, class>
+  friend class link_ptr;
+
   using index_type = Index;
   using element_type = T;
   template <class U>
-  using rebind = index_ptr<U, Index, InNode>;
-  T& operator*()
-  {
-    return *reinterpret_cast<T*>(&p[idx]);
-  }
-  const T& operator*() const
-  {
-    return *reinterpret_cast<const T*>(&p[idx]);
-  }
-  T* operator->()
-  {
-    return reinterpret_cast<T*>(&p[idx]);
-  }
-  const T* operator->() const
-  {
-    return reinterpret_cast<const T*>(&p[idx]);
-  }
-  index_ptr() = default;
-  index_ptr& operator=(const index_ptr<T, Index, true>& rhs)
+  using rebind = idx_ptr<U, Index>;
+  using link_pointer = idx_ptr<T, Index>;
+  T& operator*() { return *reinterpret_cast<T*>(&p[idx]); }
+  const T& operator*() const { return *reinterpret_cast<const T*>(&p[idx]); }
+  T* operator->() { return reinterpret_cast<T*>(&p[idx]); }
+  const T* operator->() const { return reinterpret_cast<const T*>(&p[idx]); }
+  idx_ptr() = default;
+  idx_ptr& operator=(const link_ptr<T, Index>& rhs)
   {
     idx = rhs.idx;
     return *this;
   }
-  index_ptr& operator=(const index_ptr<T, Index, false>& rhs)
+  idx_ptr& operator=(const idx_ptr<T, Index>& rhs)
   {
+    if (this == &rhs)
+      return *this;
+
     idx = rhs.idx;
     p = rhs.p;
     return *this;
   }
-  //private:
-  Index* p{nullptr};
-  Index idx{};
 };
 
 template <class T, class Index>
-class index_ptr<T, Index, true> {
+class link_ptr {
+  private:
+  template <class, class>
+  friend class idx_ptr;
+  //private:
+  Index idx;
   public:
   using index_type = Index;
   using element_type = T;
   template <class U>
-  using rebind = index_ptr<U, Index, false>;
-  template <bool InNode>
-  index_ptr& operator=(const index_ptr<T, Index, InNode>& rhs)
+  using rebind = idx_ptr<U, Index>;
+  link_ptr& operator=(const idx_ptr<T, Index>& rhs)
   {
     idx = rhs.idx;
     return *this;
   }
-  //private:
-  index_type idx;
 };
 
 template <class Index>
-class index_ptr<void, Index, false> {
+class idx_ptr_void {
   public:
   using index_type = Index;
   using element_type = void;
   template <class U>
-  using rebind = index_ptr<U, Index, true>;
+  using rebind = link_ptr<U, Index>;
 };
 
 }
@@ -80,8 +81,8 @@ namespace std
 
 template <class T, class Ptr>
 struct pointer_traits<rt::tbst::node<T, Ptr>> {
-  template <class U, class Ptr2>
-  using rebind = rt::index_ptr<U, typename Ptr2::index_type, true>;
+  template <class U>
+  using rebind = rt::link_ptr<T, typename U::index_type>;
   using element_type = T;
 };
 
@@ -120,11 +121,11 @@ int main()
 
   std::cout << "_____" << std::endl;
 
-  using node1 = tbst::node<unsigned char, index_ptr<void, unsigned char>>;
-  using node2 = tbst::node<short        , index_ptr<void, short>        >;
-  using node3 = tbst::node<int          , index_ptr<void, int>          >;
-  using node4 = tbst::node<long long    , index_ptr<void, long long>    >;
-  using node5 = tbst::node<char*        , index_ptr<void, char*>        >;
+  using node1 = tbst::node<unsigned char, idx_ptr_void<unsigned char>>;
+  using node2 = tbst::node<short        , idx_ptr_void<short>        >;
+  using node3 = tbst::node<int          , idx_ptr_void<int>          >;
+  using node4 = tbst::node<long long    , idx_ptr_void<long long>    >;
+  using node5 = tbst::node<char*        , idx_ptr_void<char*>        >;
 
   constexpr std::size_t U1 = sizeof (node1);
   constexpr std::size_t U2 = sizeof (node2);
@@ -132,19 +133,19 @@ int main()
   constexpr std::size_t U4 = sizeof (node4);
   constexpr std::size_t U5 = sizeof (node5);
 
-  std::cout << "tbst::node<uchar    , index_ptr<uchar>>     : " << U1 << std::endl;
-  std::cout << "tbst::node<short    , index_ptr<short>>     : " << U2 << std::endl;
-  std::cout << "tbst::node<int      , index_ptr<int>>       : " << U3 << std::endl;
-  std::cout << "tbst::node<long long, index_ptr<long long>> : " << U4 << std::endl;
-  std::cout << "tbst::node<char*    , index_ptr<char*>>     : " << U5 << std::endl;
+  std::cout << "tbst::node<uchar    , idx_ptr<uchar>>     : " << U1 << std::endl;
+  std::cout << "tbst::node<short    , idx_ptr<short>>     : " << U2 << std::endl;
+  std::cout << "tbst::node<int      , idx_ptr<int>>       : " << U3 << std::endl;
+  std::cout << "tbst::node<long long, idx_ptr<long long>> : " << U4 << std::endl;
+  std::cout << "tbst::node<char*    , idx_ptr<char*>>     : " << U5 << std::endl;
 
   using value_type = unsigned char;
   using index_type = unsigned char;
-  using node_type = tbst::node<value_type, index_ptr<void, index_type>>;
-  using node_self_pointer = typename node_type::self_pointer;
-  using node_pointer = index_ptr<node_type, index_type>;
+  using node_type = tbst::node<value_type, idx_ptr_void<index_type>>;
+  using node_link_type = typename node_type::link_type;
+  using node_pointer = idx_ptr<node_type, index_type>;
   node_type node;
-  node_self_pointer p;
+  node_link_type p;
   node_pointer q;
   p = q;
   q = p;

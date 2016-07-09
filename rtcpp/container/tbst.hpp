@@ -34,12 +34,12 @@ namespace detail {
 template <typename T, typename Ptr>
 struct node {
   typedef T value_type;
-  using self_pointer = typename std::pointer_traits<Ptr>::template
+  using link_type = typename std::pointer_traits<Ptr>::template
     rebind<node<T, Ptr>>;
   template<class U, class K>
   struct rebind { using other = node<U , K>; };
 
-  self_pointer link[2];
+  link_type link[2];
   unsigned char tag;
   value_type key;
 };
