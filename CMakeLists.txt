@@ -53,6 +53,7 @@ add_executable(bench_find src/benchmarks/bench_find.cpp)
 add_executable(bench_traverse src/benchmarks/bench_traverse.cpp)
 add_executable(bench_set src/benchmarks/bench_set.cpp)
 add_executable(bench_list src/benchmarks/bench_list.cpp)
+add_executable(bench_stack src/benchmarks/bench_stack.cpp)
 
 if (Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIR})
