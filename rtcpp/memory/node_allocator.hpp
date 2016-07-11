@@ -28,13 +28,12 @@ class node_allocator {
   using const_reference = const T&;
   using reference = T&;
   using value_type = T;
-  using Index = std::size_t;
+  using index_type = std::size_t;
   template<class U>
   struct rebind { using other = node_allocator<U , NodeType>; };
   public:
   node_alloc_header* header;
   node_stack<T, std::size_t> stack;
-  std::allocator<T> std_alloc; // Used for array allocations.
   public:
   node_allocator(node_alloc_header* p) : header(p) {}
   // Constructor for the node type with a different pointer type.
@@ -56,26 +55,30 @@ class node_allocator {
     if (!i)
       throw std::bad_alloc();
 
-    const auto p = reinterpret_cast<Index*>(stack.header->buffer);
+    const auto p = reinterpret_cast<index_type*>(stack.header->buffer);
     return reinterpret_cast<pointer>(&p[i]);
   }
   template <typename U = T>
   typename std::enable_if<
     !is_same_node_type<U, NodeType>::value, pointer>::type
   allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
-  {return std_alloc.allocate(n, hint);}
+  {
+    return std::allocator<T>().allocate(n, hint);
+  }
   template <typename U = T>
   typename std::enable_if<std::is_same<U, NodeType>::value>::type
   deallocate_node(pointer p)
   {
-    const auto a = reinterpret_cast<Index*>(stack.header->buffer);
-    const auto b = reinterpret_cast<Index*>(p);
+    const auto a = reinterpret_cast<index_type*>(stack.header->buffer);
+    const auto b = reinterpret_cast<index_type*>(p);
     stack.push(b - a);
   }
   template <typename U = T>
   typename std::enable_if<!std::is_same<U, NodeType>::value>::type
   deallocate(pointer p, size_type n)
-  { std_alloc.deallocate(p, n); }
+  { 
+    std::allocator<T>().deallocate(p, n);
+  }
   template<typename U>
   void destroy(U* p) {p->~U();}
   template< typename U, typename... Args>
