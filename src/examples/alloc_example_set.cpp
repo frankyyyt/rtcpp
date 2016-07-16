@@ -33,10 +33,11 @@ int main()
 
   std::copy_if( std::begin(buffer), std::end(buffer)
               , std::ostream_iterator<node_type>(std::cout, " ")
-              , rt::tbst::is_in_use());
+              , [](auto o){return o.is_in_use();});
   std::cout << std::endl;;
 
-  auto n = std::count_if(std::begin(buffer), std::end(buffer), rt::tbst::is_in_use());
+  auto n = std::count_if(std::begin(buffer), std::end(buffer),
+    [](auto o){return o.is_in_use();});
   std::cout << n << std::endl;;
 
   return 0;

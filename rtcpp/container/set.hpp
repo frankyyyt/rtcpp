@@ -163,7 +163,7 @@ set<T, Compare, Allocator>::set(set<T, Compare, Allocator>&& rhs)
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = tbst::detail::lbit;
+  m_head->template set_link_null<0>();
   std::swap(m_inner_alloc, rhs.m_inner_alloc);
   std::swap(m_head, rhs.m_head);
 }
@@ -223,7 +223,7 @@ set<T, Compare, Allocator>::set(const set<T, Compare, Allocator>& rhs) noexcept
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = tbst::detail::lbit;
+  m_head->template set_link_null<0>();
   clear();
   rhs.copy(*this);
 }
@@ -236,7 +236,7 @@ set<T, Compare, Allocator>::set(const Compare& comp, const Allocator& alloc)
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = tbst::detail::lbit;
+  m_head->template set_link_null<0>();
 }
 
 template <typename T, typename Compare, typename Allocator>
@@ -248,7 +248,8 @@ set<T, Compare, Allocator>::set(InputIt begin, InputIt end, const Compare& comp,
 {
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = tbst::detail::lbit;
+  m_head->tag = 0;
+  m_head->template set_link_null<0>();
   insert(begin, end);
 }
 
@@ -268,7 +269,8 @@ void set<T, Compare, Allocator>::clear() noexcept
   }
   m_head->link[0] = m_head;
   m_head->link[1] = m_head;
-  m_head->tag = tbst::detail::lbit;
+  m_head->tag = 0;
+  m_head->template set_link_null<0>();
 }
 
 template <typename T, typename Compare, typename Allocator>
@@ -285,7 +287,7 @@ void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noe
   node_pointer q = rhs.m_head;
 
   for (;;) {
-    if (!tbst::has_null_link<0>::apply(p)) {
+    if (!p->template has_null_link<0>()) {
       node_pointer tmp = get_node();
       tbst::attach_node<0>(q, tmp);
     }
@@ -296,7 +298,7 @@ void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noe
     if (p == m_head)
       break;
 
-    if (!tbst::has_null_link<1>::apply(p)) {
+    if (!p->template has_null_link<1>()) {
       node_pointer tmp = get_node();
       tbst::attach_node<1>(q, tmp);
     }
@@ -310,7 +312,7 @@ typename set<T, Compare, Allocator>::node_pointer
 set<T, Compare, Allocator>::get_node() const
 { 
   auto p = inner_alloc_traits_type::allocate_node(m_inner_alloc);
-  tbst::mark_in_use(p);
+  p->mark_in_use();
   return p;
 }
 
@@ -318,7 +320,7 @@ template <typename T, typename Compare, typename Allocator>
 void set<T, Compare, Allocator>::release_node(
   typename set<T, Compare, Allocator>::node_pointer p) const
 { 
-  tbst::mark_free(p);
+  p->mark_free();
   inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
 }
 
@@ -340,7 +342,7 @@ template <typename T, typename Compare, typename Allocator>
 std::pair<typename set<T, Compare, Allocator>::iterator, bool>
 set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::value_type& key) noexcept
 {
-  if (tbst::has_null_link<0>::apply(m_head)) { // The tree is empty
+  if (m_head->template has_null_link<0>()) { // The tree is empty
     node_pointer q = get_node();
     safe_construct(q, key);
     tbst::attach_node<0>(m_head, q);
@@ -350,7 +352,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
   node_pointer p = m_head->link[0];
   for (;;) {
     if (m_comp(key, p->key)) {
-      if (!tbst::has_null_link<0>::apply(p)) {
+      if (!p->template has_null_link<0>()) {
         p = p->link[0];
       } else {
         node_pointer q = get_node();
@@ -359,7 +361,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
         return std::make_pair(q, true);
       }
     } else if (m_comp(p->key, key)) {
-      if (!tbst::has_null_link<1>::apply(p)) {
+      if (!p->template has_null_link<1>()) {
         p = p->link[1];
       } else {
         node_pointer q = get_node();
@@ -378,18 +380,18 @@ template <typename K>
 typename set<T, Compare, Allocator>::size_type
 set<T, Compare, Allocator>::count(const K& key) const noexcept
 {
-  if (tbst::has_null_link<0>::apply(m_head)) // The tree is empty
+  if (m_head->template has_null_link<0>()) // The tree is empty
     return 0;
 
   node_pointer p = m_head->link[0];
   for (;;) {
     if (m_comp(key, p->key)) {
-      if (!tbst::has_null_link<0>::apply(p))
+      if (!p->template has_null_link<0>())
         p = p->link[0];
       else
         return 0;
     } else if (m_comp(p->key, key)) {
-      if (!tbst::has_null_link<1>::apply(p))
+      if (!p->template has_null_link<1>())
         p = p->link[1];
       else
         return 0;

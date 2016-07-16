@@ -14,12 +14,6 @@ namespace rt { namespace tbst {
 
 constexpr int dir[2] = {1, 0};
 
-namespace detail {
-  constexpr unsigned char rbit = 1;
-  constexpr unsigned char lbit = 2;
-  constexpr unsigned char in_use_bit = 4;
-}
-
 template <typename T, typename Ptr>
 struct node {
   typedef T value_type;
@@ -29,8 +23,32 @@ struct node {
   struct rebind { using other = node<U , K>; };
 
   link_type link[2];
-  unsigned char tag;
+  unsigned char tag = 0;
   value_type key;
+
+  static constexpr unsigned char null_link_bit = 1;
+  static constexpr unsigned char in_use_bit = 4;
+
+  template <int I>
+  void set_link_null() noexcept
+  { tag |= null_link_bit << I; }
+
+  template <int I>
+  void unset_link_null() noexcept
+  { tag &= ~(null_link_bit << I); }
+
+  template <int I>
+  bool has_null_link() const noexcept
+  {return tag & (null_link_bit << I);}
+
+  template <int I>
+  constexpr unsigned char get_null_link() const noexcept
+  { return tag & ((null_link_bit << I) | in_use_bit); }
+
+  void mark_in_use() noexcept { tag |= in_use_bit; }
+  void mark_free() noexcept { tag &= ~in_use_bit; }
+  bool is_in_use() const noexcept
+  { return tag & in_use_bit; }
 };
 
 template <class T, class Ptr>
@@ -41,107 +59,15 @@ operator<<(std::ostream& os, const node<T, Ptr*>& o)
   return os;
 }
 
-template <std::size_t I>
-struct set_link_null;
-
-template <>
-struct set_link_null<0> {
-  template <typename Ptr>
-  static void apply(Ptr p) noexcept
-  { p->tag |= detail::lbit; }
-};
-
-template <>
-struct set_link_null<1> {
-  template <typename Ptr>
-  static void apply(Ptr p) noexcept
-  { p->tag |= detail::rbit; }
-};
-
-template <std::size_t I>
-struct unset_link_null;
-
-template <>
-struct unset_link_null<0> {
-  template <typename Ptr>
-  static void apply(Ptr p) noexcept
-  { p->tag &= ~detail::lbit; }
-};
-
-template <>
-struct unset_link_null<1> {
-  template <typename Ptr>
-  static void apply(Ptr p) noexcept
-  { p->tag &= ~detail::rbit; }
-};
-
-template <typename Node>
-void mark_in_use(Node* o)
-{ o->tag |= detail::in_use_bit; }
-
-template <typename Node>
-void mark_free(Node* o)
-{ o->tag &= ~detail::in_use_bit; }
-
-template <typename Node>
-inline bool test_in_use(const Node& o)
-{ return o.tag & detail::in_use_bit; }
-
-struct is_in_use {
-  template <typename Node>
-  bool operator()(const Node& o)
-  { return o.tag & detail::in_use_bit; }
-};
-
-template <std::size_t I>
-struct has_null_link;
-
-template <>
-struct has_null_link<0> {
-  template <typename Ptr>
-  static constexpr bool apply(Ptr p) noexcept
-  {return p->tag & detail::lbit;}
-};
-
-template <>
-struct has_null_link<1> {
-  template <typename Ptr>
-  static constexpr bool apply(Ptr p) noexcept
-  {return p->tag & detail::rbit;}
-};
-
-template <std::size_t I>
-struct get_null_link;
-
-template <>
-struct get_null_link<0> {
-  template <typename Ptr>
-  static constexpr unsigned char apply(Ptr p) noexcept
-  {
-    using namespace detail;
-    return p->tag & (lbit | in_use_bit);
-  }
-};
-
-template <>
-struct get_null_link<1> {
-  template <typename Ptr>
-  static constexpr unsigned char apply(Ptr p) noexcept
-  {
-    using namespace detail;
-    return p->tag & (rbit | in_use_bit);
-  }
-};
-
 template <std::size_t I, typename Ptr> 
 Ptr inorder(Ptr p) noexcept
 {
   // I = 0: predecessor. I = 1: sucessor.
-  if (has_null_link<I>::apply(p))
+  if (p->template has_null_link<I>())
     return p->link[I];
 
   Ptr q = p->link[I];
-  while (!has_null_link<dir[I]>::apply(q))
+  while (!q->template has_null_link<dir[I]>())
     q = q->link[dir[I]];
 
   return q;
@@ -151,12 +77,12 @@ template <std::size_t I, typename Ptr>
 Ptr inorder_parent(Ptr p) noexcept
 {
   // I = 0: predecessor. I = 1: sucessor.
-  if (has_null_link<I>::apply(p))
+  if (p->template has_null_link<I>())
     return p->link[I];
 
   Ptr pq = p;
   Ptr q = p->link[I];
-  while (!has_null_link<dir[I]>::apply(q)) {
+  while (!q->template has_null_link<dir[I]>()) {
     pq = q;
     q = q->link[dir[I]];
   }
@@ -167,15 +93,15 @@ Ptr inorder_parent(Ptr p) noexcept
 template <typename Ptr>
 Ptr preorder_successor(Ptr p) noexcept
 {
-  if (!has_null_link<0>::apply(p))
+  if (!p->template has_null_link<0>())
     return p->link[0];
 
-  if (!has_null_link<1>::apply(p))
+  if (!p->template has_null_link<1>())
     return p->link[1];
 
   // This is a leaf node.
   Ptr q = p->link[1];
-  while (has_null_link<1>::apply(q))
+  while (q->template has_null_link<1>())
     q = q->link[1];
 
   return q->link[1];
@@ -186,13 +112,13 @@ void attach_node(Ptr p, Ptr q) noexcept
 {
   // Attaches node q on the left of p. Does not check if pointers are valid.
   q->link[I] = p->link[I];
-  q->tag = get_null_link<dir[I]>::apply(q) | get_null_link<I>::apply(p);
+  q->tag = q->template get_null_link<dir[I]>() | p->template get_null_link<I>();
   p->link[I] = q;
-  p->tag = get_null_link<dir[I]>::apply(p);
+  p->tag = p->template get_null_link<dir[I]>();
   q->link[dir[I]] = p;
-  set_link_null<dir[I]>::apply(q);
+  q->template set_link_null<dir[I]>();
 
-  if (!has_null_link<I>::apply(q)) {
+  if (!q->template has_null_link<I>()) {
     Ptr qs = inorder<I>(q);
     qs->link[dir[I]] = q;
   }
@@ -210,15 +136,15 @@ Ptr erase_node_lr_non_null(Ptr* linker, Ptr q) noexcept
     s = u->link[dir[I]];
   node_pointer p = inorder<dir[I]>(q);
   s->link[dir[I]] = q->link[dir[I]];;
-  unset_link_null<dir[I]>::apply(s);
+  s->template unset_link_null<dir[I]>();
   p->link[I] = s;
-  if (has_null_link<I>::apply(s))
-    set_link_null<dir[I]>::apply(u);
+  if (s->template has_null_link<I>())
+    u->template set_link_null<dir[I]>();
   else
     u->link[dir[I]] = s->link[I];;
   if (u != q) {
     s->link[I] = q->link[I];;
-    unset_link_null<I>::apply(s);
+    s->template unset_link_null<I>();
   }
   *linker = s;
   return q;
@@ -233,13 +159,13 @@ Ptr erase_node_one_null(Ptr* linker, Ptr q) noexcept
   if (u != q)
     s = u->link[I];
   s->link[I] = q->link[I];;
-  if (has_null_link<dir[I]>::apply(s))
-    set_link_null<I>::apply(u);
+  if (s->template has_null_link<dir[I]>())
+    u->template set_link_null<I>();
   else
     u->link[I] = s->link[dir[I]];;
   if (u != q) {
     s->link[dir[I]] = q->link[dir[I]];;
-    unset_link_null<dir[I]>::apply(s);
+    s->template unset_link_null<dir[I]>();
   }
   *linker = s;
   return q;
@@ -254,20 +180,20 @@ Ptr erase_node(Ptr pq, Ptr q) noexcept
   Ptr* linker = &pq->link[dir[I]];
   if (pq->link[I] == q)
     linker = &pq->link[I];
-  if (!has_null_link<dir[I]>::apply(q) && !has_null_link<I>::apply(q))
+  if (!q->template has_null_link<dir[I]>() && !q->template has_null_link<I>())
     return erase_node_lr_non_null<I>(linker, q);
 
-  if (has_null_link<dir[I]>::apply(q) && !has_null_link<I>::apply(q))
+  if (q->template has_null_link<dir[I]>() && !q->template has_null_link<I>())
     return erase_node_one_null<dir[I]>(linker, q);
 
-  if (!has_null_link<dir[I]>::apply(q) && has_null_link<I>::apply(q))
+  if (!q->template has_null_link<dir[I]>() && q->template has_null_link<I>())
     return erase_node_one_null<I>(linker, q);
 
   if (pq->link[dir[I]] == q) { // Both links are null
-    set_link_null<dir[I]>::apply(pq);
+    pq->template set_link_null<dir[I]>();
     pq->link[dir[I]] = q->link[dir[I]];
   } else {
-    set_link_null<I>::apply(pq);
+    pq->template set_link_null<I>();
     pq->link[I] = q->link[I];
   }
 
@@ -278,21 +204,21 @@ template <class Ptr, class K, class Comp>
 std::pair<Ptr, Ptr>
 find_with_parent(Ptr head, const K& key, const Comp& comp)
 {
-  if (has_null_link<0>::apply(head)) // The tree is empty
+  if (head->template has_null_link<0>()) // The tree is empty
     return std::make_pair(head, head); // end iterator.
 
   Ptr u = head; // pointer to the parent pointer.
   Ptr p = head->link[0];
   for (;;) {
     if (comp(key, p->key)) {
-      if (!has_null_link<0>::apply(p)) {
+      if (!p->template has_null_link<0>()) {
         u = p;
         p = p->link[0];
       } else {
         return std::make_pair(head, head);
       }
     } else if (comp(p->key, key)) {
-      if (!has_null_link<1>::apply(p)) {
+      if (!p->template has_null_link<1>()) {
         u = p;
         p = p->link[1];
       } else {
