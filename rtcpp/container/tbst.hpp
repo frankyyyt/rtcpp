@@ -12,23 +12,12 @@
 
 namespace rt { namespace tbst {
 
-template <std::size_t I>
-struct index_helper;
-
-template <>
-struct index_helper<0> {
-  static constexpr std::size_t other = 1;
-};
-
-template <>
-struct index_helper<1> {
-  static constexpr std::size_t other = 0;
-};
+constexpr int dir[2] = {1, 0};
 
 namespace detail {
-  constexpr int rbit = 1;
-  constexpr int lbit = 2;
-  constexpr int in_use_bit = 4;
+  constexpr unsigned char rbit = 1;
+  constexpr unsigned char lbit = 2;
+  constexpr unsigned char in_use_bit = 4;
 }
 
 template <typename T, typename Ptr>
@@ -127,7 +116,7 @@ struct get_null_link;
 template <>
 struct get_null_link<0> {
   template <typename Ptr>
-  static constexpr int apply(Ptr p) noexcept
+  static constexpr unsigned char apply(Ptr p) noexcept
   {
     using namespace detail;
     return p->tag & (lbit | in_use_bit);
@@ -137,7 +126,7 @@ struct get_null_link<0> {
 template <>
 struct get_null_link<1> {
   template <typename Ptr>
-  static constexpr int apply(Ptr p) noexcept
+  static constexpr unsigned char apply(Ptr p) noexcept
   {
     using namespace detail;
     return p->tag & (rbit | in_use_bit);
@@ -148,13 +137,12 @@ template <std::size_t I, typename Ptr>
 Ptr inorder(Ptr p) noexcept
 {
   // I = 0: predecessor. I = 1: sucessor.
-  const std::size_t O = index_helper<I>::other;
   if (has_null_link<I>::apply(p))
     return p->link[I];
 
   Ptr q = p->link[I];
-  while (!has_null_link<O>::apply(q))
-    q = q->link[O];
+  while (!has_null_link<dir[I]>::apply(q))
+    q = q->link[dir[I]];
 
   return q;
 }
@@ -163,15 +151,14 @@ template <std::size_t I, typename Ptr>
 Ptr inorder_parent(Ptr p) noexcept
 {
   // I = 0: predecessor. I = 1: sucessor.
-  const std::size_t O = index_helper<I>::other;
   if (has_null_link<I>::apply(p))
     return p->link[I];
 
   Ptr pq = p;
   Ptr q = p->link[I];
-  while (!has_null_link<O>::apply(q)) {
+  while (!has_null_link<dir[I]>::apply(q)) {
     pq = q;
-    q = q->link[O];
+    q = q->link[dir[I]];
   }
 
   return pq;
@@ -198,17 +185,16 @@ template <std::size_t I, typename Ptr>
 void attach_node(Ptr p, Ptr q) noexcept
 {
   // Attaches node q on the left of p. Does not check if pointers are valid.
-  const std::size_t O = index_helper<I>::other;
   q->link[I] = p->link[I];
-  q->tag = get_null_link<O>::apply(q) | get_null_link<I>::apply(p);
+  q->tag = get_null_link<dir[I]>::apply(q) | get_null_link<I>::apply(p);
   p->link[I] = q;
-  p->tag = get_null_link<O>::apply(p);
-  q->link[O] = p;
-  set_link_null<O>::apply(q);
+  p->tag = get_null_link<dir[I]>::apply(p);
+  q->link[dir[I]] = p;
+  set_link_null<dir[I]>::apply(q);
 
   if (!has_null_link<I>::apply(q)) {
     Ptr qs = inorder<I>(q);
-    qs->link[O] = q;
+    qs->link[dir[I]] = q;
   }
 }
 
@@ -217,20 +203,19 @@ Ptr erase_node_lr_non_null(Ptr* linker, Ptr q) noexcept
 {
   // I = 0: The inorder predecessor replaces the erased node.
   // I = 1: The inorder sucessor replaces the erased node.
-  const std::size_t O = index_helper<I>::other;
   typedef Ptr node_pointer;
   node_pointer u = const_cast<node_pointer>(inorder_parent<I>(q));
   node_pointer s = q->link[I];
   if (u != q)
-    s = u->link[O];
-  node_pointer p = inorder<O>(q);
-  s->link[O] = q->link[O];;
-  unset_link_null<O>::apply(s);
+    s = u->link[dir[I]];
+  node_pointer p = inorder<dir[I]>(q);
+  s->link[dir[I]] = q->link[dir[I]];;
+  unset_link_null<dir[I]>::apply(s);
   p->link[I] = s;
   if (has_null_link<I>::apply(s))
-    set_link_null<O>::apply(u);
+    set_link_null<dir[I]>::apply(u);
   else
-    u->link[O] = s->link[I];;
+    u->link[dir[I]] = s->link[I];;
   if (u != q) {
     s->link[I] = q->link[I];;
     unset_link_null<I>::apply(s);
@@ -242,20 +227,19 @@ Ptr erase_node_lr_non_null(Ptr* linker, Ptr q) noexcept
 template <std::size_t I, typename Ptr>
 Ptr erase_node_one_null(Ptr* linker, Ptr q) noexcept
 {
-  const std::size_t O = index_helper<I>::other;
   typedef Ptr node_pointer;
-  node_pointer u = const_cast<node_pointer>(inorder_parent<O>(q));
-  node_pointer s = q->link[O];
+  node_pointer u = const_cast<node_pointer>(inorder_parent<dir[I]>(q));
+  node_pointer s = q->link[dir[I]];
   if (u != q)
     s = u->link[I];
   s->link[I] = q->link[I];;
-  if (has_null_link<O>::apply(s))
+  if (has_null_link<dir[I]>::apply(s))
     set_link_null<I>::apply(u);
   else
-    u->link[I] = s->link[O];;
+    u->link[I] = s->link[dir[I]];;
   if (u != q) {
-    s->link[O] = q->link[O];;
-    unset_link_null<O>::apply(s);
+    s->link[dir[I]] = q->link[dir[I]];;
+    unset_link_null<dir[I]>::apply(s);
   }
   *linker = s;
   return q;
@@ -267,22 +251,21 @@ Ptr erase_node(Ptr pq, Ptr q) noexcept
   // p is parent of q. We do not handle the case p = q
   // Returns the erased node to be released elsewhere.
   // WARNING: Still unfinished.
-  const std::size_t O = index_helper<I>::other;
-  Ptr* linker = &pq->link[O];
+  Ptr* linker = &pq->link[dir[I]];
   if (pq->link[I] == q)
     linker = &pq->link[I];
-  if (!has_null_link<O>::apply(q) && !has_null_link<I>::apply(q))
+  if (!has_null_link<dir[I]>::apply(q) && !has_null_link<I>::apply(q))
     return erase_node_lr_non_null<I>(linker, q);
 
-  if (has_null_link<O>::apply(q) && !has_null_link<I>::apply(q))
-    return erase_node_one_null<O>(linker, q);
+  if (has_null_link<dir[I]>::apply(q) && !has_null_link<I>::apply(q))
+    return erase_node_one_null<dir[I]>(linker, q);
 
-  if (!has_null_link<O>::apply(q) && has_null_link<I>::apply(q))
+  if (!has_null_link<dir[I]>::apply(q) && has_null_link<I>::apply(q))
     return erase_node_one_null<I>(linker, q);
 
-  if (pq->link[O] == q) { // Both links are null
-    set_link_null<O>::apply(pq);
-    pq->link[O] = q->link[O];
+  if (pq->link[dir[I]] == q) { // Both links are null
+    set_link_null<dir[I]>::apply(pq);
+    pq->link[dir[I]] = q->link[dir[I]];
   } else {
     set_link_null<I>::apply(pq);
     pq->link[I] = q->link[I];
