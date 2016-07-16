@@ -80,16 +80,15 @@ Coding Standards
 * Do not end a line with spaces.
 * All files must end with a newline.
 * Limit line length to 71 characters.
-* Avoid use multiple inheritance.
-* Avoid use non-public inheritance.
 * Make runtime state obvious to the programmer.
-* Avoid RTTI.
 * Avoid dynamic memory allocations for small blocks of memory.
 * Separate class declaration from its definition.
 * Use standard c++ naming convention.
 * Keep names short and do use abbreviations.
 * Avoid global variables.
 * Prefer non-member functions.
+
+Some further cosmetic guidelines
 
 Classes
 ======================================================================
