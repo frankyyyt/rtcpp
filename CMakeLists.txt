@@ -19,10 +19,10 @@ enable_testing()
 include(CTest)
 include(CPack)
 
-include_directories(.)
+include_directories(include)
 include_directories(${PROJECT_BINARY_DIR})
 
-install( DIRECTORY ${PROJECT_SOURCE_DIR}/rtcpp
+install( DIRECTORY ${PROJECT_SOURCE_DIR}/include/rtcpp
          DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 add_executable(rt_bst src/tests/rt_bst.cpp)
