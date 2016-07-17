@@ -16,7 +16,90 @@
 
 namespace rt {
 
-template <class T>
+template <class, class>
+class link_ptr;
+
+template <class T, class Index>
+class idx_ptr {
+  private:
+  Index* p {nullptr};
+  Index idx {};
+
+  public:
+  template <class, class>
+  friend class link_ptr;
+
+  using index_type = Index;
+  using element_type = T;
+  template <class U>
+  using rebind = idx_ptr<U, Index>;
+  using link_pointer = idx_ptr<T, Index>;
+  T& operator*() { return *reinterpret_cast<T*>(&p[idx]); }
+  const T& operator*() const { return *reinterpret_cast<const T*>(&p[idx]); }
+  T* operator->() { return reinterpret_cast<T*>(&p[idx]); }
+  const T* operator->() const { return reinterpret_cast<const T*>(&p[idx]); }
+  idx_ptr() = default;
+  idx_ptr& operator=(const link_ptr<T, Index>& rhs)
+  {
+    idx = rhs.idx;
+    return *this;
+  }
+  idx_ptr& operator=(const idx_ptr<T, Index>& rhs)
+  {
+    if (this == &rhs)
+      return *this;
+
+    idx = rhs.idx;
+    p = rhs.p;
+    return *this;
+  }
+};
+
+template <class T, class Index>
+class link_ptr {
+  private:
+  template <class, class>
+  friend class idx_ptr;
+  //private:
+  Index idx;
+  public:
+  using index_type = Index;
+  using element_type = T;
+  template <class U>
+  using rebind = idx_ptr<U, Index>;
+  link_ptr& operator=(const idx_ptr<T, Index>& rhs)
+  {
+    idx = rhs.idx;
+    return *this;
+  }
+};
+
+template <class Index>
+class idx_ptr_void {
+  public:
+  using index_type = Index;
+  using element_type = void;
+  template <class U>
+  using rebind = link_ptr<U, Index>;
+};
+
+}
+
+namespace std
+{
+
+template <class T, class Ptr>
+struct pointer_traits<rt::tbst::node<T, Ptr>> {
+  template <class U>
+  using rebind = rt::link_ptr<T, typename U::index_type>;
+  using element_type = T;
+};
+
+}
+
+namespace rt {
+
+template <class T, bool isNode = !is_node_type<T>::value>
 struct type_support {
   using size_type = std::size_t;
   using pointer = T*;
@@ -29,10 +112,34 @@ struct type_support {
   using const_void_pointer = const void*;
 };
 
+template <class T>
+struct type_support<T, true> {
+  using size_type = std::size_t;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using const_reference = const T&;
+  using reference = T&;
+  using value_type = T;
+  using link_type = std::size_t;
+  using void_pointer = void*;
+  using const_void_pointer = const void*;
+};
+
+//template <class T>
+//struct type_support<T, true> {
+//  using size_type = std::size_t;
+//  using const_reference = const T&;
+//  using reference = T&;
+//  using value_type = T;
+//  using link_type = std::size_t;
+//  using pointer = idx_ptr<T, link_type>;
+//  using const_pointer = idx_ptr<T, link_type>;
+//  using void_pointer = idx_ptr_void<link_type>;
+//  using const_void_pointer = idx_ptr_void<link_type>;
+//};
+
 template <typename T, typename NodeType>
 class node_allocator {
-  static_assert( ((sizeof (NodeType)) >= (sizeof (char*)))
-               , "node_allocator: incompatible node size.");
   public:
   using node_allocation_only = std::true_type;
 
