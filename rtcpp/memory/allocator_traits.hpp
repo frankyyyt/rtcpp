@@ -20,36 +20,48 @@ struct allocator_traits {
       rebind<const void>;
   using void_pointer =
     typename std::pointer_traits<pointer>::template rebind<void>;
-  using const_pointer = typename allocator_type::const_pointer;
+  using const_pointer = typename Alloc::const_pointer;
   using propagate_on_container_copy_assignment = std::true_type;
   using propagate_on_container_move_assignment = std::true_type;
   using propagate_on_container_swap = std::true_type;
   template<typename U>
   using rebind_alloc =
-    typename allocator_type::template rebind<U>::other;
-  static allocator_type
-    select_on_container_copy_construction(const allocator_type& a)
+    typename Alloc::template rebind<U>::other;
+  static Alloc
+    select_on_container_copy_construction(const Alloc& a)
     {return a;}
 
-  template <typename Alloc2 = allocator_type>
+  template <typename Alloc2 = Alloc>
   static typename std::enable_if<
     has_allocate_node<Alloc2>::value, pointer>::type
   allocate_node(Alloc2& a) {return a.allocate_node();}
 
-  template <typename Alloc2 = allocator_type>
+  template <typename Alloc2 = Alloc>
   static typename std::enable_if<
     !has_allocate_node<Alloc2>::value, pointer>::type
   allocate_node(Alloc2& a) {return a.allocate(1);}
 
+  template <typename Alloc2 = Alloc>
+  static typename std::enable_if<
+    has_link_type<Alloc2>::value, pointer>::type
+  make_pointer(Alloc2& a, typename Alloc2::pointer l)
+  {return a.make_pointer(l);}
+
+  template <typename Alloc2 = Alloc>
+  static typename std::enable_if<
+    !has_link_type<Alloc2>::value, pointer>::type
+  make_pointer(Alloc2&, typename Alloc2::pointer l)
+  {return l;}
+
   static pointer allocate(Alloc& a, size_type n)
   {return a.allocate(n);}
 
-  template <typename Alloc2 = allocator_type>
+  template <typename Alloc2 = Alloc>
   static typename
   std::enable_if<rt::has_allocate_node<Alloc2>::value>::type
   deallocate_node(Alloc2& a, pointer p) {a.deallocate_node(p);}
 
-  template <typename Alloc2 = allocator_type>
+  template <typename Alloc2 = Alloc>
   static typename
   std::enable_if<!rt::has_allocate_node<Alloc2>::value>::type
   deallocate_node(Alloc2& a, pointer p) {a.deallocate(p, 1);}
@@ -58,9 +70,9 @@ struct allocator_traits {
   {a.deallocate(p, n);}
 
   template<class U>
-  static void destroy(allocator_type& a, U* p) {a.destroy(p);}
+  static void destroy(Alloc& a, U* p) {a.destroy(p);}
   template<class U, class... Args >
-  static void construct(allocator_type& a, U* p, Args&&... args)
+  static void construct(Alloc& a, U* p, Args&&... args)
   {a.construct(p, std::forward<Args>(args)...);}
 };
 

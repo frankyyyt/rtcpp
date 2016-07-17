@@ -53,7 +53,7 @@ struct is_same_node_type<N1, N2, false> {
   static const bool value = false;
 };
 
-template<typename Alloc1>
+template<typename Alloc>
 struct allocate_node_helper
 {
   template<typename Alloc2,
@@ -63,7 +63,7 @@ struct allocate_node_helper
   template<typename>
   static std::false_type test(...);
 
-  using type = decltype(test<Alloc1>(0));
+  using type = decltype(test<Alloc>(0));
 };
 
 template<typename Alloc>

@@ -3,6 +3,8 @@
 #include <memory>
 #include <ostream>
 
+#include <rtcpp/memory/allocator_traits.hpp>
+
   /*
 
   Definition of a node for a threaded binary search tree and its fundamental
@@ -16,15 +18,15 @@ constexpr int dir[2] = {1, 0};
 
 template <typename T, typename Ptr>
 struct node {
-  typedef T value_type;
+  using value_type = T;
   using link_type = typename std::pointer_traits<Ptr>::template
     rebind<node<T, Ptr>>;
   template<class U, class K>
   struct rebind { using other = node<U , K>; };
 
   link_type link[2];
+  T key;
   unsigned char tag = 0;
-  value_type key;
 
   static constexpr unsigned char null_link_bit = 1;
   static constexpr unsigned char in_use_bit = 4;
@@ -59,12 +61,15 @@ operator<<(std::ostream& os, const node<T, Ptr*>& o)
   return os;
 }
 
-template <std::size_t I, typename Ptr> 
-Ptr inorder(Ptr p) noexcept
+template <std::size_t I, class Ptr, class A> 
+Ptr inorder(Ptr p, A& a) noexcept
 {
   // I = 0: predecessor. I = 1: sucessor.
+
+  using alloc_traits = rt::allocator_traits<A>;
+
   if (p->template has_null_link<I>())
-    return p->link[I];
+    return alloc_traits::make_pointer(a, p->link[I]);
 
   Ptr q = p->link[I];
   while (!q->template has_null_link<dir[I]>())
@@ -107,8 +112,8 @@ Ptr preorder_successor(Ptr p) noexcept
   return q->link[1];
 }
 
-template <std::size_t I, typename Ptr>
-void attach_node(Ptr p, Ptr q) noexcept
+template <std::size_t I, class Ptr, class A>
+void attach_node(Ptr p, Ptr q, A& a) noexcept
 {
   // Attaches node q on the left of p. Does not check if pointers are valid.
   q->link[I] = p->link[I];
@@ -119,13 +124,13 @@ void attach_node(Ptr p, Ptr q) noexcept
   q->template set_link_null<dir[I]>();
 
   if (!q->template has_null_link<I>()) {
-    Ptr qs = inorder<I>(q);
+    Ptr qs = inorder<I>(q, a);
     qs->link[dir[I]] = q;
   }
 }
 
-template <std::size_t I, typename Ptr>
-Ptr erase_node_lr_non_null(Ptr* linker, Ptr q) noexcept
+template <std::size_t I, class Ptr, class A>
+Ptr erase_node_lr_non_null(Ptr* linker, Ptr q, A& a) noexcept
 {
   // I = 0: The inorder predecessor replaces the erased node.
   // I = 1: The inorder sucessor replaces the erased node.
@@ -134,7 +139,7 @@ Ptr erase_node_lr_non_null(Ptr* linker, Ptr q) noexcept
   node_pointer s = q->link[I];
   if (u != q)
     s = u->link[dir[I]];
-  node_pointer p = inorder<dir[I]>(q);
+  node_pointer p = inorder<dir[I]>(q, a);
   s->link[dir[I]] = q->link[dir[I]];;
   s->template unset_link_null<dir[I]>();
   p->link[I] = s;
@@ -171,8 +176,8 @@ Ptr erase_node_one_null(Ptr* linker, Ptr q) noexcept
   return q;
 }
 
-template <std::size_t I, typename Ptr>
-Ptr erase_node(Ptr pq, Ptr q) noexcept
+template <std::size_t I, class Ptr, class A>
+Ptr erase_node(Ptr pq, Ptr q, A& a) noexcept
 {
   // p is parent of q. We do not handle the case p = q
   // Returns the erased node to be released elsewhere.
@@ -181,7 +186,7 @@ Ptr erase_node(Ptr pq, Ptr q) noexcept
   if (pq->link[I] == q)
     linker = &pq->link[I];
   if (!q->template has_null_link<dir[I]>() && !q->template has_null_link<I>())
-    return erase_node_lr_non_null<I>(linker, q);
+    return erase_node_lr_non_null<I>(linker, q, a);
 
   if (q->template has_null_link<dir[I]>() && !q->template has_null_link<I>())
     return erase_node_one_null<dir[I]>(linker, q);
