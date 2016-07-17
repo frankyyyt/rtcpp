@@ -17,7 +17,12 @@ namespace rt { namespace tbst {
 constexpr int dir[2] = {1, 0};
 
 template <typename T, typename Ptr>
-struct node {
+class node {
+  private:
+  static constexpr unsigned char null_link_bit = 1;
+  static constexpr unsigned char in_use_bit = 4;
+
+  public:
   using value_type = T;
   using link_type = typename std::pointer_traits<Ptr>::template
     rebind<node<T, Ptr>>;
@@ -27,9 +32,6 @@ struct node {
   link_type link[2];
   T key;
   unsigned char tag = 0;
-
-  static constexpr unsigned char null_link_bit = 1;
-  static constexpr unsigned char in_use_bit = 4;
 
   template <int I>
   void set_link_null() noexcept
@@ -78,38 +80,43 @@ Ptr inorder(Ptr p, A& a) noexcept
   return q;
 }
 
-template <std::size_t I, typename Ptr> 
-Ptr inorder_parent(Ptr p) noexcept
+template <std::size_t I, class Ptr, class A>
+Ptr inorder_parent(Ptr p, A& a) noexcept
 {
   // I = 0: predecessor. I = 1: sucessor.
+
+  using alloc_traits = rt::allocator_traits<A>;
+
   if (p->template has_null_link<I>())
-    return p->link[I];
+    return alloc_traits::make_pointer(a, p->link[I]);
 
   Ptr pq = p;
-  Ptr q = p->link[I];
+  Ptr q = alloc_traits::make_pointer(a, p->link[I]);
   while (!q->template has_null_link<dir[I]>()) {
     pq = q;
-    q = q->link[dir[I]];
+    q = alloc_traits::make_pointer(a, q->link[dir[I]]);
   }
 
   return pq;
 }
 
-template <typename Ptr>
-Ptr preorder_successor(Ptr p) noexcept
+template <class Ptr, class A>
+Ptr preorder_successor(Ptr p, A& a) noexcept
 {
+  using alloc_traits = rt::allocator_traits<A>;
+
   if (!p->template has_null_link<0>())
-    return p->link[0];
+    return alloc_traits::make_pointer(a, p->link[0]);
 
   if (!p->template has_null_link<1>())
-    return p->link[1];
+    return alloc_traits::make_pointer(a, p->link[1]);
 
   // This is a leaf node.
-  Ptr q = p->link[1];
+  Ptr q = alloc_traits::make_pointer(a, p->link[1]);
   while (q->template has_null_link<1>())
-    q = q->link[1];
+    q = alloc_traits::make_pointer(a, q->link[1]);
 
-  return q->link[1];
+  return alloc_traits::make_pointer(a, q->link[1]);
 }
 
 template <std::size_t I, class Ptr, class A>
@@ -117,7 +124,8 @@ void attach_node(Ptr p, Ptr q, A& a) noexcept
 {
   // Attaches node q on the left of p. Does not check if pointers are valid.
   q->link[I] = p->link[I];
-  q->tag = q->template get_null_link<dir[I]>() | p->template get_null_link<I>();
+  q->tag = q->template get_null_link<dir[I]>() |
+    p->template get_null_link<I>();
   p->link[I] = q;
   p->tag = p->template get_null_link<dir[I]>();
   q->link[dir[I]] = p;
@@ -135,7 +143,7 @@ Ptr erase_node_lr_non_null(Ptr* linker, Ptr q, A& a) noexcept
   // I = 0: The inorder predecessor replaces the erased node.
   // I = 1: The inorder sucessor replaces the erased node.
   typedef Ptr node_pointer;
-  node_pointer u = const_cast<node_pointer>(inorder_parent<I>(q));
+  node_pointer u = const_cast<node_pointer>(inorder_parent<I>(q, a));
   node_pointer s = q->link[I];
   if (u != q)
     s = u->link[dir[I]];
@@ -155,14 +163,16 @@ Ptr erase_node_lr_non_null(Ptr* linker, Ptr q, A& a) noexcept
   return q;
 }
 
-template <std::size_t I, typename Ptr>
-Ptr erase_node_one_null(Ptr* linker, Ptr q) noexcept
+template <std::size_t I, class Ptr, class A>
+Ptr erase_node_one_null(Ptr* linker, Ptr q, A& a) noexcept
 {
-  typedef Ptr node_pointer;
-  node_pointer u = const_cast<node_pointer>(inorder_parent<dir[I]>(q));
-  node_pointer s = q->link[dir[I]];
+  using alloc_traits = rt::allocator_traits<A>;
+
+  Ptr u = const_cast<Ptr>(inorder_parent<dir[I]>(q, a));
+  Ptr s = alloc_traits::make_pointer(a, q->link[dir[I]]);
+
   if (u != q)
-    s = u->link[I];
+    s = alloc_traits::make_pointer(a, u->link[I]);
   s->link[I] = q->link[I];;
   if (s->template has_null_link<dir[I]>())
     u->template set_link_null<I>();
@@ -189,10 +199,10 @@ Ptr erase_node(Ptr pq, Ptr q, A& a) noexcept
     return erase_node_lr_non_null<I>(linker, q, a);
 
   if (q->template has_null_link<dir[I]>() && !q->template has_null_link<I>())
-    return erase_node_one_null<dir[I]>(linker, q);
+    return erase_node_one_null<dir[I]>(linker, q, a);
 
   if (!q->template has_null_link<dir[I]>() && q->template has_null_link<I>())
-    return erase_node_one_null<I>(linker, q);
+    return erase_node_one_null<I>(linker, q, a);
 
   if (pq->link[dir[I]] == q) { // Both links are null
     pq->template set_link_null<dir[I]>();
@@ -205,27 +215,29 @@ Ptr erase_node(Ptr pq, Ptr q, A& a) noexcept
   return q;
 }
 
-template <class Ptr, class K, class Comp>
+template <class Ptr, class K, class Comp, class A>
 std::pair<Ptr, Ptr>
-find_with_parent(Ptr head, const K& key, const Comp& comp)
+find_with_parent(Ptr head, const K& key, const Comp& comp, A& a)
 {
+  using alloc_traits = rt::allocator_traits<A>;
+
   if (head->template has_null_link<0>()) // The tree is empty
     return std::make_pair(head, head); // end iterator.
 
   Ptr u = head; // pointer to the parent pointer.
-  Ptr p = head->link[0];
+  Ptr p = alloc_traits::make_pointer(a, head->link[0]);
   for (;;) {
     if (comp(key, p->key)) {
       if (!p->template has_null_link<0>()) {
         u = p;
-        p = p->link[0];
+        p = alloc_traits::make_pointer(a, p->link[0]);
       } else {
         return std::make_pair(head, head);
       }
     } else if (comp(p->key, key)) {
       if (!p->template has_null_link<1>()) {
         u = p;
-        p = p->link[1];
+        p = alloc_traits::make_pointer(a, p->link[1]);
       } else {
         return std::make_pair(head, head);
       }
@@ -234,7 +246,6 @@ find_with_parent(Ptr head, const K& key, const Comp& comp)
     }
   }
 }
-
 
 }
 }

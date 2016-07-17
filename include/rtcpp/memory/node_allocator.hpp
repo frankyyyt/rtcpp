@@ -16,13 +16,9 @@
 
 namespace rt {
 
-template <typename T, typename NodeType>
-class node_allocator {
-  static_assert( ((sizeof (NodeType)) >= (sizeof (char*)))
-               , "node_allocator: incompatible node size.");
-  public:
+template <class T>
+struct type_support {
   using size_type = std::size_t;
-  using node_allocation_only = std::true_type;
   using pointer = T*;
   using const_pointer = const T*;
   using const_reference = const T&;
@@ -31,6 +27,25 @@ class node_allocator {
   using link_type = std::size_t;
   using void_pointer = void*;
   using const_void_pointer = const void*;
+};
+
+template <typename T, typename NodeType>
+class node_allocator {
+  static_assert( ((sizeof (NodeType)) >= (sizeof (char*)))
+               , "node_allocator: incompatible node size.");
+  public:
+  using node_allocation_only = std::true_type;
+
+  using size_type = typename type_support<T>::size_type;
+  using pointer = typename type_support<T>::pointer;
+  using const_pointer = typename type_support<T>::const_pointer;
+  using reference = typename type_support<T>::reference;
+  using const_reference = typename type_support<T>::const_reference;
+  using value_type = typename type_support<T>::value_type;
+  using link_type = typename type_support<T>::link_type;
+  using void_pointer = typename type_support<T>::void_pointer;
+  using const_void_pointer = typename type_support<T>::const_void_pointer;
+
   template<class U>
   struct rebind { using other = node_allocator<U , NodeType>; };
   node_alloc_header* header;

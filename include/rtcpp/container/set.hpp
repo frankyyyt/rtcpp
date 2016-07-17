@@ -174,7 +174,7 @@ template <typename K>
 typename set<T, Compare, Allocator>::size_type
 set<T, Compare, Allocator>::erase(const K& key)
 {
-  auto pair = find_with_parent(m_head, key, m_comp);
+  auto pair = find_with_parent(m_head, key, m_comp, m_inner_alloc);
   if (pair.first == m_head)
     return 0;
 
@@ -293,8 +293,8 @@ void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noe
       tbst::attach_node<0>(q, tmp, m_inner_alloc);
     }
 
-    p = tbst::preorder_successor(p);
-    q = tbst::preorder_successor(q);
+    p = tbst::preorder_successor(p, m_inner_alloc);
+    q = tbst::preorder_successor(q, m_inner_alloc);
 
     if (p == m_head)
       break;
@@ -350,7 +350,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
     return std::make_pair(const_iterator(q, &m_inner_alloc), true);
   }
 
-  node_pointer p = m_head->link[0];
+  node_pointer p = inner_alloc_traits_type::make_pointer(m_inner_alloc, m_head->link[0]);
   for (;;) {
     if (m_comp(key, p->key)) {
       if (!p->template has_null_link<0>()) {
@@ -363,7 +363,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
       }
     } else if (m_comp(p->key, key)) {
       if (!p->template has_null_link<1>()) {
-        p = p->link[1];
+        p = inner_alloc_traits_type::make_pointer(m_inner_alloc, p->link[1]);
       } else {
         node_pointer q = get_node();
         safe_construct(q, key);
@@ -388,12 +388,12 @@ set<T, Compare, Allocator>::count(const K& key) const noexcept
   for (;;) {
     if (m_comp(key, p->key)) {
       if (!p->template has_null_link<0>())
-        p = p->link[0];
+        p = inner_alloc_traits_type::make_pointer(m_inner_alloc, p->link[0]);
       else
         return 0;
     } else if (m_comp(p->key, key)) {
       if (!p->template has_null_link<1>())
-        p = p->link[1];
+        p = inner_alloc_traits_type::make_pointer(m_inner_alloc, p->link[1]);
       else
         return 0;
     } else {
@@ -410,7 +410,7 @@ set<T, Compare, Allocator>::find(const K& key) const
   // The function below is not the most efficient because it
   // has an additional pointer to chase the parent pointer.
   // However maintaining two functions is not desirable
-  const auto p = find_with_parent(m_head, key, m_comp).first;
+  const auto p = find_with_parent(m_head, key, m_comp, m_inner_alloc).first;
   return iterator(p, &m_inner_alloc);
 }
 
