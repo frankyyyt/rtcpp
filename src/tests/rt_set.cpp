@@ -8,9 +8,6 @@
 #include <limits>
 #include <array>
 #include <vector>
-#include <ext/pool_allocator.h>
-#include <ext/bitmap_allocator.h>
-#include <ext/mt_allocator.h>
 
 #include <rtcpp/container/set.hpp>
 #include <rtcpp/memory/node_allocator_lazy.hpp>
