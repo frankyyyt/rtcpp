@@ -21,8 +21,39 @@ template <typename ...> using void_type = void;
   struct has_##TYPE<T, void_type<typename T::TYPE>>\
   : std::true_type {};
 
+RTCPP_HAS_NESTED_TYPE(pointer)
 RTCPP_HAS_NESTED_TYPE(link_type)
 RTCPP_HAS_NESTED_TYPE(value_type)
+RTCPP_HAS_NESTED_TYPE(void_pointer)
+RTCPP_HAS_NESTED_TYPE(const_void_pointer)
+
+//__________________________________________________________________
+template <class A, bool B = has_void_pointer<A>::value>
+struct void_pointer_type {
+  using void_pointer = typename A::void_pointer;
+};
+
+template <class A>
+struct void_pointer_type<A, false> {
+  using pointer = typename A::pointer;
+  using void_pointer =
+    typename std::pointer_traits<pointer>::template rebind<void>;
+};
+
+//__________________________________________________________________
+template <class A, bool B = has_const_void_pointer<A>::value>
+struct const_void_pointer_type {
+  using const_void_pointer = typename A::const_void_pointer;
+};
+
+template <class A>
+struct const_void_pointer_type<A, false> {
+  using pointer = typename A::pointer;
+  using const_void_pointer =
+    typename std::pointer_traits<pointer>::template rebind<const void>;
+};
+
+//__________________________________________________________________
 
 template <typename T>
 struct is_node_type {

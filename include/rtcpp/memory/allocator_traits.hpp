@@ -15,20 +15,16 @@ struct allocator_traits {
   using size_type = std::size_t;
   using value_type = typename Alloc::value_type;
   using difference_type = std::ptrdiff_t;
+  using void_pointer = typename void_pointer_type<Alloc>::void_pointer;
   using const_void_pointer =
-    typename std::pointer_traits<pointer>::template
-      rebind<const void>;
-  using void_pointer =
-    typename std::pointer_traits<pointer>::template rebind<void>;
+    typename const_void_pointer_type<Alloc>::const_void_pointer;
   using const_pointer = typename Alloc::const_pointer;
   using propagate_on_container_copy_assignment = std::true_type;
   using propagate_on_container_move_assignment = std::true_type;
   using propagate_on_container_swap = std::true_type;
   template<typename U>
-  using rebind_alloc =
-    typename Alloc::template rebind<U>::other;
-  static Alloc
-    select_on_container_copy_construction(const Alloc& a)
+  using rebind_alloc = typename Alloc::template rebind<U>::other;
+  static Alloc select_on_container_copy_construction(const Alloc& a)
     {return a;}
 
   template <typename Alloc2 = Alloc>
