@@ -58,23 +58,24 @@ int main()
   print_data_type_size();
   print_node_sizes();
 
-  using value_type = unsigned char;
+  using T = unsigned char;
   using index_type = unsigned char;
 
-  using node_type1 = tbst::node<value_type, void*>;
+  using node_type1 = tbst::node<T, void*>;
+  std::cout << sizeof (node_type1) << std::endl;
 
-  //using alloc_type = node_allocator<value_type, node_type1>;
-  //using alloc_traits_type = rt::allocator_traits<alloc_type>;
-  //using void_pointer = typename alloc_traits_type::void_pointer;
-  //using node_type = tbst::node<value_type, void_pointer>;
-  //using inner_alloc_type =
-  //  typename alloc_traits_type::template rebind_alloc<node_type>;
-  //using inner_alloc_traits_type =
-  //  rt::allocator_traits<inner_alloc_type>;
-  //using node_pointer = typename inner_alloc_traits_type::pointer;
+  using alloc_type = node_allocator<T, node_type1, index_type>;
+  using alloc_traits_type = rt::allocator_traits<alloc_type>;
+  using void_pointer = typename alloc_traits_type::void_pointer;
+  using node_type = tbst::node<T, void_pointer>;
+  using inner_alloc_type =
+    typename alloc_type::template rebind<node_type>::other;
+  using inner_alloc_traits_type =
+    rt::allocator_traits<inner_alloc_type>;
 
-  //constexpr auto s = sizeof (node_type);
-  //std::cout << s << std::endl;
+  using value_type = typename inner_alloc_traits_type::value_type;
+
+  std::cout << sizeof (value_type) << std::endl;
 
   //using node_link_type = typename node_type::link_type;
   //using node_pointer = idx_ptr<node_type, index_type>;
@@ -85,12 +86,9 @@ int main()
   //q = p;
 
 
-  //using inner_alloc_type =
-  //  typename alloc_traits_type::template rebind_alloc<node_type>;
-
-  //node_alloc_header header;
-  //alloc_type alloc(&header);
-  //inner_alloc_type inner_alloc(alloc);
+  node_alloc_header header;
+  alloc_type alloc(&header);
+  inner_alloc_type inner_alloc(alloc);
 
   //auto k = inner_alloc.allocate_node();
 
