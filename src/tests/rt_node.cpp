@@ -88,7 +88,7 @@ int main()
 
   node_alloc_header header;
   alloc_type alloc(&header);
-  inner_alloc_type inner_alloc(alloc);
+  //inner_alloc_type inner_alloc(alloc);
 
   //auto k = inner_alloc.allocate_node();
 
