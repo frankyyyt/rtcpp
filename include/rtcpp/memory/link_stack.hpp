@@ -4,24 +4,11 @@
 
 namespace rt {
 
-  /*
-
-  This function takes a pointer p to an array of n bytes.  The address
-  to which p points is expected to be aligned on a N = sizeof (char*)
-  boundary. The minimum value of n expected is 2 * S, where S >= N.
-  The buffer is split into blocks of size S and the blocks are linked
-  in a LIFO fashion (stack). The address of the next block is recorded
-  in the first N bytes of the block. The block sizes S are expected to
-  be at least the size of a pointer.
-
-  returns a pointer to the top of the stack.
-
-  */
+// Expects the pointer p to have a suitable aliggment for both T and I.
 
 template <class T, class I>
 void link_stack(I* p, std::size_t n)
 {
-  // TODO: check alignment of pointers.
   constexpr auto N = sizeof (I);
   constexpr auto S = sizeof (T);
   constexpr auto r = S / N;
