@@ -46,7 +46,9 @@ node_stack<T, Index>::node_stack(node_alloc_header* header)
     if (header->block_size < S)
       throw std::runtime_error("node_stack: Avail stack already linked for node with incompatible size.");
   } else { // Links only once.
-    link_stack<S, Index>(header->buffer, n);
+    auto p = reinterpret_cast<Index*>(header->buffer);
+    constexpr auto N = sizeof (Index);
+    link_stack<T, Index>(p, n / N);
     header->block_size = S;
   }
   ++header->n_alloc;

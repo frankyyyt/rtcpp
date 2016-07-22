@@ -18,24 +18,18 @@ namespace rt {
 
   */
 
-template <std::size_t S, class Index = std::size_t>
-void link_stack(char* p, std::size_t n)
+template <class T, class I>
+void link_stack(I* p, std::size_t n)
 {
   // TODO: check alignment of pointers.
+  constexpr auto N = sizeof (I);
+  constexpr auto S = sizeof (T);
+  constexpr auto r = S / N;
+  const auto m = n / r; // Number of blocks of size S available.
 
-  // Number of blocks of size S available.
-  const std::size_t m = n / S;
-
-  // How many index types fits into size S;
-  constexpr std::size_t r = S / sizeof (Index);
-
-  // Interprets the pointer p as if it were pointing to an array
-  // of index types.
-  auto idx = reinterpret_cast<Index*>(p);
-
-  idx[0] = (m - 1) * r;
+  p[0] = (m - 1) * r;
   for (std::size_t i = 1; i < m; ++i)
-    idx[i * r] = (i - 1) * r;
+    p[i * r] = (i - 1) * r;
 }
 
 }
