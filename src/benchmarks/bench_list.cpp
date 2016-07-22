@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     std::cout << n << " ";
     {
       std::vector<char> buffer((n + 2) * 40, 0);
-      rt::node_alloc_header header(buffer);
+      rt::node_alloc_header<std::size_t> header(buffer);
       rt::node_allocator_lazy<int> alloc(&header);
       std::list<int, rt::node_allocator_lazy<int>> s(alloc);
       print_list_bench(s, std::begin(data), n); // (2)

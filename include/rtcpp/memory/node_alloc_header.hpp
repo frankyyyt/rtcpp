@@ -5,6 +5,7 @@
 
 namespace rt {
 
+template <class L>
 struct node_alloc_header {
   char* buffer;
   std::size_t buffer_size; // In bytes

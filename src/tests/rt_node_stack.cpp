@@ -16,7 +16,7 @@ int main()
   constexpr T n = 10;
   std::array<T, n> arr = {{}};
 
-  node_alloc_header header(arr);
+  node_alloc_header<std::size_t> header(arr);
 
   using Index = std::size_t;
   node_stack<T, Index> stack(&header);

@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
   }
   std::cout << v << std::endl;
 
-  rt::node_alloc_header header(buffer);
+  rt::node_alloc_header<std::size_t> header(buffer);
   alloc_type alloc(&header);
 
   set_type set(a, b, alloc);

@@ -86,7 +86,7 @@ int main()
   //q = p;
 
 
-  node_alloc_header header;
+  node_alloc_header<index_type> header;
   alloc_type alloc(&header);
   //inner_alloc_type inner_alloc(alloc);
 

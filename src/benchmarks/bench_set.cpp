@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     const int n = N + i * S;
     std::cout << n << " ";
     std::vector<char> buffer((n + 2) * node_size, 0);
-    rt::node_alloc_header header(buffer);
+    rt::node_alloc_header<std::size_t> header(buffer);
     typename type2::allocator_type alloc(&header);
     type2 s(alloc);
     print_set_bench(s, std::begin(data), n);

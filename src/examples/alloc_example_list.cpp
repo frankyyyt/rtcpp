@@ -7,7 +7,7 @@
 int main()
 {
   std::array<char, 2000> buffer = {{}};
-  rt::node_alloc_header header(buffer);
+  rt::node_alloc_header<std::size_t> header(buffer);
   rt::node_allocator_lazy<int> alloc(&header);
 
   std::list<int, rt::node_allocator_lazy<int>> t1(alloc);

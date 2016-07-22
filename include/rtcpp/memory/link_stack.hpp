@@ -4,12 +4,12 @@
 
 namespace rt {
 
-// Expects the pointer p to have a suitable aliggment for both T and I.
+// Expects the pointer p to have a suitable aliggment for both T and L.
 
-template <class T, class I>
-void link_stack(I* p, std::size_t n)
+template <class T, class L>
+void link_stack(L* p, std::size_t n)
 {
-  constexpr auto N = sizeof (I);
+  constexpr auto N = sizeof (L);
   constexpr auto S = sizeof (T);
   constexpr auto r = S / N;
   const auto m = n / r; // Number of blocks of size S available.

@@ -12,7 +12,7 @@ int main()
   using node_type = typename set_type::node_type;
 
   std::array<node_type, 13> buffer = {{}};
-  rt::node_alloc_header header(buffer);
+  rt::node_alloc_header<std::size_t> header(buffer);
 
   for (auto a: buffer)
     std::cout << a << " ";

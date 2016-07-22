@@ -38,7 +38,7 @@ template <typename T, std::size_t S = sizeof (T),
           bool B = is_node<T>::value >
 class node_allocator_lazy {
   public:
-  node_alloc_header* header;
+  node_alloc_header<std::size_t>* header;
   std::allocator<T> alloc;
   public:
   using value_type = T;
@@ -57,7 +57,7 @@ class node_allocator_lazy {
   {
     std::swap(header, other.header);
   }
-  node_allocator_lazy(node_alloc_header* p) : header(p) {}
+  node_allocator_lazy(node_alloc_header<std::size_t>* p) : header(p) {}
   template<typename U>
   node_allocator_lazy(const node_allocator_lazy< U, sizeof (U)
                            , is_node<U>::value>& alloc)
@@ -87,10 +87,10 @@ class node_allocator_lazy<T, N, true> {
     using other = node_allocator_lazy<U, sizeof (U), is_node<U>::value>;
   };
   public:
-  node_alloc_header* header;
+  node_alloc_header<std::size_t>* header;
   node_stack<T, Index> stack;
   public:
-  node_allocator_lazy(node_alloc_header* p) : header(p) {}
+  node_allocator_lazy(node_alloc_header<std::size_t>* p) : header(p) {}
   template<typename U>
   node_allocator_lazy(const node_allocator_lazy<U, sizeof (U),
                       is_node<U>::value>& alloc)
