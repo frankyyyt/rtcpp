@@ -164,7 +164,7 @@ class node_allocator {
     if (!i)
       throw std::bad_alloc();
 
-    const auto p = reinterpret_cast<link_type*>(stack.header->buffer);
+    const auto p = stack.header->buffer;
     return reinterpret_cast<pointer>(&p[i]);
   }
   pointer make_pointer(pointer l)
@@ -182,7 +182,7 @@ class node_allocator {
   typename std::enable_if<std::is_same<U, NodeType>::value>::type
   deallocate_node(pointer p)
   {
-    const auto a = reinterpret_cast<link_type*>(stack.header->buffer);
+    const auto a = stack.header->buffer;
     const auto b = reinterpret_cast<link_type*>(p);
     stack.push(b - a);
   }

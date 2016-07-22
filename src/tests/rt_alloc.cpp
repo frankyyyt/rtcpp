@@ -65,7 +65,6 @@ bool test_list()
 
 bool test_deallocate()
 {
-  const std::size_t ptr_size = sizeof (char*);
   const std::size_t data_size = sizeof (std::size_t);
   std::array<char, 3 * data_size> buffer = {{}};
 

@@ -17,7 +17,6 @@ namespace rt {
 template <class T, class L>
 class node_stack {
   public:
-  static const std::size_t ptr_size = sizeof (char*);
   node_alloc_header<L>* header;
   // used only when default constructed. Will be soon removed.
   node_alloc_header<L> header_dummy;
@@ -37,28 +36,27 @@ node_stack<T, L>::node_stack(node_alloc_header<L>* header)
 : header(header)
 {
   constexpr auto ST = sizeof (T);
-  constexpr auto SI = sizeof (L);
-  constexpr auto S = std::max(ST, SI);
+  constexpr auto SL = sizeof (L);
+  constexpr auto S = std::max(ST, SL);
 
   constexpr auto AT = alignof (T);
-  constexpr auto AI = alignof (L);
-  constexpr auto A = std::max(AT, AI);
+  constexpr auto AL = alignof (L);
+  constexpr auto A = std::max(AT, AL);
 
   void* pa = reinterpret_cast<void*>(header->buffer);
-  auto p = std::align(A, S, pa, header->buffer_size);
-  header->buffer = reinterpret_cast<char*>(p);
+  std::size_t bytes = header->buffer_size * SL;
+  auto p = std::align(A, S, pa, bytes);
+  header->buffer = reinterpret_cast<L*>(p);
+  header->buffer_size = bytes / SL;
 
-  const std::size_t n = header->buffer_size;
-
-  if (n < 2 * S)
+  if (header->buffer_size < 2)
     throw std::runtime_error("node_stack: There is not enough space.");
 
   if (header->n_alloc != 0) { // Links only once.
     if (header->block_size < S)
       throw std::runtime_error("node_stack: Avail stack already linked for node with incompatible size.");
   } else { // Links only once.
-    auto p = reinterpret_cast<L*>(header->buffer);
-    link_stack<T, L>(p, n / SI);
+    link_stack<T, L>(header->buffer, header->buffer_size);
     header->block_size = S;
   }
   ++header->n_alloc;
@@ -67,7 +65,7 @@ node_stack<T, L>::node_stack(node_alloc_header<L>* header)
 template <class T, class L>
 L node_stack<T, L>::pop() noexcept
 {
-  auto p = reinterpret_cast<L*>(header->buffer);
+  auto p = header->buffer; // Alias
 
   const L i = p[0]; // L of the next free node.
 
@@ -80,7 +78,7 @@ L node_stack<T, L>::pop() noexcept
 template <class T, class L>
 void node_stack<T, L>::push(L idx) noexcept
 {
-  auto p = reinterpret_cast<L*>(header->buffer);
+  auto p = header->buffer; // Alias.
   p[idx] = p[0];
   p[0] = idx;
 }

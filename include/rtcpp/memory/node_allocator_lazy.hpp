@@ -101,13 +101,13 @@ class node_allocator_lazy<T, N, true> {
     if (!i)
       throw std::bad_alloc();
 
-    const auto p = reinterpret_cast<Index*>(stack.header->buffer);
+    const auto p = stack.header->buffer;
     return reinterpret_cast<pointer>(&p[i]);
   }
   pointer allocate(size_type) { return allocate_node(); }
   void deallocate_node(pointer p)
   {
-    const auto a = reinterpret_cast<Index*>(stack.header->buffer);
+    const auto a = stack.header->buffer;
     const auto b = reinterpret_cast<Index*>(p);
     stack.push(b - a);
   }
