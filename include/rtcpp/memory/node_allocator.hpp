@@ -17,7 +17,7 @@
 namespace rt {
 
 template <class, class>
-class link_ptr;
+class node_link;
 
 template <class T, class Index>
 class idx_ptr {
@@ -27,7 +27,7 @@ class idx_ptr {
 
   public:
   template <class, class>
-  friend class link_ptr;
+  friend class node_link;
 
   using index_type = Index;
   using element_type = T;
@@ -39,7 +39,7 @@ class idx_ptr {
   T* operator->() { return reinterpret_cast<T*>(&p[idx]); }
   const T* operator->() const { return reinterpret_cast<const T*>(&p[idx]); }
   idx_ptr() = default;
-  idx_ptr& operator=(const link_ptr<T, Index>& rhs)
+  idx_ptr& operator=(const node_link<T, Index>& rhs)
   {
     idx = rhs.idx;
     return *this;
@@ -56,7 +56,7 @@ class idx_ptr {
 };
 
 template <class T, class Index>
-class link_ptr {
+class node_link {
   private:
   template <class, class>
   friend class idx_ptr;
@@ -67,7 +67,7 @@ class link_ptr {
   using element_type = T;
   template <class U>
   using rebind = idx_ptr<U, Index>;
-  link_ptr& operator=(const idx_ptr<T, Index>& rhs)
+  node_link& operator=(const idx_ptr<T, Index>& rhs)
   {
     idx = rhs.idx;
     return *this;
@@ -80,7 +80,7 @@ class idx_ptr_void {
   using index_type = Index;
   using element_type = void;
   template <class U>
-  using rebind = link_ptr<U, Index>;
+  using rebind = node_link<U, Index>;
 };
 
 }
