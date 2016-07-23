@@ -6,9 +6,9 @@
 
 namespace rt {
 
-template <typename T>
-std::vector<T> make_rand_data(std::size_t size, int first,
-                              int last, int type = 2)
+template <class T>
+std::vector<T>
+make_rand_data(std::size_t size, T first, T last, int type = 2)
 {
   // Generates a uniform distribution of integers in the range
   // [first, last] with size size.
@@ -18,7 +18,7 @@ std::vector<T> make_rand_data(std::size_t size, int first,
 
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(first, last);
+  std::uniform_int_distribution<T> dis(first, last);
 
   std::vector<T> data;
   std::generate_n( std::back_inserter(data), size,

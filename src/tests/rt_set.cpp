@@ -11,6 +11,7 @@
 
 #include <rtcpp/container/set.hpp>
 #include <rtcpp/memory/node_allocator_lazy.hpp>
+#include <rtcpp/memory/node_allocator.hpp>
 #include <rtcpp/utility/make_rand_data.hpp>
 #include <rtcpp/utility/print.hpp>
 
@@ -186,35 +187,51 @@ bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
   return true;
 }
 
-template <typename T>
+template <class T, class A>
+using set_type = rt::set<T, std::less<T>, A>;
+
+template <class T, class L>
 bool run_tests_all()
 {
   const T size = 1000;
-  const int a = 1;
-  const int b = std::numeric_limits<int>::max();
+  const T a = 1;
+  const T b = std::numeric_limits<T>::max();
 
-  // Random unique integers in the range [a,b].
-  std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
+  using alloc_type1 = std::allocator<T>;
+  using type1 = set_type<T, alloc_type1>;
+  const auto node_size1 =
+    sizeof (typename set_type<T, alloc_type1>::node_type);
+
+  using alloc_type2 = rt::node_allocator_lazy<T>;
+  using type2 = set_type<T, alloc_type2>;
+  const auto node_size2 =
+    sizeof (typename set_type<T, alloc_type2>::node_type);
+
+  using alloc_type3 =
+    rt::node_allocator<T, typename type1::node_type, L>;
+  using type3 = set_type<T, alloc_type3>;
+  const auto node_size3 =
+    sizeof (typename set_type<T, alloc_type3>::node_type);
+
+  // Random unique integers in the range [a, b].
+  const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
 
   // Should be enough for rt::set.
-  const T bsize = 3 * (tmp.size() + 3) * 25;
+  const auto bsize = 10 * (tmp.size() + 1) * node_size1;
 
-  // Tow buffers for two allocators.
-  std::vector<char> buffer1(2 * bsize);
-  std::vector<char> buffer2(5 * bsize);
-  rt::node_alloc_header<std::size_t> header1(buffer1);
-  rt::node_alloc_header<std::size_t> header2(buffer2);
+  // Two buffers for two allocators.
+  std::vector<char> buffer1(bsize);
+  std::vector<char> buffer2(bsize);
 
-  rt::node_allocator_lazy<T> alloc1(&header1);
-  rt::node_allocator_lazy<T> alloc2(&header2);
+  rt::node_alloc_header<L> header1(buffer1);
+  rt::node_alloc_header<L> header2(buffer2);
 
-  rt::set<T> t1;
-  rt::set<T, std::less<T>, rt::node_allocator_lazy<T>> t2(std::less<T>(), alloc1);
-  rt::set<T, std::less<T>, rt::node_allocator_lazy<T>> t3(std::less<T>(), alloc1);
+  alloc_type2 alloc1(&header1);
+  alloc_type2 alloc2(&header2);
 
-  std::set<T> t7;
-  std::set<T, std::less<T>, rt::node_allocator_lazy<T>> t8(std::less<T>(), alloc2);
-  std::set<T, std::less<T>, rt::node_allocator_lazy<T>> t9(std::less<T>(), alloc2);
+  type1 t1;
+  type2 t2(alloc1);
+  type2 t3(alloc1);
 
   if (!run_tests(t1, tmp))
     return false;
@@ -225,22 +242,13 @@ bool run_tests_all()
   if (!run_tests(t3, tmp))
     return false;
 
-  if (!run_tests(t7, tmp))
-    return false;
-
-  if (!run_tests(t8, tmp))
-    return false;
-
-  if (!run_tests(t9, tmp))
-    return false;
-
   return true;
 }
 
 int main()
 {
-  const bool b1 = run_tests_all<int>();
-  const bool b2 = run_tests_all<long long int>();
+  const bool b1 = run_tests_all<int, std::size_t>();
+  const bool b2 = run_tests_all<long long int, std::size_t>();
   return (b1 && b2) ? 0 : 1;
 }
 
