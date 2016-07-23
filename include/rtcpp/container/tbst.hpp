@@ -57,7 +57,7 @@ class node {
 
 template <class T, class Ptr>
 std::ostream&
-operator<<(std::ostream& os, const node<T, Ptr*>& o)
+operator<<(std::ostream& os, const node<T, Ptr>& o)
 {
   os << o.key;
   return os;
@@ -73,7 +73,7 @@ Ptr inorder(Ptr p, A& a) noexcept
   if (p->template has_null_link<I>())
     return alloc_traits::make_pointer(a, p->link[I]);
 
-  Ptr q = p->link[I];
+  Ptr q = alloc_traits::make_pointer(a, p->link[I]);
   while (!q->template has_null_link<dir[I]>())
     q = q->link[dir[I]];
 
@@ -94,7 +94,7 @@ Ptr inorder_parent(Ptr p, A& a) noexcept
   Ptr q = alloc_traits::make_pointer(a, p->link[I]);
   while (!q->template has_null_link<dir[I]>()) {
     pq = q;
-    q = alloc_traits::make_pointer(a, q->link[dir[I]]);
+    q = q->link[dir[I]];
   }
 
   return pq;
@@ -114,7 +114,7 @@ Ptr preorder_successor(Ptr p, A& a) noexcept
   // This is a leaf node.
   Ptr q = alloc_traits::make_pointer(a, p->link[1]);
   while (q->template has_null_link<1>())
-    q = alloc_traits::make_pointer(a, q->link[1]);
+    q = q->link[1];
 
   return alloc_traits::make_pointer(a, q->link[1]);
 }
@@ -172,7 +172,7 @@ Ptr erase_node_one_null(Ptr* linker, Ptr q, A& a) noexcept
   Ptr s = alloc_traits::make_pointer(a, q->link[dir[I]]);
 
   if (u != q)
-    s = alloc_traits::make_pointer(a, u->link[I]);
+    s = u->link[I];
   s->link[I] = q->link[I];;
   if (s->template has_null_link<dir[I]>())
     u->template set_link_null<I>();
@@ -230,14 +230,14 @@ find_with_parent(Ptr head, const K& key, const Comp& comp, A& a)
     if (comp(key, p->key)) {
       if (!p->template has_null_link<0>()) {
         u = p;
-        p = alloc_traits::make_pointer(a, p->link[0]);
+        p = p->link[0];
       } else {
         return std::make_pair(head, head);
       }
     } else if (comp(p->key, key)) {
       if (!p->template has_null_link<1>()) {
         u = p;
-        p = alloc_traits::make_pointer(a, p->link[1]);
+        p = p->link[1];
       } else {
         return std::make_pair(head, head);
       }

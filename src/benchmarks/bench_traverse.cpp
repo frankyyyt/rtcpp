@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
   std::vector<int> data = rt::make_rand_data<int>(N, min, max);
 
-  using alloc_type = rt::node_allocator<int, rt::set<int>::node_type>;
+  using alloc_type = rt::node_allocator<int, rt::set<int>::node_type, std::size_t>;
   using set_type = rt::set<int, std::less<int>, alloc_type>;
   using node_type = typename set_type::node_type;
 

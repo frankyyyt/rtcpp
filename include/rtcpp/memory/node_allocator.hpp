@@ -22,21 +22,22 @@ class node_link;
 template <class T, class L>
 class node_ptr {
   private:
-  L* p {nullptr};
+  L* ptr {nullptr};
   L idx {};
 
   public:
   template <class, class>
   friend class node_link;
 
+  L get_idx() const {return idx;}
   using link_type = L;
   using element_type = T;
   template <class U>
   using rebind = node_ptr<U, L>;
-  T& operator*() { return *reinterpret_cast<T*>(&p[idx]); }
-  const T& operator*() const { return *reinterpret_cast<const T*>(&p[idx]); }
-  T* operator->() { return reinterpret_cast<T*>(&p[idx]); }
-  const T* operator->() const { return reinterpret_cast<const T*>(&p[idx]); }
+  T& operator*() { return *reinterpret_cast<T*>(&ptr[idx]); }
+  const T& operator*() const { return *reinterpret_cast<const T*>(&ptr[idx]); }
+  T* operator->() { return reinterpret_cast<T*>(&ptr[idx]); }
+  const T* operator->() const { return reinterpret_cast<const T*>(&ptr[idx]); }
   node_ptr() = default;
   node_ptr& operator=(const node_link<T, L>& rhs)
   {
@@ -49,10 +50,21 @@ class node_ptr {
       return *this;
 
     idx = rhs.idx;
-    p = rhs.p;
+    ptr = rhs.ptr;
     return *this;
   }
+  node_ptr(L* pp, L i) : ptr(pp), idx(i) {}
 };
+
+template <class T, class L>
+bool operator==( const node_ptr<T, L>& p1
+               , const node_ptr<T, L>& p2)
+{return p1.get_idx() == p2.get_idx();}
+
+template <class T, class L>
+bool operator!=( const node_ptr<T, L>& p1
+               , const node_ptr<T, L>& p2)
+{return !(p1 == p2);}
 
 template <class T, class L>
 class node_link {
@@ -62,6 +74,7 @@ class node_link {
   //private:
   L idx;
   public:
+  L get_idx() const {return idx;}
   using link_type = L;
   using element_type = T;
   template <class U>
@@ -94,37 +107,37 @@ struct type_support {
   using const_reference = const T&;
   using reference = T&;
   using value_type = T;
-  using void_pointer = void*;
-  using const_void_pointer = const void*;
-  //using void_pointer = node_ptr_void<L>;
-  //using const_void_pointer = node_ptr_void<L>;
-};
-
-template <class T, class L>
-struct type_support<T, L, true> {
-  using size_type = std::size_t;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using const_reference = const T&;
-  using reference = T&;
-  using value_type = T;
-  using void_pointer = void*;
-  using const_void_pointer = const void*;
+  //using void_pointer = void*;
+  //using const_void_pointer = const void*;
+  using void_pointer = node_ptr_void<L>;
+  using const_void_pointer = node_ptr_void<L>;
 };
 
 //template <class T, class L>
 //struct type_support<T, L, true> {
 //  using size_type = std::size_t;
+//  using pointer = T*;
+//  using const_pointer = const T*;
 //  using const_reference = const T&;
 //  using reference = T&;
 //  using value_type = T;
-//  using pointer = node_ptr<T, L>;
-//  using const_pointer = node_ptr<T, L>;
-//  using void_pointer = node_ptr_void<L>;
-//  using const_void_pointer = node_ptr_void<L>;
+//  using void_pointer = void*;
+//  using const_void_pointer = const void*;
 //};
 
-template <typename T, typename NodeType, class L = std::size_t>
+template <class T, class L>
+struct type_support<T, L, true> {
+  using size_type = std::size_t;
+  using const_reference = const T&;
+  using reference = T&;
+  using value_type = T;
+  using pointer = node_ptr<T, L>;
+  using const_pointer = node_ptr<T, L>;
+  using void_pointer = node_ptr_void<L>;
+  using const_void_pointer = node_ptr_void<L>;
+};
+
+template <class T, class Node, class L>
 class node_allocator {
   public:
   using node_allocation_only = std::true_type;
@@ -135,65 +148,63 @@ class node_allocator {
   using reference = typename type_support<T, L>::reference;
   using const_reference = typename type_support<T, L>::const_reference;
   using value_type = typename type_support<T, L>::value_type;
-  using link_type = L;
+  using link_type = node_link<T, L>;
   using void_pointer = typename type_support<T, L>::void_pointer;
   using const_void_pointer = typename type_support<T, L>::const_void_pointer;
 
   template<class U>
-  struct rebind { using other = node_allocator<U , NodeType, L>; };
+  struct rebind { using other = node_allocator<U , Node, L>; };
   node_alloc_header<L>* header;
-  node_stack<T, std::size_t> stack;
+  node_stack<T, L> stack;
   node_allocator(node_alloc_header<L>* p) : header(p) {}
   // Constructor for the node type with a different pointer type.
   template<typename U, typename K = T>
-  node_allocator( const node_allocator<U, NodeType, L>& alloc
-                , typename std::enable_if<is_same_node_type<K, NodeType>::value, void*>::type p = 0)
+  node_allocator( const node_allocator<U, Node, L>& alloc
+                , typename std::enable_if<is_same_node_type<K, Node>::value, void*>::type p = 0)
   : header(alloc.header)
   , stack(header) {}
   template<typename U, typename K = T>
-  node_allocator( const node_allocator<U, NodeType, L>& alloc
-                , typename std::enable_if<!is_same_node_type<K, NodeType>::value, void*>::type p = 0)
+  node_allocator( const node_allocator<U, Node, L>& alloc
+                , typename std::enable_if<!is_same_node_type<K, Node>::value, void*>::type p = 0)
   : header(alloc.header) {}
   template <typename U = T>
   typename std::enable_if<
-    is_same_node_type<U, NodeType>::value, pointer>::type
+    is_same_node_type<U, Node>::value, pointer>::type
   allocate_node()
   {
     const auto i = stack.pop(); 
     if (!i)
       throw std::bad_alloc();
 
-    const auto p = stack.header->buffer;
-    return reinterpret_cast<pointer>(&p[i]);
+    return pointer(stack.header->buffer, i);
   }
-  pointer make_pointer(pointer l)
-  {
-    return l;
-  }
-  template <typename U = T>
+  template <class U = T>
   typename std::enable_if<
-    !is_same_node_type<U, NodeType>::value, pointer>::type
+    is_same_node_type<U, Node>::value, void>::type
+  deallocate_node(pointer p)
+  {
+    stack.push(p.get_idx());
+  }
+  pointer make_pointer(link_type link)
+  {
+    return pointer(stack.header->buffer, link.get_idx());
+  }
+  template <class U = T>
+  typename std::enable_if<
+    !is_same_node_type<U, Node>::value, pointer>::type
   allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
   {
     return std::allocator<T>().allocate(n, hint);
   }
-  template <typename U = T>
-  typename std::enable_if<std::is_same<U, NodeType>::value>::type
-  deallocate_node(pointer p)
-  {
-    const auto a = stack.header->buffer;
-    const auto b = reinterpret_cast<link_type*>(p);
-    stack.push(b - a);
-  }
-  template <typename U = T>
-  typename std::enable_if<!std::is_same<U, NodeType>::value>::type
+  template <class U = T>
+  typename std::enable_if<!std::is_same<U, Node>::value>::type
   deallocate(pointer p, size_type n)
   { 
     std::allocator<T>().deallocate(p, n);
   }
-  template<typename U>
+  template<class U>
   void destroy(U* p) {p->~U();}
-  template< typename U, typename... Args>
+  template<class U, typename... Args>
   void construct(U* p, Args&&... args)
   {::new((void *)p) U(std::forward<Args>(args)...);}
   void swap(node_allocator& other) noexcept

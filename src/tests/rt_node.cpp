@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <rtcpp/container/tbst.hpp>
+#include <rtcpp/container/set.hpp>
 #include <rtcpp/memory/node_allocator.hpp>
 
 void print_data_type_size()
@@ -12,6 +13,47 @@ void print_data_type_size()
   std::cout << "long long   : " << sizeof (long long) << std::endl;
   std::cout << "char*       : " << sizeof (char*) << std::endl;
   std::cout << "std::string : " << sizeof (std::string) << std::endl;
+}
+
+void test_set()
+{
+  using L = int;
+  using T = int;
+
+  using alloc_type = rt::node_allocator<T, rt::set<T>::node_type, L>;
+  using set_type = rt::set<T, std::less<T>, alloc_type>;
+  using node_type = typename set_type::node_type;
+
+  std::cout << sizeof (node_type) << std::endl;
+
+  std::array<node_type, 13> buffer = {{}};
+  rt::node_alloc_header<L> header(buffer);
+
+  //for (auto a: buffer)
+  //  std::cout << a << " ";
+  //std::cout << std::endl;;
+
+  alloc_type alloc(&header);
+
+  set_type t1(alloc);
+  t1 = {1, 5, 1, 7, 3, 1, 1, 4, 9, 1};
+
+  for (auto a: buffer)
+    std::cout << a << " ";
+  std::cout << std::endl;;
+
+  for (auto a: t1)
+    std::cout << a << " ";
+  std::cout << std::endl;;
+
+  std::copy_if( std::begin(buffer), std::end(buffer)
+              , std::ostream_iterator<node_type>(std::cout, " ")
+              , [](auto o){return o.is_in_use();});
+  std::cout << std::endl;;
+
+  auto n = std::count_if(std::begin(buffer), std::end(buffer),
+    [](auto o){return o.is_in_use();});
+  std::cout << n << std::endl;;
 }
 
 using namespace rt;
@@ -86,11 +128,14 @@ int main()
   //q = p;
 
 
-  node_alloc_header<link_type> header;
+  std::array<char, 100> buffer = {{}};
+  node_alloc_header<link_type> header(buffer);
   alloc_type alloc(&header);
-  //inner_alloc_type inner_alloc(alloc);
+  inner_alloc_type inner_alloc(alloc);
 
-  //auto k = inner_alloc.allocate_node();
+  auto k = inner_alloc.allocate_node();
+  inner_alloc.deallocate_node(k);
+  test_set();
 
   return 0;
 }
