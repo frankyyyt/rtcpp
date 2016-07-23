@@ -16,8 +16,8 @@
 #include "heap_frag.hpp"
 #include "print_set_bench.hpp"
 
-using T = unsigned int;
-using L = std::size_t;
+using T = unsigned short;
+using L = unsigned short;
 
 template <class Allocator>
 using set_type = rt::set<T, std::less<T>, Allocator>;
