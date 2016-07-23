@@ -191,12 +191,37 @@ template <class T, class A>
 using set_type = rt::set<T, std::less<T>, A>;
 
 template <class T, class L>
-bool run_tests_all()
+bool test_with_node_alloc()
 {
-  const T size = 1000;
-  const T a = 1;
+  using alloc_type1 = std::allocator<T>;
+  using type1 = set_type<T, alloc_type1>;
+
+  using alloc_type3 =
+    rt::node_allocator<T, typename type1::node_type, L>;
+  using type3 = set_type<T, alloc_type3>;
+  const auto node_size3 =
+    sizeof (typename set_type<T, alloc_type3>::node_type);
+
+  const T size = 10;
+  const T a = std::numeric_limits<T>::min();
   const T b = std::numeric_limits<T>::max();
 
+  // Random unique integers in the range [a, b].
+  const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
+  const auto bsize = 10 * (tmp.size() + 1) * node_size3;
+
+  std::vector<char> buffer3(bsize);
+  rt::node_alloc_header<L> header3(buffer3);
+  alloc_type3 alloc3(&header3);
+  type3 t3(alloc3);
+
+  return run_tests(t3, tmp);
+}
+
+template <class T>
+bool run_tests_all()
+{
+  using L = std::size_t;
   using alloc_type1 = std::allocator<T>;
   using type1 = set_type<T, alloc_type1>;
   const auto node_size1 =
@@ -207,11 +232,9 @@ bool run_tests_all()
   const auto node_size2 =
     sizeof (typename set_type<T, alloc_type2>::node_type);
 
-  using alloc_type3 =
-    rt::node_allocator<T, typename type1::node_type, L>;
-  using type3 = set_type<T, alloc_type3>;
-  const auto node_size3 =
-    sizeof (typename set_type<T, alloc_type3>::node_type);
+  const T size = 1000;
+  const T a = 1;
+  const T b = std::numeric_limits<T>::max();
 
   // Random unique integers in the range [a, b].
   const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
@@ -219,27 +242,36 @@ bool run_tests_all()
   // Should be enough for rt::set.
   const auto bsize = 10 * (tmp.size() + 1) * node_size1;
 
-  // Two buffers for two allocators.
-  std::vector<char> buffer1(bsize);
-  std::vector<char> buffer2(bsize);
-
-  rt::node_alloc_header<L> header1(buffer1);
-  rt::node_alloc_header<L> header2(buffer2);
-
-  alloc_type2 alloc1(&header1);
-  alloc_type2 alloc2(&header2);
-
   type1 t1;
-  type2 t2(alloc1);
-  type2 t3(alloc1);
-
   if (!run_tests(t1, tmp))
     return false;
-    
+
+  std::vector<char> buffer2(bsize);
+  rt::node_alloc_header<L> header2(buffer2);
+  alloc_type2 alloc1(&header2);
+  type2 t2(alloc1);
   if (!run_tests(t2, tmp))
     return false;
 
-  if (!run_tests(t3, tmp))
+  if (!test_with_node_alloc<std::size_t, std::size_t>())
+    return false;
+
+  if (!test_with_node_alloc<unsigned int, std::size_t>())
+    return false;
+
+  if (!test_with_node_alloc<unsigned short, std::size_t>())
+    return false;
+
+  if (!test_with_node_alloc<unsigned char, std::size_t>())
+    return false;
+
+  if (!test_with_node_alloc<unsigned int, unsigned int>())
+    return false;
+
+  if (!test_with_node_alloc<unsigned short, unsigned short>())
+    return false;
+
+  if (!test_with_node_alloc<unsigned char, unsigned char>())
     return false;
 
   return true;
@@ -247,8 +279,8 @@ bool run_tests_all()
 
 int main()
 {
-  const bool b1 = run_tests_all<int, std::size_t>();
-  const bool b2 = run_tests_all<long long int, std::size_t>();
+  const bool b1 = run_tests_all<int>();
+  const bool b2 = run_tests_all<long long int>();
   return (b1 && b2) ? 0 : 1;
 }
 

@@ -9,6 +9,9 @@ namespace rt {
 template <class T, class L>
 void link_stack(L* p, std::size_t n)
 {
+  const std::size_t max = std::numeric_limits<L>::max();
+  n = (n > max) ? max : n;
+
   constexpr auto N = sizeof (L);
   constexpr auto S = sizeof (T);
   constexpr auto r = S / N;

@@ -387,16 +387,19 @@ set<T, Compare, Allocator>::count(const K& key) const noexcept
   if (m_head->template has_null_link<0>()) // The tree is empty
     return 0;
 
-  node_pointer p = m_head->link[0];
+  node_pointer p =
+    inner_alloc_traits_type::make_pointer(m_inner_alloc,
+      m_head->link[0]);
+
   for (;;) {
     if (m_comp(key, p->key)) {
       if (!p->template has_null_link<0>())
-        p = inner_alloc_traits_type::make_pointer(m_inner_alloc, p->link[0]);
+        p = p->link[0];
       else
         return 0;
     } else if (m_comp(p->key, key)) {
       if (!p->template has_null_link<1>())
-        p = inner_alloc_traits_type::make_pointer(m_inner_alloc, p->link[1]);
+        p = p->link[1];
       else
         return 0;
     } else {
