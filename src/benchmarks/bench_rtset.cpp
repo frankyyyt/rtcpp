@@ -39,6 +39,8 @@ void print_info()
 
 int main(int argc, char* argv[])
 {
+  print_info();
+
   if ((argc != 5) && (argc != 6)) {
     std::cout <<
     "\nUsage: $ ./bench_set N S K B F\n"
