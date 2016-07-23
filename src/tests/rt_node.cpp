@@ -34,11 +34,11 @@ void print_node_sizes()
 
   std::cout << "_____" << std::endl;
 
-  using node1 = tbst::node<unsigned char, idx_ptr_void<unsigned char>>;
-  using node2 = tbst::node<short        , idx_ptr_void<short>        >;
-  using node3 = tbst::node<int          , idx_ptr_void<int>          >;
-  using node4 = tbst::node<long long    , idx_ptr_void<long long>    >;
-  using node5 = tbst::node<char*        , idx_ptr_void<char*>        >;
+  using node1 = tbst::node<unsigned char, node_ptr_void<unsigned char>>;
+  using node2 = tbst::node<short        , node_ptr_void<short>        >;
+  using node3 = tbst::node<int          , node_ptr_void<int>          >;
+  using node4 = tbst::node<long long    , node_ptr_void<long long>    >;
+  using node5 = tbst::node<char*        , node_ptr_void<char*>        >;
 
   constexpr std::size_t U1 = sizeof (node1);
   constexpr std::size_t U2 = sizeof (node2);
@@ -46,11 +46,11 @@ void print_node_sizes()
   constexpr std::size_t U4 = sizeof (node4);
   constexpr std::size_t U5 = sizeof (node5);
 
-  std::cout << "tbst::node<uchar    , idx_ptr<uchar>>     : " << U1 << std::endl;
-  std::cout << "tbst::node<short    , idx_ptr<short>>     : " << U2 << std::endl;
-  std::cout << "tbst::node<int      , idx_ptr<int>>       : " << U3 << std::endl;
-  std::cout << "tbst::node<long long, idx_ptr<long long>> : " << U4 << std::endl;
-  std::cout << "tbst::node<char*    , idx_ptr<char*>>     : " << U5 << std::endl;
+  std::cout << "tbst::node<uchar    , node_ptr<uchar>>     : " << U1 << std::endl;
+  std::cout << "tbst::node<short    , node_ptr<short>>     : " << U2 << std::endl;
+  std::cout << "tbst::node<int      , node_ptr<int>>       : " << U3 << std::endl;
+  std::cout << "tbst::node<long long, node_ptr<long long>> : " << U4 << std::endl;
+  std::cout << "tbst::node<char*    , node_ptr<char*>>     : " << U5 << std::endl;
 }
 
 int main()
@@ -59,12 +59,12 @@ int main()
   print_node_sizes();
 
   using T = unsigned char;
-  using index_type = unsigned char;
+  using link_type = unsigned char;
 
   using node_type1 = tbst::node<T, void*>;
   std::cout << sizeof (node_type1) << std::endl;
 
-  using alloc_type = node_allocator<T, node_type1, index_type>;
+  using alloc_type = node_allocator<T, node_type1, link_type>;
   using alloc_traits_type = rt::allocator_traits<alloc_type>;
   using void_pointer = typename alloc_traits_type::void_pointer;
   using node_type = tbst::node<T, void_pointer>;
@@ -78,7 +78,7 @@ int main()
   std::cout << sizeof (value_type) << std::endl;
 
   //using node_link_type = typename node_type::link_type;
-  //using node_pointer = idx_ptr<node_type, index_type>;
+  //using node_pointer = node_ptr<node_type, link_type>;
   //node_type node;
   //node_link_type p;
   //node_pointer q;
@@ -86,7 +86,7 @@ int main()
   //q = p;
 
 
-  node_alloc_header<index_type> header;
+  node_alloc_header<link_type> header;
   alloc_type alloc(&header);
   //inner_alloc_type inner_alloc(alloc);
 

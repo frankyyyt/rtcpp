@@ -19,32 +19,31 @@ namespace rt {
 template <class, class>
 class node_link;
 
-template <class T, class Index>
-class idx_ptr {
+template <class T, class L>
+class node_ptr {
   private:
-  Index* p {nullptr};
-  Index idx {};
+  L* p {nullptr};
+  L idx {};
 
   public:
   template <class, class>
   friend class node_link;
 
-  using index_type = Index;
+  using link_type = L;
   using element_type = T;
   template <class U>
-  using rebind = idx_ptr<U, Index>;
-  using link_pointer = idx_ptr<T, Index>;
+  using rebind = node_ptr<U, L>;
   T& operator*() { return *reinterpret_cast<T*>(&p[idx]); }
   const T& operator*() const { return *reinterpret_cast<const T*>(&p[idx]); }
   T* operator->() { return reinterpret_cast<T*>(&p[idx]); }
   const T* operator->() const { return reinterpret_cast<const T*>(&p[idx]); }
-  idx_ptr() = default;
-  idx_ptr& operator=(const node_link<T, Index>& rhs)
+  node_ptr() = default;
+  node_ptr& operator=(const node_link<T, L>& rhs)
   {
     idx = rhs.idx;
     return *this;
   }
-  idx_ptr& operator=(const idx_ptr<T, Index>& rhs)
+  node_ptr& operator=(const node_ptr<T, L>& rhs)
   {
     if (this == &rhs)
       return *this;
@@ -55,32 +54,32 @@ class idx_ptr {
   }
 };
 
-template <class T, class Index>
+template <class T, class L>
 class node_link {
   private:
   template <class, class>
-  friend class idx_ptr;
+  friend class node_ptr;
   //private:
-  Index idx;
+  L idx;
   public:
-  using index_type = Index;
+  using link_type = L;
   using element_type = T;
   template <class U>
-  using rebind = idx_ptr<U, Index>;
-  node_link& operator=(const idx_ptr<T, Index>& rhs)
+  using rebind = node_ptr<U, L>;
+  node_link& operator=(const node_ptr<T, L>& rhs)
   {
     idx = rhs.idx;
     return *this;
   }
 };
 
-template <class Index>
-class idx_ptr_void {
+template <class L>
+class node_ptr_void {
   public:
-  using index_type = Index;
+  using link_type = L;
   using element_type = void;
   template <class U>
-  using rebind = node_link<U, Index>;
+  using rebind = node_link<U, L>;
 };
 
 }
@@ -97,8 +96,8 @@ struct type_support {
   using value_type = T;
   using void_pointer = void*;
   using const_void_pointer = const void*;
-  //using void_pointer = idx_ptr_void<L>;
-  //using const_void_pointer = idx_ptr_void<L>;
+  //using void_pointer = node_ptr_void<L>;
+  //using const_void_pointer = node_ptr_void<L>;
 };
 
 template <class T, class L>
@@ -119,10 +118,10 @@ struct type_support<T, L, true> {
 //  using const_reference = const T&;
 //  using reference = T&;
 //  using value_type = T;
-//  using pointer = idx_ptr<T, L>;
-//  using const_pointer = idx_ptr<T, L>;
-//  using void_pointer = idx_ptr_void<L>;
-//  using const_void_pointer = idx_ptr_void<L>;
+//  using pointer = node_ptr<T, L>;
+//  using const_pointer = node_ptr<T, L>;
+//  using void_pointer = node_ptr_void<L>;
+//  using const_void_pointer = node_ptr_void<L>;
 //};
 
 template <typename T, typename NodeType, class L = std::size_t>
