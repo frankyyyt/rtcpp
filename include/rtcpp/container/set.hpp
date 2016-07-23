@@ -84,6 +84,7 @@ class set {
   using reference = value_type&;
   using const_reference = const value_type&;
   using pointer = typename rt::allocator_traits<Allocator>::pointer;
+  using allocator_type = Allocator;
   using const_pointer = typename
     rt::allocator_traits<Allocator>::const_pointer;
   using difference_type = std::ptrdiff_t;
@@ -178,9 +179,11 @@ set<T, Compare, Allocator>::erase(const K& key)
   if (pair.first == m_head)
     return 0;
 
-  node_pointer r = tbst::erase_node<1>(
-    const_cast<node_pointer>(pair.second),
-    const_cast<node_pointer>(pair.first), m_inner_alloc);
+  //node_pointer r = tbst::erase_node<1>(
+  //  const_cast<node_pointer>(pair.second),
+  //  const_cast<node_pointer>(pair.first), m_inner_alloc);
+  node_pointer r = tbst::erase_node<1>(pair.second, pair.first,
+    m_inner_alloc);
   release_node(r);
   return 1;
 }

@@ -56,6 +56,7 @@ class node_ptr {
   node_ptr(L* pp, L i) : ptr(pp), idx(i) {}
 };
 
+//____________________________________________________
 template <class T, class L>
 bool operator==( const node_ptr<T, L>& p1
                , const node_ptr<T, L>& p2)
@@ -86,6 +87,28 @@ class node_link {
   }
 };
 
+//____________________________________________________
+template <class T, class L>
+bool operator==( const node_ptr<T, L>& p1
+               , const node_link<T, L>& p2)
+{return p1.get_idx() == p2.get_idx();}
+
+template <class T, class L>
+bool operator!=( const node_ptr<T, L>& p1
+               , const node_link<T, L>& p2)
+{return !(p1 == p2);}
+
+template <class T, class L>
+bool operator==( const node_link<T, L>& p1
+               , const node_ptr<T, L>& p2)
+{return p1.get_idx() == p2.get_idx();}
+
+template <class T, class L>
+bool operator!=( const node_link<T, L>& p1
+               , const node_ptr<T, L>& p2)
+{return !(p1 == p2);}
+
+//____________________________________________________
 template <class L>
 class node_ptr_void {
   public:
