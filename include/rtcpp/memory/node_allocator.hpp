@@ -22,6 +22,7 @@ class node_link;
 template <class T, class L>
 class node_ptr {
   private:
+  static constexpr std::size_t R = sizeof (T) / sizeof (L);
   L* ptr {nullptr};
   L idx {};
 
@@ -34,10 +35,14 @@ class node_ptr {
   using element_type = T;
   template <class U>
   using rebind = node_ptr<U, L>;
-  T& operator*() { return *reinterpret_cast<T*>(&ptr[idx]); }
-  const T& operator*() const { return *reinterpret_cast<const T*>(&ptr[idx]); }
-  T* operator->() { return reinterpret_cast<T*>(&ptr[idx]); }
-  const T* operator->() const { return reinterpret_cast<const T*>(&ptr[idx]); }
+  T& operator*()
+  { return *reinterpret_cast<T*>(&ptr[idx * R]); }
+  const T& operator*() const
+  { return *reinterpret_cast<const T*>(&ptr[idx * R]); }
+  T* operator->()
+  { return reinterpret_cast<T*>(&ptr[idx * R]); }
+  const T* operator->() const
+  { return reinterpret_cast<const T*>(&ptr[idx * R]); }
   node_ptr() = default;
   node_ptr& operator=(const node_link<T, L>& rhs)
   {

@@ -16,6 +16,8 @@ namespace rt {
 
 template <class T, class L>
 class node_stack {
+  private:
+  static constexpr std::size_t R = sizeof (T) / sizeof (L);
   public:
   node_alloc_header<L>* header;
   // used only when default constructed. Will be soon removed.
@@ -70,7 +72,7 @@ L node_stack<T, L>::pop() noexcept
   const L i = p[0]; // L of the next free node.
 
   if (i)
-    p[0] = p[i];
+    p[0] = p[i * R];
 
   return i;
 }
@@ -79,7 +81,7 @@ template <class T, class L>
 void node_stack<T, L>::push(L idx) noexcept
 {
   auto p = header->buffer; // Alias.
-  p[idx] = p[0];
+  p[idx * R] = p[0];
   p[0] = idx;
 }
 

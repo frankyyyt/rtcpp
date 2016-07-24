@@ -73,6 +73,7 @@ class node_allocator_lazy {
 
 template <typename T , std::size_t N>
 class node_allocator_lazy<T, N, true> {
+  static constexpr std::size_t R = sizeof (T) / sizeof (std::size_t);
   public:
   using value_type = T;
   using pointer = T*;
@@ -102,14 +103,14 @@ class node_allocator_lazy<T, N, true> {
       throw std::bad_alloc();
 
     const auto p = stack.header->buffer;
-    return reinterpret_cast<pointer>(&p[i]);
+    return reinterpret_cast<pointer>(&p[i * R]);
   }
   pointer allocate(size_type) { return allocate_node(); }
   void deallocate_node(pointer p)
   {
     const auto a = stack.header->buffer;
     const auto b = reinterpret_cast<Index*>(p);
-    stack.push(b - a);
+    stack.push(((b - a) / R));
   }
   void deallocate(pointer p, size_type) { deallocate_node(p); }
   template<typename U>

@@ -9,17 +9,22 @@ namespace rt {
 template <class T, class L>
 void link_stack(L* p, std::size_t n)
 {
-  const std::size_t max = std::numeric_limits<L>::max();
-  n = (n > max) ? max : n;
-
   constexpr auto N = sizeof (L);
   constexpr auto S = sizeof (T);
-  constexpr auto r = S / N;
-  const auto m = n / r; // Number of blocks of size S available.
+  constexpr auto R = S / N;
+  constexpr auto K = sizeof (std::size_t);
 
-  p[0] = (m - 1) * r;
+  if (N < K) {
+    const std::size_t max = R * std::numeric_limits<L>::max();
+    if (n > max)
+      n = max;
+  }
+
+  const auto m = n / R; // Number of blocks of size S available.
+
+  p[0] = m - 1;
   for (std::size_t i = 1; i < m; ++i)
-    p[i * r] = (i - 1) * r;
+    p[i * R] = i - 1;
 }
 
 }

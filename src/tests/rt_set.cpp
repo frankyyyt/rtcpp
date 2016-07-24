@@ -190,6 +190,38 @@ bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
 template <class T, class A>
 using set_type = rt::set<T, std::less<T>, A>;
 
+bool test_node_alloc_size()
+{
+  using T = unsigned char;
+  using L = unsigned char;
+  using alloc_type1 = std::allocator<T>;
+  using type1 = set_type<T, alloc_type1>;
+
+  using alloc_type3 =
+    rt::node_allocator<T, typename type1::node_type, L>;
+  using type3 = set_type<T, alloc_type3>;
+  const auto node_size3 =
+    sizeof (typename set_type<T, alloc_type3>::node_type);
+
+  const T max = std::numeric_limits<T>::max();
+
+  // Random unique integers in the range [a, b].
+  std::vector<T> tmp(max - 2);
+  std::iota(std::begin(tmp), std::end(tmp), 0);
+
+  std::vector<T> buffer(max * node_size3);
+  rt::node_alloc_header<L> header(buffer);
+  alloc_type3 alloc(&header);
+  type3 t3(alloc);
+
+  t3.insert(std::begin(tmp), std::end(tmp));
+  print(t3);
+  std::cout << std::endl;
+  //std::cout << "aaaaaaaaa" << std::endl;
+
+  return true;
+}
+
 template <class T, class L>
 bool test_with_node_alloc()
 {
@@ -281,6 +313,7 @@ int main()
 {
   const bool b1 = run_tests_all<int>();
   const bool b2 = run_tests_all<long long int>();
-  return (b1 && b2) ? 0 : 1;
+  const bool b3 = test_node_alloc_size();
+  return (b1 && b2 && b3) ? 0 : 1;
 }
 
