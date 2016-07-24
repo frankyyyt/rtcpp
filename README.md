@@ -19,6 +19,17 @@ or more easily here doc/proposal_allocator.pdf.
 
 A benchmark graph can be found here: doc/fig/unordered_set_with_frag.pdf
 
+#### Massive reduction of memory overhead
+
+A well known issue we face when working with linked data structures is
+that the links contained in the nodes represent a big memory overhead.
+The situation is made worse by the fact that there is no way to avoid
+pointers in STL containers. Even when you are using, say 20 elements,
+the links have the pointer size e.g 64 bits, that is suitable to address
+the whole address space. In the project I offer the possibility of using
+any integer to address the elements, resulting in massive reduction of
+the memory usage.
+
 #### Alternative to traverse linked data structures.
 
 A big concern today in the use of linked data structures is related
