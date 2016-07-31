@@ -11,9 +11,8 @@
 
 bool test_buffer_size()
 {
-  std::array<char, 1> buffer = {{}};
   try {
-    rt::node_alloc_header<std::size_t> header(buffer);
+    rt::node_alloc_header<std::size_t> header(0);
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
     return true;
@@ -23,8 +22,7 @@ bool test_buffer_size()
 
 bool test_link_diff_node_size()
 {
-  std::array<char, 900> buffer = {{}};
-  rt::node_alloc_header<std::size_t> header(buffer);
+  rt::node_alloc_header<std::size_t> header(90);
   rt::node_allocator_lazy<int> alloc(&header);
   try {
     rt::set< int
@@ -42,9 +40,7 @@ bool test_list()
 {
   std::array<int, 6> data = {{10, 3, 2, 8, 19, 33}};
 
-  std::array<char, 5000> buffer = {{}};
-
-  rt::node_alloc_header<std::size_t> header(buffer);
+  rt::node_alloc_header<std::size_t> header(500);
   rt::node_allocator_lazy<int> alloc(&header);
 
   std::list<int, rt::node_allocator_lazy<int>> t1(std::begin(data), std::end(data), alloc);
@@ -65,10 +61,7 @@ bool test_list()
 
 bool test_deallocate()
 {
-  const std::size_t data_size = sizeof (std::size_t);
-  std::array<char, 3 * data_size> buffer = {{}};
-
-  rt::node_alloc_header<std::size_t> header(buffer);
+  rt::node_alloc_header<std::size_t> header(3);
   rt::node_allocator_lazy<int> alloc1(&header);
   // links the node_allocator_lazy.
   rt::node_allocator_lazy<std::size_t> alloc2(alloc1);

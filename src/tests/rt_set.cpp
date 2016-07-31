@@ -209,8 +209,7 @@ bool test_node_alloc_size()
   std::vector<T> tmp(max - 2);
   std::iota(std::begin(tmp), std::end(tmp), 0);
 
-  std::vector<T> buffer(max * node_size3);
-  rt::node_alloc_header<L> header(buffer);
+  rt::node_alloc_header<L> header(max * node_size3);
   alloc_type3 alloc(&header);
   type3 t3(alloc);
 
@@ -242,8 +241,7 @@ bool test_with_node_alloc()
   const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
   const auto bsize = 10 * (tmp.size() + 1) * node_size3;
 
-  std::vector<char> buffer3(bsize);
-  rt::node_alloc_header<L> header3(buffer3);
+  rt::node_alloc_header<L> header3(bsize * 40);
   alloc_type3 alloc3(&header3);
   type3 t3(alloc3);
 
@@ -278,8 +276,7 @@ bool run_tests_all()
   if (!run_tests(t1, tmp))
     return false;
 
-  std::vector<char> buffer2(bsize);
-  rt::node_alloc_header<L> header2(buffer2);
+  rt::node_alloc_header<L> header2(bsize);
   alloc_type2 alloc1(&header2);
   type2 t2(alloc1);
   if (!run_tests(t2, tmp))

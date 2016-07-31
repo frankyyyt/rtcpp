@@ -15,10 +15,8 @@ int main()
                                        , inner_alloc_type> outer_alloc_type;
   typedef std::list<inner_list_type, outer_alloc_type> outer_list_type;
 
-  std::array<char, 2000> buffer1 = {{}};
-  std::array<char, 2000> buffer2 = {{}};
-  rt::node_alloc_header<std::size_t> header1(buffer1);
-  rt::node_alloc_header<std::size_t> header2(buffer2);
+  rt::node_alloc_header<std::size_t> header1(50);
+  rt::node_alloc_header<std::size_t> header2(50);
 
   inner_alloc_type alloc1(&header1);
   rt::node_allocator_lazy<inner_list_type> alloc2(&header2);

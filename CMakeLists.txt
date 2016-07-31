@@ -49,7 +49,6 @@ add_executable(ex_alloc_unordered_set src/examples/alloc_example_unordered_set.c
 add_executable(ex_matrix src/examples/matrix_example1.cpp)
 add_executable(bench_list_frag src/benchmarks/bench_list_frag.cpp)
 add_executable(bench_find src/benchmarks/bench_find.cpp)
-add_executable(bench_traverse src/benchmarks/bench_traverse.cpp)
 add_executable(bench_set src/benchmarks/bench_set.cpp)
 add_executable(bench_rtset src/benchmarks/bench_rtset.cpp)
 add_executable(bench_list src/benchmarks/bench_list.cpp)

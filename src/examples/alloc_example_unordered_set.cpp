@@ -6,8 +6,7 @@
 
 int main()
 {
-  std::array<char, 2000> buffer = {{}};
-  rt::node_alloc_header<std::size_t> header(buffer);
+  rt::node_alloc_header<std::size_t> header(50);
   rt::node_allocator_lazy<int> alloc(&header);
 
   std::unordered_set<int, std::hash<int>, std::equal_to<int>,
