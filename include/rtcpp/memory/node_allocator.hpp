@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <memory>
+#include <vector>
 #include <exception>
 #include <type_traits>
 
@@ -154,8 +155,14 @@ struct type_support<T, L, A, true> {
   using const_void_pointer = node_ptr_void<L>;
 };
 
-template <class T, class Node, class L, class A = std::allocator<T>>
+template < class T
+         , class Node
+         , class L = std::size_t
+         , std::size_t S = 1024 // Block size.
+         , class A = std::allocator<T>>
 class node_allocator {
+  static_assert((is_power_of_two<S>::value),
+  "node_allcator: S must be a power of 2.");
   public:
   using node_allocation_only = std::true_type;
 
@@ -170,19 +177,19 @@ class node_allocator {
   using const_void_pointer = typename type_support<T, L, A>::const_void_pointer;
 
   template<class U>
-  struct rebind { using other = node_allocator<U , Node, L, A>; };
+  struct rebind { using other = node_allocator<U , Node, L, S, A>; };
   node_alloc_header<L>* header;
   node_stack<T, L> stack;
   A alloc;
   node_allocator(node_alloc_header<L>* p, const A& a = A()) : header(p) {}
   // Constructor for the node type with a different pointer type.
   template<typename U, typename K = T>
-  node_allocator( const node_allocator<U, Node, L, A>& alloc
+  node_allocator( const node_allocator<U, Node, L, S, A>& alloc
                 , typename std::enable_if<is_same_node_type<K, Node>::value, void*>::type p = 0)
   : header(alloc.header)
   , stack(header) {}
   template<typename U, typename K = T>
-  node_allocator( const node_allocator<U, Node, L, A>& alloc
+  node_allocator( const node_allocator<U, Node, L, S, A>& alloc
                 , typename std::enable_if<!is_same_node_type<K, Node>::value, void*>::type p = 0)
   : header(alloc.header) {}
   template <typename U = T>
@@ -235,18 +242,19 @@ class node_allocator {
   { return std::addressof(x); }
 };
 
-template <class T, class K, class U, class V, class L, class A>
-bool operator==( const node_allocator<T, K, L, A>& alloc1
-               , const node_allocator<U, V, L, A>& alloc2)
+template <class T, class Node, class L, std::size_t S, class A>
+bool operator==( const node_allocator<T, Node, L, S, A>& alloc1
+               , const node_allocator<T, Node, L, S, A>& alloc2)
 {return alloc1.stack == alloc2.stack;}
 
-template <class T, class K, class U, class V, class L, class A>
-bool operator!=( const node_allocator<T, K, L, A>& alloc1
-               , const node_allocator<U, V, L, A>& alloc2)
+template <class T, class Node, class L, std::size_t S, class A>
+bool operator!=( const node_allocator<T, Node, L, S, A>& alloc1
+               , const node_allocator<T, Node, L, S, A>& alloc2)
 {return !(alloc1 == alloc2);}
 
-template <class T, class K, class U, class V, class L, class A>
-void swap(rt::node_allocator<T, K, L, A>& s1, rt::node_allocator<U, V, L, A>& s2)
+template <class T, class Node, class L, std::size_t S, class A>
+void swap(rt::node_allocator<T, Node, L, S, A>& s1,
+          rt::node_allocator<T, Node, L, S, A>& s2)
 {
   s1.swap(s2); // Put some static assert here.
 }
