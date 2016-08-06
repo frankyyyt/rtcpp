@@ -6,8 +6,7 @@
 
 int main()
 {
-  rt::node_alloc_header<std::size_t> header(50);
-  rt::node_allocator_lazy<int> alloc(&header);
+  rt::node_allocator_lazy<int> alloc(50);
 
   std::list<int, rt::node_allocator_lazy<int>> t1(alloc);
   t1 = {5, 3, 7, 20, 1, 44, 22, 8};

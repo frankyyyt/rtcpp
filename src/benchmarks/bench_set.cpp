@@ -106,8 +106,7 @@ int main(int argc, char* argv[])
   for (int i = 0; i < K; ++i) {
     const int n = N + i * S;
     std::cout << n << " ";
-    rt::node_alloc_header<std::size_t> header((n + 2) * node_size);
-    typename type2::allocator_type alloc(&header);
+    typename type2::allocator_type alloc((n + 2) * node_size);
     type2 s(alloc);
     print_set_bench(s, std::begin(data), n);
     std::cout << std::endl;

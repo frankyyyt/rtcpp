@@ -274,8 +274,7 @@ bool run_tests_all()
   if (!run_tests(t1, tmp))
     return false;
 
-  rt::node_alloc_header<L> header2(bsize);
-  alloc_type2 alloc1(&header2);
+  alloc_type2 alloc1(bsize);
   type2 t2(alloc1);
   if (!run_tests(t2, tmp))
     return false;

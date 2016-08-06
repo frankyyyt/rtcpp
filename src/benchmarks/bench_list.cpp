@@ -79,8 +79,7 @@ int main(int argc, char* argv[])
     const std::size_t n = N + i * S;
     std::cout << n << " ";
     {
-      rt::node_alloc_header<std::size_t> header((n + 2) * 5);
-      rt::node_allocator_lazy<int> alloc(&header);
+      rt::node_allocator_lazy<int> alloc((n + 2) * 5);
       std::list<int, rt::node_allocator_lazy<int>> s(alloc);
       print_list_bench(s, std::begin(data), n); // (2)
     }

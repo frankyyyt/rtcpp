@@ -22,8 +22,7 @@ bool test_buffer_size()
 
 bool test_link_diff_node_size()
 {
-  rt::node_alloc_header<std::size_t> header(90);
-  rt::node_allocator_lazy<int> alloc(&header);
+  rt::node_allocator_lazy<int> alloc(90);
   try {
     rt::set< int
            , std::less<int>, rt::node_allocator_lazy<int>> t2(alloc);
@@ -40,8 +39,7 @@ bool test_list()
 {
   std::array<int, 6> data = {{10, 3, 2, 8, 19, 33}};
 
-  rt::node_alloc_header<std::size_t> header(500);
-  rt::node_allocator_lazy<int> alloc(&header);
+  rt::node_allocator_lazy<int> alloc(500);
 
   std::list<int, rt::node_allocator_lazy<int>> t1(std::begin(data), std::end(data), alloc);
   std::list<int, rt::node_allocator_lazy<int>> t2(std::begin(data), std::end(data), alloc);
@@ -61,8 +59,7 @@ bool test_list()
 
 bool test_deallocate()
 {
-  rt::node_alloc_header<std::size_t> header(3);
-  rt::node_allocator_lazy<int> alloc1(&header);
+  rt::node_allocator_lazy<int> alloc1(3);
   // links the node_allocator_lazy.
   rt::node_allocator_lazy<std::size_t> alloc2(alloc1);
 
