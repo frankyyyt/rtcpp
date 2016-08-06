@@ -24,7 +24,7 @@ using set_type = rt::set<T, std::less<T>, Allocator>;
 
 using type1 = set_type<std::allocator<T>>;
 
-using alloc_type = rt::node_allocator<T, typename type1::node_type, L>;
+using alloc_type = rt::node_allocator<T, L>;
 
 using type2 = set_type<alloc_type>;
 
@@ -92,9 +92,7 @@ int main(int argc, char* argv[])
   for (int i = 0; i < K; ++i) {
     const int n = N + i * S;
     std::cout << n << " ";
-    typename type2::allocator_type alloc((n + 2) * node_size2 / sizeof (L));
-    type2 s(alloc);
-    print_set_bench(s, std::begin(data), n);
+    print_set_bench(type2(), std::begin(data), n);
     std::cout << std::endl;
   }
   std::cout << std::endl;

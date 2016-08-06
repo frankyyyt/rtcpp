@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "node_stack.hpp"
+#include "node_traits.hpp"
 #include "node_alloc_header.hpp"
 
 /*
@@ -27,12 +28,6 @@
 */
 
 namespace rt {
-
-template <typename T>
-struct is_node {
-  static const bool value =
-    !(sizeof (T) < sizeof (char*)) && !std::is_pointer<T>::value;
-};
 
 template <typename T, std::size_t S = sizeof (T),
           bool B = is_node<T>::value >

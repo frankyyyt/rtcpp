@@ -100,5 +100,10 @@ struct allocate_node_helper
 template<typename Alloc>
 using has_allocate_node = typename allocate_node_helper<Alloc>::type;
 
+template <typename T>
+struct is_node {
+  static const bool value = !std::is_pointer<T>::value;
+};
+
 }
 

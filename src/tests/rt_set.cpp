@@ -197,8 +197,7 @@ bool test_node_alloc_size()
   using alloc_type1 = std::allocator<T>;
   using type1 = set_type<T, alloc_type1>;
 
-  using alloc_type3 =
-    rt::node_allocator<T, typename type1::node_type, L>;
+  using alloc_type3 = rt::node_allocator<T, L>;
   using type3 = set_type<T, alloc_type3>;
   const auto node_size3 =
     sizeof (typename set_type<T, alloc_type3>::node_type);
@@ -209,8 +208,7 @@ bool test_node_alloc_size()
   std::vector<T> tmp(max - 2);
   std::iota(std::begin(tmp), std::end(tmp), 0);
 
-  alloc_type3 alloc(max * node_size3);
-  type3 t3(alloc);
+  type3 t3;
 
   t3.insert(std::begin(tmp), std::end(tmp));
   print(t3);
@@ -226,8 +224,7 @@ bool test_with_node_alloc()
   using alloc_type1 = std::allocator<T>;
   using type1 = set_type<T, alloc_type1>;
 
-  using alloc_type3 =
-    rt::node_allocator<T, typename type1::node_type, L>;
+  using alloc_type3 = rt::node_allocator<T, L>;
   using type3 = set_type<T, alloc_type3>;
   const auto node_size3 =
     sizeof (typename set_type<T, alloc_type3>::node_type);
@@ -240,8 +237,7 @@ bool test_with_node_alloc()
   const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
   const auto bsize = 10 * (tmp.size() + 1) * node_size3;
 
-  alloc_type3 alloc3(bsize * 40);
-  type3 t3(alloc3);
+  type3 t3;
 
   return run_tests(t3, tmp);
 }

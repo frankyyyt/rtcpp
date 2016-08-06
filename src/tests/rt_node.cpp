@@ -65,7 +65,7 @@ int main()
   using node_type1 = tbst::node<T, void*>;
   std::cout << sizeof (node_type1) << std::endl;
 
-  using alloc_type = node_allocator<T, node_type1, link_type>;
+  using alloc_type = node_allocator<T, link_type>;
   using alloc_traits_type = rt::allocator_traits<alloc_type>;
   using void_pointer = typename alloc_traits_type::void_pointer;
   using node_type = tbst::node<T, void_pointer>;
@@ -87,8 +87,7 @@ int main()
   //q = p;
 
 
-  alloc_type alloc(100);
-  inner_alloc_type inner_alloc(alloc);
+  inner_alloc_type inner_alloc;
 
   auto k = inner_alloc.allocate_node();
   inner_alloc.deallocate_node(k);
