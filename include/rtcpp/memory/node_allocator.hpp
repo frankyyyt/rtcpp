@@ -178,16 +178,17 @@ class node_allocator {
 
   template<class U>
   struct rebind { using other = node_allocator<U , Node, L, S, A>; };
-  node_alloc_header<L>* header;
+  std::shared_ptr<node_alloc_header<L>> header;
   node_stack<T, L> stack;
   A alloc;
-  node_allocator(node_alloc_header<L>* p, const A& a = A()) : header(p) {}
+  node_allocator(std::size_t n, const A& a = A())
+  : header(std::make_shared<node_alloc_header<L>>(n)) {}
   // Constructor for the node type with a different pointer type.
   template<typename U, typename K = T>
   node_allocator( const node_allocator<U, Node, L, S, A>& alloc
                 , typename std::enable_if<is_same_node_type<K, Node>::value, void*>::type p = 0)
   : header(alloc.header)
-  , stack(header) {}
+  , stack(header.get()) {}
   template<typename U, typename K = T>
   node_allocator( const node_allocator<U, Node, L, S, A>& alloc
                 , typename std::enable_if<!is_same_node_type<K, Node>::value, void*>::type p = 0)
