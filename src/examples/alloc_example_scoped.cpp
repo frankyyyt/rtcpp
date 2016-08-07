@@ -15,8 +15,8 @@ int main()
                                        , inner_alloc_type> outer_alloc_type;
   typedef std::list<inner_list_type, outer_alloc_type> outer_list_type;
 
-  inner_alloc_type alloc1(50);
-  rt::node_allocator_lazy<inner_list_type> alloc2(50);
+  inner_alloc_type alloc1;
+  rt::node_allocator_lazy<inner_list_type> alloc2;
 
   outer_alloc_type alloc(alloc2, alloc1);
 

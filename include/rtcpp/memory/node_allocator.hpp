@@ -6,7 +6,6 @@
 #include <exception>
 #include <type_traits>
 
-#include "node_stack.hpp"
 #include "node_traits.hpp"
 #include "node_alloc_header.hpp"
 
@@ -193,37 +192,36 @@ class node_allocator<T, L, S, A, true> {
   template<class U>
   struct rebind { using other = node_allocator<U , L, S, A, is_node_type<U>::value>; };
 
-  std::shared_ptr<node_alloc_header<L>> header;
-  node_stack<T, L> stack;
+  std::shared_ptr<node_alloc_header<T, L, S>> header;
   A alloc;
 
   node_allocator(const A& a = A())
-  : header(std::make_shared<node_alloc_header<L>>(S * sizeof (T)))
-  , stack(header.get()), alloc(a) {}
+  : header(std::make_shared<node_alloc_header<T, L, S>>())
+  , alloc(a) {}
 
   template<class U>
   node_allocator(const node_allocator<U, L, S, A, true>& a)
-  : header(a.header), stack(header.get()), alloc(a.alloc) {}
+  : header(a.header), alloc(a.alloc) {}
 
   template<class U>
   node_allocator(const node_allocator<U, L, S, A, false>& a)
-  : header(std::make_shared<node_alloc_header<L>>(S * sizeof (T)))
-  , stack(header.get()), alloc(a.alloc) {}
+  : header(std::make_shared<node_alloc_header<T, L, S>>())
+  , alloc(a.alloc) {}
 
   pointer allocate_node()
   {
-    const auto i = stack.pop(); 
+    const auto i = header->pop(); 
     if (!i)
       throw std::bad_alloc();
 
-    return pointer(stack.header->buffer, i);
+    return pointer(header->buffer, i);
   }
 
   void deallocate_node(pointer p)
-  { stack.push(p.get_idx()); }
+  { header->push(p.get_idx()); }
 
   pointer make_pointer(link_type link)
-  { return pointer(stack.header->buffer, link.get_idx()); }
+  { return pointer(header->buffer, link.get_idx()); }
 
   template<class U>
   void destroy(U* p) {p->~U();}
@@ -232,7 +230,6 @@ class node_allocator<T, L, S, A, true> {
   {::new((void *)p) U(std::forward<Args>(args)...);}
   void swap(node_allocator& other) noexcept
   {
-    stack.swap(other.stack);
     std::swap(header, other.header);
     std::swap(alloc, other.alloc);
   }
@@ -244,7 +241,7 @@ class node_allocator<T, L, S, A, true> {
 template <class T, class L, std::size_t S, class A, bool B>
 bool operator==( const node_allocator<T, L, S, A, B>& alloc1
                , const node_allocator<T, L, S, A, B>& alloc2)
-{return alloc1.stack == alloc2.stack;}
+{return alloc1.header == alloc2.header;}
 
 template <class T, class L, std::size_t S, class A, bool B>
 bool operator!=( const node_allocator<T, L, S, A, B>& alloc1

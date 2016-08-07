@@ -9,7 +9,8 @@ int main()
 {
   using T = unsigned char;
   using L = unsigned char;
-  using set_type = rt::set<T, std::less<T>, rt::node_allocator<T, L>>;
+  using set_type = rt::set<T, std::less<T>,
+                           rt::node_allocator<T, L, 256>>;
 
   set_type t1;
   t1 = {'a', 'f', 'a', 'c', 'l', 'l', 'e', 'd', 'f', 'b'};

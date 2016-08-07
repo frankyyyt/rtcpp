@@ -7,8 +7,6 @@
 #include <exception>
 #include <type_traits>
 
-#include "node_stack.hpp"
-
 namespace rt {
 
 template <typename ...> using void_type = void;

@@ -106,9 +106,7 @@ int main(int argc, char* argv[])
   for (int i = 0; i < K; ++i) {
     const int n = N + i * S;
     std::cout << n << " ";
-    typename type2::allocator_type alloc((n + 2) * node_size);
-    type2 s(alloc);
-    print_set_bench(s, std::begin(data), n);
+    print_set_bench(type2(), std::begin(data), n);
     std::cout << std::endl;
   }
 #ifdef GNU_FOUND

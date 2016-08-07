@@ -197,7 +197,7 @@ bool test_node_alloc_size()
   using alloc_type1 = std::allocator<T>;
   using type1 = set_type<T, alloc_type1>;
 
-  using alloc_type3 = rt::node_allocator<T, L>;
+  using alloc_type3 = rt::node_allocator<T, L, 256>;
   using type3 = set_type<T, alloc_type3>;
   const auto node_size3 =
     sizeof (typename set_type<T, alloc_type3>::node_type);
@@ -205,7 +205,7 @@ bool test_node_alloc_size()
   const T max = std::numeric_limits<T>::max();
 
   // Random unique integers in the range [a, b].
-  std::vector<T> tmp(max - 2);
+  std::vector<T> tmp(max - 3);
   std::iota(std::begin(tmp), std::end(tmp), 0);
 
   type3 t3;
@@ -224,7 +224,7 @@ bool test_with_node_alloc()
   using alloc_type1 = std::allocator<T>;
   using type1 = set_type<T, alloc_type1>;
 
-  using alloc_type3 = rt::node_allocator<T, L>;
+  using alloc_type3 = rt::node_allocator<T, L, 256>;
   using type3 = set_type<T, alloc_type3>;
   const auto node_size3 =
     sizeof (typename set_type<T, alloc_type3>::node_type);
@@ -235,7 +235,6 @@ bool test_with_node_alloc()
 
   // Random unique integers in the range [a, b].
   const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
-  const auto bsize = 10 * (tmp.size() + 1) * node_size3;
 
   type3 t3;
 
@@ -256,7 +255,7 @@ bool run_tests_all()
   const auto node_size2 =
     sizeof (typename set_type<T, alloc_type2>::node_type);
 
-  const T size = 1000;
+  const T size = 10;
   const T a = 1;
   const T b = std::numeric_limits<T>::max();
 
@@ -270,7 +269,7 @@ bool run_tests_all()
   if (!run_tests(t1, tmp))
     return false;
 
-  alloc_type2 alloc1(bsize);
+  alloc_type2 alloc1;
   type2 t2(alloc1);
   if (!run_tests(t2, tmp))
     return false;

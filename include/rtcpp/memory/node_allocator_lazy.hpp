@@ -7,7 +7,6 @@
 #include <exception>
 #include <type_traits>
 
-#include "node_stack.hpp"
 #include "node_traits.hpp"
 #include "node_alloc_header.hpp"
 
@@ -29,12 +28,9 @@
 
 namespace rt {
 
-template <typename T, std::size_t S = sizeof (T),
-          bool B = is_node<T>::value >
+template <class T, std::size_t S = sizeof (T),
+          bool B = is_node<T>::value>
 class node_allocator_lazy {
-  public:
-  std::shared_ptr<node_alloc_header<std::size_t>> header;
-  std::allocator<T> alloc;
   public:
   using value_type = T;
   using pointer = T*;
@@ -43,28 +39,23 @@ class node_allocator_lazy {
   using const_reference = const T&;
   using size_type = std::size_t;
   using difference_type = std::ptrdiff_t;
-  template<typename U>
+  template<class U>
   struct rebind {
     using other = node_allocator_lazy<U, sizeof (U),
       is_node<U>::value>;
   };
-  void swap(node_allocator_lazy& other) noexcept
-  {
-    std::swap(header, other.header);
-  }
-  node_allocator_lazy(std::size_t n)
-  : header(std::make_shared<node_alloc_header<std::size_t>>(n)) {}
-  template<typename U>
-  node_allocator_lazy( const node_allocator_lazy< U, sizeof (U)
-                     , is_node<U>::value>& alloc)
-  : header(alloc.header) {}
-  template<typename U>
+  template<class U>
+  node_allocator_lazy(const node_allocator_lazy<U, sizeof (U),
+                      true>& a) {}
+  template<class U>
   void destroy(U* p) {p->~U();}
-  template< typename U, typename... Args>
+  template<class U, typename... Args>
   void construct(U* p, Args&&... args)
   {::new((void *)p) U(std::forward<Args>(args)...);}
-  pointer allocate(size_type n) { return alloc.allocate(n); }
-  void deallocate(pointer p, size_type n) { alloc.deallocate(p, n); }
+  pointer allocate(size_type n)
+  { return std::allocator<T>().allocate(n); }
+  void deallocate(pointer p, size_type n)
+  { std::allocator<T>().deallocate(p, n); }
 };
 
 template <typename T , std::size_t N>
@@ -84,30 +75,43 @@ class node_allocator_lazy<T, N, true> {
     using other = node_allocator_lazy<U, sizeof (U), is_node<U>::value>;
   };
   public:
-  std::shared_ptr<node_alloc_header<std::size_t>> header;
-  node_stack<T, Index> stack;
+  std::shared_ptr<node_alloc_header<T, std::size_t, 1024>> header;
   public:
-  node_allocator_lazy(std::size_t n)
-  : header(std::make_shared<node_alloc_header<std::size_t>>(n)) {}
-  template<typename U>
+
+  node_allocator_lazy()
+  : header(std::make_shared<node_alloc_header<T, std::size_t, 1024>>())
+  {}
+
+  template<class U>
   node_allocator_lazy(const node_allocator_lazy<U, sizeof (U),
-                      is_node<U>::value>& alloc)
-  : header(alloc.header), stack(header.get()) {}
+                      true>& a)
+  {
+    if (!header)
+      header =
+        std::make_shared<node_alloc_header<T, std::size_t, 1024>>();
+  }
+
+  template<class U>
+  node_allocator_lazy(const node_allocator_lazy<U, sizeof (U),
+                      false>& a)
+  : header(std::make_shared<node_alloc_header<T, std::size_t, 1024>>())
+  {}
+
   pointer allocate_node()
   {
-    const auto i = stack.pop(); 
+    const auto i = header->pop(); 
     if (!i)
       throw std::bad_alloc();
 
-    const auto p = stack.header->buffer;
+    const auto p = header->buffer;
     return reinterpret_cast<pointer>(&p[i * R]);
   }
   pointer allocate(size_type) { return allocate_node(); }
   void deallocate_node(pointer p)
   {
-    const auto a = stack.header->buffer;
+    const auto a = header->buffer;
     const auto b = reinterpret_cast<Index*>(p);
-    stack.push(((b - a) / R));
+    header->push(((b - a) / R));
   }
   void deallocate(pointer p, size_type) { deallocate_node(p); }
   template<typename U>
@@ -118,7 +122,6 @@ class node_allocator_lazy<T, N, true> {
   void swap(node_allocator_lazy& other) noexcept
   {
     std::swap(header, other.header);
-    stack.swap(other.stack);
   }
   pointer address(reference x) const noexcept
   { return std::addressof(x); }
@@ -130,7 +133,7 @@ class node_allocator_lazy<T, N, true> {
 template <typename T>
 bool operator==( const node_allocator_lazy<T>& alloc1
                , const node_allocator_lazy<T>& alloc2)
-{return alloc1.stack == alloc2.stack;}
+{return alloc1.header == alloc2.header;}
 
 template <typename T>
 bool operator!=( const node_allocator_lazy<T>& alloc1
