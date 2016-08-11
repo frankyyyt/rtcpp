@@ -209,13 +209,7 @@ class node_allocator<T, L, S, A, true> {
   , alloc(a.alloc) {}
 
   pointer allocate_node()
-  {
-    const auto i = header->pop(); 
-    if (!i)
-      throw std::bad_alloc();
-
-    return pointer(header->buffer, i);
-  }
+  { return pointer(header->buffer, header->pop()); }
 
   void deallocate_node(pointer p)
   { header->push(p.get_idx()); }

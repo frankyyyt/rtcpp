@@ -16,14 +16,17 @@ int main()
   using Index = std::size_t;
   node_alloc_header<std::size_t, Index, n> header;
 
-  for (auto i = n; i != 0; --i) {
+  for (auto i = 1; i != n; ++i) {
     auto idx = header.pop();
     std::cout << idx << std::endl;
   }
 
-  if (header.pop()) {
+  try {
+    header.pop();
     std::cout << "ERROR" << std::endl;
     return 1;
+  } catch (...) {
+    std::cout << "OK" << std::endl;
   }
 
   std::cout << "___________" << std::endl;
@@ -36,14 +39,18 @@ int main()
   header.push(4);
   std::cout << "___________" << std::endl;
 
-  for (T i = n; i != 0; --i) {
+  for (auto i = 1; i != n; ++i) {
     auto idx = header.pop();
     std::cout << idx << std::endl;
   }
 
-  if (header.pop()) {
+
+  try {
+    header.pop();
     std::cout << "ERROR" << std::endl;
     return 1;
+  } catch (...) {
+    std::cout << "OK" << std::endl;
   }
 
   return 0;

@@ -100,9 +100,6 @@ class node_allocator_lazy<T, N, true> {
   pointer allocate_node()
   {
     const auto i = header->pop(); 
-    if (!i)
-      throw std::bad_alloc();
-
     const auto p = header->buffer;
     return reinterpret_cast<pointer>(&p[i * R]);
   }

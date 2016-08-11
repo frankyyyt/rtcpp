@@ -51,15 +51,16 @@ struct node_alloc_header {
 
   ~node_alloc_header() { delete [] buffer; }
 
-  L pop() noexcept
+  L pop()
   {
     auto p = buffer; // Alias
 
-    const L i = p[0]; // L of the next free node.
+    const L i = p[0];
 
-    if (i)
-      p[0] = p[i * R];
+    if (!i)
+      throw std::bad_alloc();
 
+    p[0] = p[i * R];
     return i;
   }
 
