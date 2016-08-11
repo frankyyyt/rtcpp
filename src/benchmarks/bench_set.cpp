@@ -96,41 +96,16 @@ int main(int argc, char* argv[])
     pointers = heap_frag<std::set<int>>(B, data);
 
   std::cout << "(1)" << std::endl;
-  for (int i = 0; i < K; ++i) {
-    const int n = N + i * S;
-    std::cout << n << " ";
-    print_set_bench(type1(), std::begin(data), n); // (1)
-    std::cout << std::endl;
-  }
+  bench<type1>(N, S, K, data);
   std::cout << "(2)" << std::endl;
-  for (int i = 0; i < K; ++i) {
-    const int n = N + i * S;
-    std::cout << n << " ";
-    print_set_bench(type2(), std::begin(data), n);
-    std::cout << std::endl;
-  }
+  bench<type2>(N, S, K, data);
 #ifdef GNU_FOUND
   std::cout << "(3)" << std::endl;
-  for (int i = 0; i < K; ++i) {
-    const int n = N + i * S;
-    std::cout << n << " ";
-    print_set_bench(type3(), std::begin(data), n);
-    std::cout << std::endl;
-  }
+  bench<type3>(N, S, K, data);
   std::cout << "(4)" << std::endl;
-  for (int i = 0; i < K; ++i) {
-    const int n = N + i * S;
-    std::cout << n << " ";
-    print_set_bench(type4(), std::begin(data), n);
-    std::cout << std::endl;
-  }
+  bench<type4>(N, S, K, data);
   std::cout << "(5)" << std::endl;
-  for (int i = 0; i < K; ++i) {
-    const int n = N + i * S;
-    std::cout << n << " ";
-    print_set_bench(type5(), std::begin(data), n);
-    std::cout << std::endl;
-  }
+  bench<type5>(N, S, K, data);
 #endif
   std::cout << std::endl;
   std::for_each( std::begin(pointers), std::end(pointers)
