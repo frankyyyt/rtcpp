@@ -10,7 +10,6 @@
 #include <vector>
 
 #include <rtcpp/container/set.hpp>
-#include <rtcpp/memory/node_allocator_lazy.hpp>
 #include <rtcpp/memory/node_allocator.hpp>
 #include <rtcpp/utility/make_rand_data.hpp>
 #include <rtcpp/utility/print.hpp>
@@ -250,11 +249,6 @@ bool run_tests_all()
   const auto node_size1 =
     sizeof (typename set_type<T, alloc_type1>::node_type);
 
-  using alloc_type2 = rt::node_allocator_lazy<T>;
-  using type2 = set_type<T, alloc_type2>;
-  const auto node_size2 =
-    sizeof (typename set_type<T, alloc_type2>::node_type);
-
   const T size = 10;
   const T a = 1;
   const T b = std::numeric_limits<T>::max();
@@ -267,11 +261,6 @@ bool run_tests_all()
 
   type1 t1;
   if (!run_tests(t1, tmp))
-    return false;
-
-  alloc_type2 alloc1;
-  type2 t2(alloc1);
-  if (!run_tests(t2, tmp))
     return false;
 
   if (!test_with_node_alloc<std::size_t, std::size_t>())

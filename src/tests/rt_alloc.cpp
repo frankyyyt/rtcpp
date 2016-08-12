@@ -2,22 +2,21 @@
 #include <iterator>
 #include <functional>
 #include <array>
-#include <set>
 #include <algorithm>
-#include <list>
 
-#include <rtcpp/memory/node_allocator_lazy.hpp>
+#include <rtcpp/memory/node_allocator.hpp>
 #include <rtcpp/container/set.hpp>
+
+using T = unsigned int;
+using L = unsigned int;
 
 bool test_list()
 {
-  std::array<int, 6> data = {{10, 3, 2, 8, 19, 33}};
+  std::initializer_list<T> data = {2, 3, 4, 5, 19, 33};
 
-  rt::node_allocator_lazy<int> alloc;
-
-  std::list<int, rt::node_allocator_lazy<int>> t1(std::begin(data), std::end(data), alloc);
-  std::list<int, rt::node_allocator_lazy<int>> t2(std::begin(data), std::end(data), alloc);
-  std::list<int, rt::node_allocator_lazy<int>> t3(std::begin(data), std::end(data), alloc);
+  rt::set<T, std::less<T>, rt::node_allocator<T, L>> t1(data);
+  rt::set<T, std::less<T>, rt::node_allocator<T, L>> t2(data);
+  rt::set<T, std::less<T>, rt::node_allocator<T, L>> t3(data);
 
   if (!std::equal(std::begin(data), std::end(data), std::begin(t1)))
     return false;
