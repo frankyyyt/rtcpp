@@ -47,7 +47,6 @@ add_executable(ex_matrix src/examples/matrix_example1.cpp)
 add_executable(bench_list_frag src/benchmarks/bench_list_frag.cpp)
 add_executable(bench_find src/benchmarks/bench_find.cpp)
 add_executable(bench_set src/benchmarks/bench_set.cpp)
-add_executable(bench_rtset src/benchmarks/bench_rtset.cpp)
 add_executable(bench_list src/benchmarks/bench_list.cpp)
 add_executable(bench_stack src/benchmarks/bench_stack.cpp)
 

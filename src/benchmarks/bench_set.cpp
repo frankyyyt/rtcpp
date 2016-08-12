@@ -1,6 +1,3 @@
-#include <set>
-#include <vector>
-#include <tuple>
 #include <iterator>
 #include <iostream>
 #include <algorithm>
@@ -16,39 +13,37 @@
 #endif
 
 #include <rtcpp/utility/to_number.hpp>
-#include <rtcpp/memory/node_allocator_lazy.hpp>
+#include <rtcpp/memory/node_allocator.hpp>
 #include <rtcpp/utility/make_rand_data.hpp>
+#include <rtcpp/container/set.hpp>
 
 #include "heap_frag.hpp"
 #include "print_set_bench.hpp"
 
-// WARNING: The number bellow is the container node size in bytes.
-// I do not have access to this information and therefore have to
-// hard code its values making it non-portable. It may have a
-// different value on your machine. You can easily find out by 
-// printing its value with cout on node_stack constructor.
+using T = unsigned short;
+using L = unsigned short;
 
-// Comment and uncomment the desired type (the same for the node size)
-
-//const int node_size = 40; // std::set
-const int node_size = 16; // std::unordered_set
-
-//template <class Allocator>
-//using set_type = std::set<int, std::less<int>, Allocator>;
-
-// List of set types with different allocators.
 template <class Allocator>
-using set_type = std::unordered_set<int, std::hash<int>,
-                 std::equal_to<int>,Allocator>;
+using set_type = rt::set<T, std::less<T>, Allocator>;
 
-using type1 = set_type<std::allocator<int>>;
-using type2 = set_type<rt::node_allocator_lazy<int>>;
-
+using type1 = set_type<std::allocator<T>>;
+using type2 = set_type<rt::node_allocator<T, L>>;
 #ifdef GNU_FOUND
-using type3 = set_type<__gnu_cxx::__pool_alloc<int>>;
-using type4 = set_type<__gnu_cxx::bitmap_allocator<int>>;
-using type5 = set_type<__gnu_cxx::__mt_alloc<int>>;
+using type3 = set_type<__gnu_cxx::__pool_alloc<T>>;
+using type4 = set_type<__gnu_cxx::bitmap_allocator<T>>;
+using type5 = set_type<__gnu_cxx::__mt_alloc<T>>;
 #endif
+
+void print_info()
+{
+  std::cout << "Size 1: " << sizeof (type1::node_type) << std::endl;
+  std::cout << "Size 2: " << sizeof (type2::node_type) << std::endl;
+#ifdef GNU_FOUND
+  std::cout << "Size 3: " << sizeof (type3::node_type) << std::endl;
+  std::cout << "Size 4: " << sizeof (type4::node_type) << std::endl;
+  std::cout << "Size 5: " << sizeof (type5::node_type) << std::endl;
+#endif
+}
 
 int main(int argc, char* argv[])
 {
@@ -65,8 +60,8 @@ int main(int argc, char* argv[])
     "(0) (1) (2) (3) (4) (5): \n"
     "Where: \n"
     "(0)  Number of elements.\n"
-    "(1)  std::set<std::alloc>\n"
-    "(2)  std::set<rt::alloc>\n"
+    "(1)  std::set<std::allocator>\n"
+    "(2)  std::set<rt::node_allocator>\n"
     "(3)  std::set<__gnu_cxx::__pool_alloc>\n"
     "(4)  std::set<__gnu_cxx::bitmap_alloc>\n"
     "(5)  std::set<__mt_alloc>\n\n";
@@ -87,13 +82,13 @@ int main(int argc, char* argv[])
   const int B = to_number<int>(argv[4]);
   const bool frag = !(argc == 6);
 
-  const std::vector<int> data =
-    rt::make_rand_data<int>( N + (K - 1) * S, 1
-                           , std::numeric_limits<int>::max());
+  const std::vector<T> data =
+    rt::make_rand_data<T>( N + (K - 1) * S, 1
+                         , std::numeric_limits<T>::max());
 
   std::vector<char*> pointers;
   if (frag) // Fragments the heap.
-    pointers = heap_frag<std::set<int>>(B, data);
+    pointers = heap_frag<rt::set<T>>(B, data);
 
   std::cout << "(1)" << std::endl;
   bench<type1>(N, S, K, data);
