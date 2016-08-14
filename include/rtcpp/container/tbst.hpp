@@ -75,9 +75,9 @@ Ptr inorder(Ptr p, A& a) noexcept
   using alloc_traits = rt::allocator_traits<A>;
 
   if (p->template get_null_link<I>())
-    return alloc_traits::make_pointer(a, p->link[I]);
+    return alloc_traits::make_ptr(a, p->link[I]);
 
-  Ptr q = alloc_traits::make_pointer(a, p->link[I]);
+  Ptr q = alloc_traits::make_ptr(a, p->link[I]);
   while (!q->template get_null_link<dir[I]>())
     q = q->link[dir[I]];
 
@@ -92,10 +92,10 @@ Ptr inorder_parent(Ptr p, A& a) noexcept
   using alloc_traits = rt::allocator_traits<A>;
 
   if (p->template get_null_link<I>())
-    return alloc_traits::make_pointer(a, p->link[I]);
+    return alloc_traits::make_ptr(a, p->link[I]);
 
   Ptr pq = p;
-  Ptr q = alloc_traits::make_pointer(a, p->link[I]);
+  Ptr q = alloc_traits::make_ptr(a, p->link[I]);
   while (!q->template get_null_link<dir[I]>()) {
     pq = q;
     q = q->link[dir[I]];
@@ -110,17 +110,17 @@ Ptr preorder_successor(Ptr p, A& a) noexcept
   using alloc_traits = rt::allocator_traits<A>;
 
   if (!p->template get_null_link<0>())
-    return alloc_traits::make_pointer(a, p->link[0]);
+    return alloc_traits::make_ptr(a, p->link[0]);
 
   if (!p->template get_null_link<1>())
-    return alloc_traits::make_pointer(a, p->link[1]);
+    return alloc_traits::make_ptr(a, p->link[1]);
 
   // This is a leaf node.
-  Ptr q = alloc_traits::make_pointer(a, p->link[1]);
+  Ptr q = alloc_traits::make_ptr(a, p->link[1]);
   while (q->template get_null_link<1>())
     q = q->link[1];
 
-  return alloc_traits::make_pointer(a, q->link[1]);
+  return alloc_traits::make_ptr(a, q->link[1]);
 }
 
 template <std::size_t I, class Ptr, class A>
@@ -150,7 +150,7 @@ Ptr2 erase_node_lr_non_null(Ptr* linker, Ptr2 q, A& a) noexcept
   using alloc_traits = rt::allocator_traits<A>;
 
   auto u = inorder_parent<I>(q, a);
-  auto s = alloc_traits::make_pointer(a, q->link[I]);
+  auto s = alloc_traits::make_ptr(a, q->link[I]);
   if (u != q)
     s = u->link[dir[I]];
   auto p = inorder<dir[I]>(q, a);
@@ -175,7 +175,7 @@ Ptr2 erase_node_one_null(Ptr* linker, Ptr2 q, A& a) noexcept
   using alloc_traits = rt::allocator_traits<A>;
 
   auto u = inorder_parent<dir[I]>(q, a);
-  auto s = alloc_traits::make_pointer(a, q->link[dir[I]]);
+  auto s = alloc_traits::make_ptr(a, q->link[dir[I]]);
 
   if (u != q)
     s = u->link[I];
@@ -231,7 +231,7 @@ find_with_parent(Ptr head, const K& key, const Comp& comp, A& a)
     return std::make_pair(head, head); // end iterator.
 
   Ptr u = head; // pointer to the parent pointer.
-  Ptr p = alloc_traits::make_pointer(a, head->link[0]);
+  Ptr p = alloc_traits::make_ptr(a, head->link[0]);
   for (;;) {
     if (comp(key, p->key)) {
       if (!p->template get_null_link<0>()) {

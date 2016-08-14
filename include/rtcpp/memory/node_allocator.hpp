@@ -214,7 +214,7 @@ class node_allocator<T, L, S, A, true> {
   void deallocate_node(pointer p)
   { header->push(p.get_idx()); }
 
-  pointer make_pointer(link_type link)
+  pointer make_ptr(link_type link)
   { return pointer(header->buffer, link.get_idx()); }
 
   template<class U>

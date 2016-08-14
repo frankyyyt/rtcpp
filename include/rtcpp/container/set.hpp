@@ -355,7 +355,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
     return std::make_pair(const_iterator(q, &m_inner_alloc), true);
   }
 
-  node_pointer p = inner_alloc_traits_type::make_pointer(m_inner_alloc, m_head->link[0]);
+  node_pointer p = inner_alloc_traits_type::make_ptr(m_inner_alloc, m_head->link[0]);
   for (;;) {
     if (m_comp(key, p->key)) {
       if (!p->template get_null_link<0>()) {
@@ -368,7 +368,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
       }
     } else if (m_comp(p->key, key)) {
       if (!p->template get_null_link<1>()) {
-        p = inner_alloc_traits_type::make_pointer(m_inner_alloc, p->link[1]);
+        p = inner_alloc_traits_type::make_ptr(m_inner_alloc, p->link[1]);
       } else {
         node_pointer q = get_node();
         safe_construct(q, key);
@@ -390,7 +390,7 @@ set<T, Compare, Allocator>::count(const K& key) const noexcept
     return 0;
 
   node_pointer p =
-    inner_alloc_traits_type::make_pointer(m_inner_alloc,
+    inner_alloc_traits_type::make_ptr(m_inner_alloc,
       m_head->link[0]);
 
   for (;;) {

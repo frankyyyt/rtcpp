@@ -40,13 +40,13 @@ struct allocator_traits {
   template <typename Alloc2 = Alloc>
   static typename std::enable_if<
     has_link_type<Alloc2>::value, pointer>::type
-  make_pointer(Alloc2& a, typename Alloc2::link_type l)
-  {return a.make_pointer(l);}
+  make_ptr(Alloc2& a, typename Alloc2::link_type l)
+  {return a.make_ptr(l);}
 
   template <typename Alloc2 = Alloc>
   static typename std::enable_if<
     !has_link_type<Alloc2>::value, pointer>::type
-  make_pointer(Alloc2&, typename Alloc2::pointer l)
+  make_ptr(Alloc2&, typename Alloc2::pointer l)
   {return l;}
 
   static pointer allocate(Alloc& a, size_type n)
