@@ -11,42 +11,45 @@ namespace rt {
 // Expects the pointer p to have a suitable alignment for both T and
 // L.
 
-template <class T, class L, std::size_t Size>
-void link_stack(L* p)
+template <class T, class L, std::size_t N>
+void link_stack(L* p, std::size_t offset)
 {
-  constexpr auto N = sizeof (L);
-  constexpr auto S = sizeof (T);
-  constexpr auto R = (S < N) ? 1 : S / N;
+  static constexpr auto SL = sizeof (L);
+  static constexpr auto ST = sizeof (T);
+  static constexpr auto R = (SL < ST) ? ST / SL : 1;
 
-  constexpr auto M = Size / R; // Number of blocks of size S available.
-
-  p[0] = M - 1;
-  for (std::size_t i = 1; i < M; ++i)
-    p[i * R] = i - 1;
+  for (std::size_t i = 0; i < N; ++i)
+    p[i * R] = offset + i;
 }
 
 template <class T, class L, std::size_t N>
-struct node_alloc_header {
+class node_alloc_header {
+  private:
+
   static_assert((!std::is_signed<L>::value),
-  "link_stack: Incompatible type.");
+  "node_alloc_header: Incompatible type.");
 
   static_assert((N - 1 <= std::numeric_limits<L>::max()),
-  "link_stack: Incompatible size.");
+  "node_alloc_header: Incompatible size.");
 
   static_assert((is_power_of_two<N>::value),
   "node_alloc_header: N must be a power of 2.");
 
+  static constexpr auto SL = sizeof (L);
+  static constexpr auto ST = sizeof (T);
+  static constexpr auto R = (SL < ST) ? ST / SL : 1;
+  static constexpr auto S = N * R; // Size of allocated array.
+
+  public:
   L* buffer;
-  static constexpr auto S = std::max(sizeof (T), sizeof (L));
-  static constexpr auto M = std::min(sizeof (T), sizeof (L));
-  static constexpr auto R = S / M;
-  static constexpr auto size = N * R;
 
-  static_assert((size >= 2), "node_alloc_header: Invalid N.");
+  static_assert((S >= 2), "node_alloc_header: Invalid N.");
 
-  node_alloc_header() : buffer(new L[size])
+  node_alloc_header() : buffer(new L[S])
   {
-    link_stack<T, L, size>(buffer);
+    buffer[0] = N - 1;
+    for (std::size_t i = 1; i < N; ++i)
+      buffer[i * R] = i - 1;
   }
 
   ~node_alloc_header() { delete [] buffer; }

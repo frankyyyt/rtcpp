@@ -182,7 +182,7 @@ set<T, Compare, Allocator>::erase(const K& key)
   //node_pointer r = tbst::erase_node<1>(
   //  const_cast<node_pointer>(pair.second),
   //  const_cast<node_pointer>(pair.first), m_inner_alloc);
-  node_pointer r = tbst::erase_node<1>(pair.second, pair.first,
+  auto r = tbst::erase_node<1>(pair.second, pair.first,
     m_inner_alloc);
   release_node(r);
   return 1;
