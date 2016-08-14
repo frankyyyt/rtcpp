@@ -15,10 +15,12 @@ int main()
 
   using Index = std::size_t;
   node_alloc_header<std::size_t, Index, n> header;
+  using pointer = 
+    typename node_alloc_header<std::size_t, Index, n>::pointer;
 
   for (auto i = 1; i != n; ++i) {
     auto idx = header.pop();
-    std::cout << idx << std::endl;
+    std::cout << idx.get_idx() << std::endl;
   }
 
   try {
@@ -30,18 +32,18 @@ int main()
   }
 
   std::cout << "___________" << std::endl;
-  header.push(3);
-  header.push(2);
-  header.push(1);
-  header.push(7);
-  header.push(5);
-  header.push(6);
-  header.push(4);
+  header.push(pointer(header.get_base_ptr(3), 3));
+  header.push(pointer(header.get_base_ptr(2), 2));
+  header.push(pointer(header.get_base_ptr(1), 1));
+  header.push(pointer(header.get_base_ptr(7), 7));
+  header.push(pointer(header.get_base_ptr(5), 5));
+  header.push(pointer(header.get_base_ptr(6), 6));
+  header.push(pointer(header.get_base_ptr(4), 4));
   std::cout << "___________" << std::endl;
 
   for (auto i = 1; i != n; ++i) {
     auto idx = header.pop();
-    std::cout << idx << std::endl;
+    std::cout << idx.get_idx() << std::endl;
   }
 
 
