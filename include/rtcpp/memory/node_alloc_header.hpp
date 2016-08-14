@@ -45,6 +45,11 @@ class node_alloc_header {
 
   static_assert((S >= 2), "node_alloc_header: Invalid N.");
 
+  L* get_base_ptr(L)
+  {
+    return buffer;
+  }
+
   node_alloc_header() : buffer(new L[S])
   {
     buffer[0] = N - 1;

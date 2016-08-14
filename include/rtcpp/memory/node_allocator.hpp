@@ -215,7 +215,10 @@ class node_allocator<T, L, S, A, true> {
   { header->push(p.get_idx()); }
 
   pointer make_ptr(link_type link)
-  { return pointer(header->buffer, link.get_idx()); }
+  {
+    const auto idx = link.get_idx();
+    return pointer(header->get_base_ptr(idx),idx);
+  }
 
   template<class U>
   void destroy(U* p) {p->~U();}
