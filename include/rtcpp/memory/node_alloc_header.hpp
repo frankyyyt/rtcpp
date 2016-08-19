@@ -116,14 +116,15 @@ class node_ptr_void {
 // L.
 
 template <class T, class L, std::size_t N>
-void link_stack(L* p, std::size_t offset)
+void link_stack(L* p, std::size_t n_blocs)
 {
   static constexpr auto SL = sizeof (L);
   static constexpr auto ST = sizeof (T);
   static constexpr auto R = (SL < ST) ? ST / SL : 1;
 
-  for (std::size_t i = 0; i < N; ++i)
-    p[i * R] = offset + i;
+  const auto offset = n_blocs * N;
+  for (std::size_t i = 1; i < N; ++i)
+    p[i * R] = offset + i - 1;
 }
 
 template <class T, class L, std::size_t N>
@@ -147,11 +148,13 @@ class node_alloc_header {
   static constexpr auto S = N * R; // Size of allocated array.
 
   L free {0};
+  std::size_t n_blocs {0};
   L* buffer[5] = {0};
   public:
 
   static_assert((S >= 2), "node_alloc_header: Invalid N.");
 
+  std::size_t get_n_blocs() const {return n_blocs;}
   L* get_base_ptr(L)
   {
     return buffer[0];
@@ -159,20 +162,23 @@ class node_alloc_header {
 
   node_alloc_header()
   {
-    buffer[0] = new L[S];
-    free = N - 1;
-    for (std::size_t i = 1; i < N; ++i)
-      buffer[0][i * R] = i - 1;
   }
 
   ~node_alloc_header() { delete [] buffer[0]; }
 
   pointer pop()
   {
-    const L i = free;
+    auto i = free;
 
-    if (!i)
-      throw std::bad_alloc();
+    if (!i) {
+      buffer[n_blocs] = new L[S];
+      free = N - 1;
+      link_stack<T, L, N>(buffer[n_blocs], n_blocs);
+      buffer[n_blocs][0] = free;
+      ++n_blocs;
+      free = n_blocs * N - 1;
+      i = free;
+    }
 
     free = buffer[0][i * R];
     return pointer(buffer[0], i);

@@ -11,7 +11,7 @@ int main()
 
   using T = std::size_t;
   const std::size_t N = sizeof (T);
-  constexpr T n = 8;
+  constexpr T n = 4;
 
   using Index = std::size_t;
   node_alloc_header<std::size_t, Index, n> header;
@@ -23,22 +23,18 @@ int main()
     std::cout << idx.get_idx() << std::endl;
   }
 
-  try {
-    header.pop();
-    std::cout << "ERROR" << std::endl;
+  if (header.get_n_blocs() != 1)
     return 1;
-  } catch (...) {
-    std::cout << "OK" << std::endl;
-  }
+
+  header.pop();
+
+  if (header.get_n_blocs() != 2)
+    return 1;
 
   std::cout << "___________" << std::endl;
   header.push(pointer(header.get_base_ptr(3), 3));
   header.push(pointer(header.get_base_ptr(2), 2));
   header.push(pointer(header.get_base_ptr(1), 1));
-  header.push(pointer(header.get_base_ptr(7), 7));
-  header.push(pointer(header.get_base_ptr(5), 5));
-  header.push(pointer(header.get_base_ptr(6), 6));
-  header.push(pointer(header.get_base_ptr(4), 4));
   std::cout << "___________" << std::endl;
 
   for (auto i = 1; i != n; ++i) {
@@ -47,13 +43,8 @@ int main()
   }
 
 
-  try {
-    header.pop();
-    std::cout << "ERROR" << std::endl;
+  if (header.get_n_blocs() != 2)
     return 1;
-  } catch (...) {
-    std::cout << "OK" << std::endl;
-  }
 
   return 0;
 }
