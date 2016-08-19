@@ -146,6 +146,7 @@ class node_alloc_header {
   static constexpr auto R = (SL < ST) ? ST / SL : 1;
   static constexpr auto S = N * R; // Size of allocated array.
 
+  L free {0};
   L* buffer[5] = {0};
   public:
 
@@ -159,7 +160,7 @@ class node_alloc_header {
   node_alloc_header()
   {
     buffer[0] = new L[S];
-    buffer[0][0] = N - 1;
+    free = N - 1;
     for (std::size_t i = 1; i < N; ++i)
       buffer[0][i * R] = i - 1;
   }
@@ -168,23 +169,20 @@ class node_alloc_header {
 
   pointer pop()
   {
-    auto p = buffer[0]; // Alias
-
-    const L i = p[0];
+    const L i = free;
 
     if (!i)
       throw std::bad_alloc();
 
-    p[0] = p[i * R];
-    return pointer(p, i);
+    free = buffer[0][i * R];
+    return pointer(buffer[0], i);
   }
 
   void push(pointer idx) noexcept
   {
-    auto p = buffer[0]; // Alias.
     const auto i = idx.get_idx();
-    p[i * R] = p[0];
-    p[0] = i;
+    buffer[0][i * R] = free;
+    free = i;
   }
 
   bool operator==(const node_alloc_header& rhs) const noexcept
