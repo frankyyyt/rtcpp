@@ -26,25 +26,29 @@ int main()
   if (header.get_n_blocs() != 1)
     return 1;
 
-  header.pop();
-
-  if (header.get_n_blocs() != 2)
-    return 1;
-
-  std::cout << "___________" << std::endl;
-  header.push(pointer(&header, 3));
-  header.push(pointer(&header, 2));
-  header.push(pointer(&header, 1));
-  std::cout << "___________" << std::endl;
-
+  std::cout << "OK" << std::endl;
   for (auto i = 1; i != n; ++i) {
     auto idx = header.pop();
     std::cout << idx.get_idx() << std::endl;
   }
 
-
   if (header.get_n_blocs() != 2)
     return 1;
+
+  std::cout << "OK" << std::endl;
+  for (auto i = 1; i != n; ++i) {
+    auto idx = header.pop();
+    std::cout << idx.get_idx() << std::endl;
+  }
+
+  if (header.get_n_blocs() != 3)
+    return 1;
+
+  std::cout << "OK" << std::endl;
+  for (auto i = 1; i != n; ++i) {
+    auto idx = header.pop();
+    std::cout << idx.get_idx() << std::endl;
+  }
 
   return 0;
 }

@@ -35,22 +35,22 @@ class node_ptr {
   T& operator*()
   {
     auto b = storage->get_base_ptr(idx);
-    return *reinterpret_cast<T*>(&b[idx * R]);
+    return *reinterpret_cast<T*>(&b[(idx % N) * R]);
   }
   const T& operator*() const
   {
     auto b = storage->get_base_ptr(idx);
-    return *reinterpret_cast<const T*>(&b[idx * R]);
+    return *reinterpret_cast<const T*>(&b[(idx % N) * R]);
   }
   T* operator->()
   {
     auto b = storage->get_base_ptr(idx);
-    return reinterpret_cast<T*>(&b[idx * R]);
+    return reinterpret_cast<T*>(&b[(idx % N) * R]);
   }
   const T* operator->() const
   {
     auto b = storage->get_base_ptr(idx);
-    return reinterpret_cast<const T*>(&b[idx * R]);
+    return reinterpret_cast<const T*>(&b[(idx % N) * R]);
   }
   node_ptr() = default;
   node_ptr& operator=(const node_link<T, L, N>& rhs)
@@ -129,21 +129,6 @@ class node_ptr_void {
   using rebind = node_link<U, L, N>;
 };
 
-// Expects the pointer p to have a suitable alignment for both T and
-// L.
-
-template <class T, class L, std::size_t N>
-void link_stack(L* p, std::size_t n_blocs)
-{
-  static constexpr auto SL = sizeof (L);
-  static constexpr auto ST = sizeof (T);
-  static constexpr auto R = (SL < ST) ? ST / SL : 1;
-
-  const auto offset = n_blocs * N;
-  for (std::size_t i = 1; i < N; ++i)
-    p[i * R] = offset + i - 1;
-}
-
 template <class T, class L, std::size_t N>
 class node_storage {
   public:
@@ -191,7 +176,10 @@ class node_storage {
   {
       const auto s = bufs.size();
       bufs.push_back(new L[S]);
-      link_stack<T, L, N>(bufs.back(), s);
+      const auto offset = s * N;
+      for (std::size_t i = 1; i < N; ++i)
+        bufs.back()[i * R] = offset + i - 1;
+
       bufs.back()[0] = 0;
       return bufs.size() * N - 1;
   }
@@ -206,7 +194,7 @@ class node_storage {
     }
 
     auto b = get_base_ptr(i);
-    free = b[i * R];
+    free = b[(i % N) * R];
     return pointer(this, i);
   }
 
@@ -214,7 +202,7 @@ class node_storage {
   {
     const auto i = idx.get_idx();
     auto b = get_base_ptr(i);
-    b[i * R] = free;
+    b[(i % N) * R] = free;
     free = i;
   }
 
