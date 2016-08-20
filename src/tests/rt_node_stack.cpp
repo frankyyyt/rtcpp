@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <exception>
 
-#include <rtcpp/memory/node_alloc_header.hpp>
+#include <rtcpp/memory/node_storage.hpp>
 #include <rtcpp/utility/print.hpp>
 
 int main()
@@ -14,9 +14,9 @@ int main()
   constexpr T n = 4;
 
   using Index = std::size_t;
-  node_alloc_header<std::size_t, Index, n> header;
+  node_storage<std::size_t, Index, n> header;
   using pointer = 
-    typename node_alloc_header<std::size_t, Index, n>::pointer;
+    typename node_storage<std::size_t, Index, n>::pointer;
 
   for (auto i = 1; i != n; ++i) {
     auto idx = header.pop();

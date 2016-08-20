@@ -7,7 +7,7 @@
 #include <type_traits>
 
 #include "node_traits.hpp"
-#include "node_alloc_header.hpp"
+#include "node_storage.hpp"
 
 /*
   This is the prototype allocator I have implemented for the proposal.
@@ -67,10 +67,10 @@ class node_allocator<T, L, S, A, true> {
   static_assert((is_power_of_two<S>::value),
   "node_allcator: S must be a power of 2.");
   public:
-  using node_storage = node_alloc_header<T, L, S>;
+  using node_storage_type = node_storage<T, L, S>;
   using node_allocation_only = std::true_type;
   using size_type = typename A::size_type;
-  using pointer = typename node_storage::pointer;
+  using pointer = typename node_storage_type::pointer;
   using const_pointer = pointer;
   using reference = T&;
   using const_reference = const T&;
@@ -82,11 +82,11 @@ class node_allocator<T, L, S, A, true> {
   template<class U>
   struct rebind { using other = node_allocator<U , L, S, A, is_node_type<U>::value>; };
 
-  std::shared_ptr<node_alloc_header<T, L, S>> header;
+  std::shared_ptr<node_storage_type> header;
   A alloc;
 
   node_allocator(const A& a = A())
-  : header(std::make_shared<node_alloc_header<T, L, S>>())
+  : header(std::make_shared<node_storage_type>())
   , alloc(a) {}
 
   template<class U>
@@ -95,7 +95,7 @@ class node_allocator<T, L, S, A, true> {
 
   template<class U>
   node_allocator(const node_allocator<U, L, S, A, false>& a)
-  : header(std::make_shared<node_alloc_header<T, L, S>>())
+  : header(std::make_shared<node_storage_type>())
   , alloc(a.alloc) {}
 
   pointer allocate_node() { return header->pop(); }

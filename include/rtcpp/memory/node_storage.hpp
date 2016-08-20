@@ -12,12 +12,12 @@ template <class, class, std::size_t>
 class node_link;
 
 template <class T, class L, std::size_t N>
-class node_alloc_header;
+class node_storage;
 
 template <class T, class L, std::size_t N>
 class node_ptr {
   public:
-  using storage_type = node_alloc_header<T, L, N>;
+  using storage_type = node_storage<T, L, N>;
   private:
   static constexpr std::size_t R = sizeof (T) / sizeof (L);
   storage_type* storage {nullptr};
@@ -145,19 +145,19 @@ void link_stack(L* p, std::size_t n_blocs)
 }
 
 template <class T, class L, std::size_t N>
-class node_alloc_header {
+class node_storage {
   public:
   using pointer = node_ptr<T, L, N>;
   private:
 
   static_assert((!std::is_signed<L>::value),
-  "node_alloc_header: Incompatible type.");
+  "node_storage: Incompatible type.");
 
   static_assert((N - 1 <= std::numeric_limits<L>::max()),
-  "node_alloc_header: Incompatible size.");
+  "node_storage: Incompatible size.");
 
   static_assert((is_power_of_two<N>::value),
-  "node_alloc_header: N must be a power of 2.");
+  "node_storage: N must be a power of 2.");
 
   static constexpr auto SL = sizeof (L);
   static constexpr auto ST = sizeof (T);
@@ -169,7 +169,7 @@ class node_alloc_header {
   L* buffer[5] = {0};
   public:
 
-  static_assert((S >= 2), "node_alloc_header: Invalid N.");
+  static_assert((S >= 2), "node_storage: Invalid N.");
 
   std::size_t get_n_blocs() const {return n_blocs;}
   L* get_base_ptr(L idx)
@@ -177,7 +177,7 @@ class node_alloc_header {
     return buffer[idx / N];
   }
 
-  ~node_alloc_header() { delete [] buffer[0]; }
+  ~node_storage() { delete [] buffer[0]; }
 
   pointer pop()
   {
@@ -206,7 +206,7 @@ class node_alloc_header {
     free = i;
   }
 
-  bool operator==(const node_alloc_header& rhs) const noexcept
+  bool operator==(const node_storage& rhs) const noexcept
   {return buffer == rhs.buffer;}
 };
 
