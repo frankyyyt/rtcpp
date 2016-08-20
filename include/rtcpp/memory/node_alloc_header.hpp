@@ -8,63 +8,80 @@
 
 namespace rt {
 
-template <class, class>
+template <class, class, std::size_t>
 class node_link;
 
-template <class T, class L>
+template <class T, class L, std::size_t N>
+class node_alloc_header;
+
+template <class T, class L, std::size_t N>
 class node_ptr {
+  public:
+  using storage_type = node_alloc_header<T, L, N>;
   private:
   static constexpr std::size_t R = sizeof (T) / sizeof (L);
-  L* ptr {nullptr};
+  storage_type* storage {nullptr};
   L idx {};
 
   public:
-  template <class, class>
+  template <class, class, std::size_t>
   friend class node_link;
 
   L get_idx() const {return idx;}
   using link_type = L;
   using element_type = T;
   template <class U>
-  using rebind = node_ptr<U, L>;
+  using rebind = node_ptr<U, L, N>;
   T& operator*()
-  { return *reinterpret_cast<T*>(&ptr[idx * R]); }
+  {
+    auto b = storage->get_base_ptr(idx);
+    return *reinterpret_cast<T*>(&b[idx * R]);
+  }
   const T& operator*() const
-  { return *reinterpret_cast<const T*>(&ptr[idx * R]); }
+  {
+    auto b = storage->get_base_ptr(idx);
+    return *reinterpret_cast<const T*>(&b[idx * R]);
+  }
   T* operator->()
-  { return reinterpret_cast<T*>(&ptr[idx * R]); }
+  {
+    auto b = storage->get_base_ptr(idx);
+    return reinterpret_cast<T*>(&b[idx * R]);
+  }
   const T* operator->() const
-  { return reinterpret_cast<const T*>(&ptr[idx * R]); }
+  {
+    auto b = storage->get_base_ptr(idx);
+    return reinterpret_cast<const T*>(&b[idx * R]);
+  }
   node_ptr() = default;
-  node_ptr& operator=(const node_link<T, L>& rhs)
+  node_ptr& operator=(const node_link<T, L, N>& rhs)
   {
     idx = rhs.idx;
     return *this;
   }
-  node_ptr& operator=(const node_ptr<T, L>& rhs)
+  node_ptr& operator=(const node_ptr<T, L, N>& rhs)
   {
     idx = rhs.idx;
-    ptr = rhs.ptr;
+    storage = rhs.storage;
     return *this;
   }
-  node_ptr(L* pp, L i) : ptr(pp), idx(i) {}
+  node_ptr(storage_type* pp, L i) : storage(pp), idx(i) {}
 };
 
 //____________________________________________________
-template <class T, class L>
-bool operator==( const node_ptr<T, L>& p1
-               , const node_ptr<T, L>& p2)
+template <class T, class L, std::size_t N>
+bool operator==( const node_ptr<T, L, N>& p1
+               , const node_ptr<T, L, N>& p2)
 {return p1.get_idx() == p2.get_idx();}
 
-template <class T, class L>
-bool operator!=( const node_ptr<T, L>& p1
-               , const node_ptr<T, L>& p2)
+template <class T, class L, std::size_t N>
+bool operator!=( const node_ptr<T, L, N>& p1
+               , const node_ptr<T, L, N>& p2)
 {return !(p1 == p2);}
 
-template <class T, class L>
+template <class T, class L, std::size_t N>
 class node_link {
   private:
-  template <class, class>
+  template <class, class, std::size_t>
   friend class node_ptr;
   //private:
   L idx;
@@ -73,8 +90,8 @@ class node_link {
   using link_type = L;
   using element_type = T;
   template <class U>
-  using rebind = node_ptr<U, L>;
-  node_link& operator=(const node_ptr<T, L>& rhs)
+  using rebind = node_ptr<U, L, N>;
+  node_link& operator=(const node_ptr<T, L, N>& rhs)
   {
     idx = rhs.idx;
     return *this;
@@ -82,34 +99,34 @@ class node_link {
 };
 
 //____________________________________________________
-template <class T, class L>
-bool operator==( const node_ptr<T, L>& p1
-               , const node_link<T, L>& p2)
+template <class T, class L, std::size_t N>
+bool operator==( const node_ptr<T, L, N>& p1
+               , const node_link<T, L, N>& p2)
 {return p1.get_idx() == p2.get_idx();}
 
-template <class T, class L>
-bool operator!=( const node_ptr<T, L>& p1
-               , const node_link<T, L>& p2)
+template <class T, class L, std::size_t N>
+bool operator!=( const node_ptr<T, L, N>& p1
+               , const node_link<T, L, N>& p2)
 {return !(p1 == p2);}
 
-template <class T, class L>
-bool operator==( const node_link<T, L>& p1
-               , const node_ptr<T, L>& p2)
+template <class T, class L, std::size_t N>
+bool operator==( const node_link<T, L, N>& p1
+               , const node_ptr<T, L, N>& p2)
 {return p1.get_idx() == p2.get_idx();}
 
-template <class T, class L>
-bool operator!=( const node_link<T, L>& p1
-               , const node_ptr<T, L>& p2)
+template <class T, class L, std::size_t N>
+bool operator!=( const node_link<T, L, N>& p1
+               , const node_ptr<T, L, N>& p2)
 {return !(p1 == p2);}
 
 //____________________________________________________
-template <class L>
+template <class L, std::size_t N>
 class node_ptr_void {
   public:
   using link_type = L;
   using element_type = void;
   template <class U>
-  using rebind = node_link<U, L>;
+  using rebind = node_link<U, L, N>;
 };
 
 // Expects the pointer p to have a suitable alignment for both T and
@@ -130,7 +147,7 @@ void link_stack(L* p, std::size_t n_blocs)
 template <class T, class L, std::size_t N>
 class node_alloc_header {
   public:
-  using pointer = node_ptr<T, L>;
+  using pointer = node_ptr<T, L, N>;
   private:
 
   static_assert((!std::is_signed<L>::value),
@@ -155,13 +172,9 @@ class node_alloc_header {
   static_assert((S >= 2), "node_alloc_header: Invalid N.");
 
   std::size_t get_n_blocs() const {return n_blocs;}
-  L* get_base_ptr(L)
+  L* get_base_ptr(L idx)
   {
-    return buffer[0];
-  }
-
-  node_alloc_header()
-  {
+    return buffer[idx / N];
   }
 
   ~node_alloc_header() { delete [] buffer[0]; }
@@ -180,19 +193,21 @@ class node_alloc_header {
       i = free;
     }
 
-    free = buffer[0][i * R];
-    return pointer(buffer[0], i);
+    auto b = get_base_ptr(i);
+    free = b[i * R];
+    return pointer(this, i);
   }
 
   void push(pointer idx) noexcept
   {
     const auto i = idx.get_idx();
-    buffer[0][i * R] = free;
+    auto b = get_base_ptr(i);
+    b[i * R] = free;
     free = i;
   }
 
   bool operator==(const node_alloc_header& rhs) const noexcept
-  {return buffer[0] == rhs.buffer[0];}
+  {return buffer == rhs.buffer;}
 };
 
 }

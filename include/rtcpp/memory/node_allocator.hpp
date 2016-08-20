@@ -32,9 +32,9 @@ class node_allocator {
   using reference = typename A::reference;
   using const_reference = typename A::const_reference;
   using value_type = typename A::value_type;
-  using void_pointer = node_ptr_void<L>;
-  using const_void_pointer = node_ptr_void<L>;
-  using link_type = node_link<T, L>;
+  using void_pointer = node_ptr_void<L, S>;
+  using const_void_pointer = node_ptr_void<L, S>;
+  using link_type = node_link<T, L, S>;
 
   template<class U>
   struct rebind { using other = node_allocator<U, L, S, A, is_node_type<U>::value>; };
@@ -67,16 +67,17 @@ class node_allocator<T, L, S, A, true> {
   static_assert((is_power_of_two<S>::value),
   "node_allcator: S must be a power of 2.");
   public:
+  using node_storage = node_alloc_header<T, L, S>;
   using node_allocation_only = std::true_type;
   using size_type = typename A::size_type;
-  using pointer = node_ptr<T, L>;
-  using const_pointer = node_ptr<T, L>;
+  using pointer = typename node_storage::pointer;
+  using const_pointer = pointer;
   using reference = T&;
   using const_reference = const T&;
   using value_type = T;
-  using void_pointer = node_ptr_void<L>;
-  using const_void_pointer = node_ptr_void<L>;
-  using link_type = node_link<T, L>;
+  using void_pointer = node_ptr_void<L, S>;
+  using const_void_pointer = node_ptr_void<L, S>;
+  using link_type = node_link<T, L, S>;
 
   template<class U>
   struct rebind { using other = node_allocator<U , L, S, A, is_node_type<U>::value>; };
@@ -104,8 +105,7 @@ class node_allocator<T, L, S, A, true> {
 
   pointer make_ptr(link_type link)
   {
-    const auto idx = link.get_idx();
-    return pointer(header->get_base_ptr(idx),idx);
+    return pointer(header.get(), link.get_idx());
   }
 
   template<class U>

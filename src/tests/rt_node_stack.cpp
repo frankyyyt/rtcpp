@@ -32,9 +32,9 @@ int main()
     return 1;
 
   std::cout << "___________" << std::endl;
-  header.push(pointer(header.get_base_ptr(3), 3));
-  header.push(pointer(header.get_base_ptr(2), 2));
-  header.push(pointer(header.get_base_ptr(1), 1));
+  header.push(pointer(&header, 3));
+  header.push(pointer(&header, 2));
+  header.push(pointer(&header, 1));
   std::cout << "___________" << std::endl;
 
   for (auto i = 1; i != n; ++i) {

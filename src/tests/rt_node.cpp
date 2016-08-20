@@ -19,6 +19,7 @@ using namespace rt;
 
 void print_node_sizes()
 {
+  constexpr std::size_t N = 8;
   constexpr std::size_t S1 = sizeof (tbst::node<unsigned char, void*>);
   constexpr std::size_t S2 = sizeof (tbst::node<short    , void*>);
   constexpr std::size_t S3 = sizeof (tbst::node<int      , void*>);
@@ -35,11 +36,11 @@ void print_node_sizes()
 
   std::cout << "_____" << std::endl;
 
-  using node1 = tbst::node<unsigned char, node_ptr_void<unsigned char>>;
-  using node2 = tbst::node<short        , node_ptr_void<short>        >;
-  using node3 = tbst::node<int          , node_ptr_void<int>          >;
-  using node4 = tbst::node<long long    , node_ptr_void<long long>    >;
-  using node5 = tbst::node<char*        , node_ptr_void<char*>        >;
+  using node1 = tbst::node<unsigned char, node_ptr_void<unsigned char, N>>;
+  using node2 = tbst::node<short        , node_ptr_void<short, N>        >;
+  using node3 = tbst::node<int          , node_ptr_void<int, N>          >;
+  using node4 = tbst::node<long long    , node_ptr_void<long long, N>    >;
+  using node5 = tbst::node<char*        , node_ptr_void<char*, N>        >;
 
   constexpr std::size_t U1 = sizeof (node1);
   constexpr std::size_t U2 = sizeof (node2);
