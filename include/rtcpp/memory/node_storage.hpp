@@ -83,7 +83,7 @@ class node_link {
   private:
   template <class, class, std::size_t>
   friend class node_ptr;
-  //private:
+  private:
   L idx;
   public:
   L get_idx() const {return idx;}
@@ -165,31 +165,43 @@ class node_storage {
   static constexpr auto S = N * R; // Size of allocated array.
 
   L free {0};
-  std::size_t n_blocs {0};
-  L* buffer[5] = {0};
+  std::vector<L*> bufs;
+
+  // Non copyable
+  node_storage& operator=(const node_storage&) = delete;
+  node_storage(const node_storage&) = delete;
   public:
+  node_storage() {}
 
   static_assert((S >= 2), "node_storage: Invalid N.");
 
-  std::size_t get_n_blocs() const {return n_blocs;}
+  std::size_t get_n_blocs() const {return bufs.size();}
   L* get_base_ptr(L idx)
   {
-    return buffer[idx / N];
+    return bufs[idx / N];
   }
 
-  ~node_storage() { delete [] buffer[0]; }
+  ~node_storage()
+  {
+    for_each(std::begin(bufs), std::end(bufs), [](auto p) {
+      delete [] p; });
+  }
+
+  L add_bloc() // returns the index of the next free node.
+  {
+      const auto s = bufs.size();
+      bufs.push_back(new L[S]);
+      link_stack<T, L, N>(bufs.back(), s);
+      bufs.back()[0] = 0;
+      return bufs.size() * N - 1;
+  }
 
   pointer pop()
   {
     auto i = free;
 
     if (!i) {
-      buffer[n_blocs] = new L[S];
-      free = N - 1;
-      link_stack<T, L, N>(buffer[n_blocs], n_blocs);
-      buffer[n_blocs][0] = free;
-      ++n_blocs;
-      free = n_blocs * N - 1;
+      free = add_bloc();
       i = free;
     }
 
@@ -207,7 +219,7 @@ class node_storage {
   }
 
   bool operator==(const node_storage& rhs) const noexcept
-  {return buffer == rhs.buffer;}
+  {return bufs == rhs.bufs;}
 };
 
 }
