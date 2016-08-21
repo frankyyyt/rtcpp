@@ -79,15 +79,6 @@ int main()
 
   std::cout << sizeof (value_type) << std::endl;
 
-  //using node_link_type = typename node_type::link_type;
-  //using node_pointer = node_ptr<node_type, link_type>;
-  //node_type node;
-  //node_link_type p;
-  //node_pointer q;
-  //p = q;
-  //q = p;
-
-
   inner_alloc_type inner_alloc;
 
   auto k = inner_alloc.allocate_node();

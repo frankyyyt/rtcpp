@@ -14,28 +14,43 @@
 #include <rtcpp/utility/make_rand_data.hpp>
 #include <rtcpp/utility/print.hpp>
 
+template <class A>
 bool test_move()
 {
-  rt::set<int> t1 = {1, 2, 3, 4, 5};
-  rt::set<int> t2(std::move(t1));
+  std::initializer_list<int> data1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+  rt::set<int, std::less<int>, A> t1(data1);
+
+  if (!std::equal(std::begin(data1), std::end(data1), std::begin(t1)))
+    return false;
+
+  rt::set<int, std::less<int>, A> t2(std::move(t1));
+
+  if (!std::equal(std::begin(data1), std::end(data1), std::begin(t2)))
+    return false;
 
   if (!t1.empty())
     return false;
 
-  //print(t1);
-  //print(t2);
+  print(t1);
+  print(t2);
 
   return true;
 }
+
+template <class A>
 bool test_reverse_traversal()
 {
   constexpr int size = 10;
-  constexpr std::array<int, size> o = {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}};
-  constexpr std::array<int, size> arr = {{o[5], o[2], o[7], o[9], o[8], o[3], o[0], o[4], o[6], o[1]}};
-  rt::set<int> t1(std::begin(arr), std::end(arr));
 
-  // Now the tree has three items 3, 2, 4. Lets test if the iterators can get
-  // us to the right point.
+  constexpr std::array<int, size> o =
+  {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}};
+
+  constexpr std::array<int, size> arr =
+  {{o[5], o[2], o[7], o[9], o[8], o[3], o[0], o[4], o[6], o[1]}};
+
+  rt::set<int, std::less<int>, A> t1(std::begin(arr), std::end(arr));
+
   auto iter = t1.end();
 
   // We should be now at the rbegin.
@@ -47,20 +62,42 @@ bool test_reverse_traversal()
   return true;
 }
 
-template <typename T>
-bool test_swap(const std::vector<T>& arr)
+template <class A>
+bool test_swap()
 {
-  rt::set<T> t1(std::begin(arr), std::end(arr));
-  rt::set<T> t1_copy = t1;
-  rt::set<T> t2 = {1, 4, 8, 2, 7};
-  rt::set<T> t2_copy = t2;
+  std::initializer_list<int> data1 = {1, 2, 3, 4, 5};
+  std::initializer_list<int> data2 = {6, 7, 8, 9, 10};
+
+  using set_type = rt::set<int, std::less<int>, A>;
+  set_type t1(data1);
+  set_type t1_copy = t1;
+  set_type t2(data2);
+  set_type t2_copy = t2;
+
+  std::cout << "_______" << std::endl;
+  rt::print(t1);
+  rt::print(t1_copy);
+  rt::print(t2);
+  rt::print(t2_copy);
+
   std::swap(t1, t2);
+
+  std::cout << "_______" << std::endl;
+  rt::print(t1);
+  rt::print(t1_copy);
+  rt::print(t2);
+  rt::print(t2_copy);
+  std::cout << "_______" << std::endl;
+
+  std::cout << "test_swap" << std::endl;
 
   if (t1 != t2_copy)
     return false;
+  std::cout << "test_swap" << std::endl;
 
   if (t2 != t1_copy)
     return false;
+  std::cout << "test_swap" << std::endl;
 
   return true;
 }
@@ -174,13 +211,23 @@ bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
   if (!test_find(t1, tmp))
     return false;
 
-  if (!test_swap<value_type>(tmp))
+  if (!test_swap<std::allocator<int>>())
     return false;
 
-  if (!test_reverse_traversal())
+  // Bug
+  if (!test_swap<rt::node_allocator<int, unsigned char, 2>>())
     return false;
 
-  if (!test_move())
+  if (!test_reverse_traversal<std::allocator<int>>())
+    return false;
+
+  if (!test_reverse_traversal<rt::node_allocator<int, unsigned char, 2>>())
+    return false;
+
+  if (!test_move<std::allocator<int>>())
+    return false;
+
+  if (!test_move<rt::node_allocator<int, unsigned char, 2>>())
     return false;
 
   return true;

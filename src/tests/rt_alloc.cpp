@@ -7,24 +7,24 @@
 #include <rtcpp/memory/node_allocator.hpp>
 #include <rtcpp/container/set.hpp>
 
-using T = unsigned int;
-using L = unsigned int;
+using T = unsigned char;
+using L = unsigned char;
 
-bool test_list()
+bool test()
 {
-  std::initializer_list<T> data = {2, 3, 4, 5, 19, 33};
+  std::initializer_list<T> data =
+  {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
 
-  rt::set<T, std::less<T>, rt::node_allocator<T, L>> t1(data);
-  rt::set<T, std::less<T>, rt::node_allocator<T, L>> t2(data);
-  rt::set<T, std::less<T>, rt::node_allocator<T, L>> t3(data);
+  rt::set<T, std::less<T>, rt::node_allocator<T, L, 2>> t1(data);
 
   if (!std::equal(std::begin(data), std::end(data), std::begin(t1)))
     return false;
 
-  if (!std::equal(std::begin(data), std::end(data), std::begin(t2)))
-    return false;
+  t1.clear();
 
-  if (!std::equal(std::begin(data), std::end(data), std::begin(t3)))
+  t1 = data;
+
+  if (!std::equal(std::begin(data), std::end(data), std::begin(t1)))
     return false;
 
   return true;
@@ -33,7 +33,7 @@ bool test_list()
 int main()
 {
   try {
-    if (!test_list())
+    if (!test())
       return 1;
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
