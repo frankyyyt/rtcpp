@@ -102,10 +102,10 @@ bool test_swap()
   return true;
 }
 
-template <typename C>
-bool test_erase(C& t1, const std::vector<typename C::value_type>& arr)
+template <class A>
+bool test_erase(const std::vector<int>& arr)
 {
-  t1.clear();
+  rt::set<int, std::less<int>, A> t1;
 
   t1.insert(std::begin(arr), std::end(arr));
   for (auto v : arr) { // Removes forward
@@ -131,25 +131,23 @@ bool test_erase(C& t1, const std::vector<typename C::value_type>& arr)
   return true;
 }
 
-template <typename C>
-bool test_count(C& t1, const std::vector<typename C::value_type>& arr)
+template <class A>
+bool test_count(const std::vector<int>& arr)
 {
-  typedef typename C::value_type value_type;
-  t1.clear();
+  rt::set<int, std::less<int>, A> t1;
   t1.insert(std::begin(arr), std::end(arr));
-  if (!std::all_of(std::begin(arr), std::end(arr), [&](value_type a){ return t1.count(a) == 1;}))
+  if (!std::all_of(std::begin(arr), std::end(arr), [&](int a){ return t1.count(a) == 1;}))
     return false;
 
   return true;
 }
 
-template <typename C>
-bool test_find(C& t1,const std::vector<typename C::value_type>& arr)
+template <class A>
+bool test_find(const std::vector<int>& arr)
 {
-  typedef typename C::value_type value_type;
-  t1.clear();
+  rt::set<int, std::less<int>, A> t1;
   t1.insert(std::begin(arr), std::end(arr));
-  auto func = [&](value_type a) -> bool
+  auto func = [&](int a) -> bool
   {
     auto iter = t1.find(a);
     if (iter == t1.end())
@@ -165,10 +163,11 @@ bool test_find(C& t1,const std::vector<typename C::value_type>& arr)
   return true;
 }
 
-template <typename C>
-bool test_basic(C& t1, const std::vector<typename C::value_type>& tmp)
+template <class A>
+bool test_basic(const std::vector<int>& tmp)
 {
-  t1.clear();
+  using set_type = rt::set<int, std::less<int>, A>;
+  set_type t1;
   t1.insert(std::begin(tmp), std::end(tmp));
 
   if (t1.size() != tmp.size())
@@ -177,11 +176,11 @@ bool test_basic(C& t1, const std::vector<typename C::value_type>& tmp)
   if (!std::is_sorted(std::begin(t1), std::end(t1)))
     return false;
 
-  C t3(t1);
+  set_type t3(t1);
   if (t3 != t1)
     return false;
 
-  C t4 = t3;
+  set_type t4 = t3;
   if (t4 != t1)
     return false;
 
@@ -195,150 +194,38 @@ bool test_basic(C& t1, const std::vector<typename C::value_type>& tmp)
   return true;
 }
 
-template <typename C>
-bool run_tests(C& t1, const std::vector<typename C::value_type>& tmp)
+template <class A>
+bool run_tests(const std::vector<int>& tmp)
 {
-  typedef typename C::value_type value_type;
-  if (!test_basic(t1, tmp))
-    return false;
+  const bool b1 = test_basic<A>(tmp);
+  const bool b2 = test_count<A>(tmp);
+  const bool b3 = test_erase<A>(tmp);
+  const bool b4 = test_find<A>(tmp);
+  const bool b5 = test_swap<A>();
+  const bool b6 = test_reverse_traversal<A>();
+  const bool b7 = test_move<A>();
 
-  if (!test_count(t1, tmp))
-    return false;
-
-  if (!test_erase(t1, tmp))
-    return false;
-
-  if (!test_find(t1, tmp))
-    return false;
-
-  if (!test_swap<std::allocator<int>>())
-    return false;
-
-  // Bug
-  if (!test_swap<rt::node_allocator<int, unsigned char, 2>>())
-    return false;
-
-  if (!test_reverse_traversal<std::allocator<int>>())
-    return false;
-
-  if (!test_reverse_traversal<rt::node_allocator<int, unsigned char, 2>>())
-    return false;
-
-  if (!test_move<std::allocator<int>>())
-    return false;
-
-  if (!test_move<rt::node_allocator<int, unsigned char, 2>>())
-    return false;
-
-  return true;
-}
-
-template <class T, class A>
-using set_type = rt::set<T, std::less<T>, A>;
-
-bool test_node_alloc_size()
-{
-  using T = unsigned char;
-  using L = unsigned char;
-  using alloc_type1 = std::allocator<T>;
-  using type1 = set_type<T, alloc_type1>;
-
-  using alloc_type3 = rt::node_allocator<T, L, 256>;
-  using type3 = set_type<T, alloc_type3>;
-  const auto node_size3 =
-    sizeof (typename set_type<T, alloc_type3>::node_type);
-
-  const T max = std::numeric_limits<T>::max();
-
-  // Random unique integers in the range [a, b].
-  std::vector<T> tmp(max - 3);
-  std::iota(std::begin(tmp), std::end(tmp), 0);
-
-  type3 t3;
-
-  t3.insert(std::begin(tmp), std::end(tmp));
-  print(t3);
-  std::cout << std::endl;
-  //std::cout << "aaaaaaaaa" << std::endl;
-
-  return true;
-}
-
-template <class T, class L>
-bool test_with_node_alloc()
-{
-  using alloc_type1 = std::allocator<T>;
-  using type1 = set_type<T, alloc_type1>;
-
-  using alloc_type3 = rt::node_allocator<T, L, 256>;
-  using type3 = set_type<T, alloc_type3>;
-  const auto node_size3 =
-    sizeof (typename set_type<T, alloc_type3>::node_type);
-
-  const T size = 10;
-  const T a = std::numeric_limits<T>::min();
-  const T b = std::numeric_limits<T>::max();
-
-  // Random unique integers in the range [a, b].
-  const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
-
-  type3 t3;
-
-  return run_tests(t3, tmp);
-}
-
-template <class T>
-bool run_tests_all()
-{
-  using L = std::size_t;
-  using alloc_type1 = std::allocator<T>;
-  using type1 = set_type<T, alloc_type1>;
-  const auto node_size1 =
-    sizeof (typename set_type<T, alloc_type1>::node_type);
-
-  const T size = 10;
-  const T a = 1;
-  const T b = std::numeric_limits<T>::max();
-
-  // Random unique integers in the range [a, b].
-  const std::vector<T> tmp = rt::make_rand_data<T>(size, a, b);
-
-  // Should be enough for rt::set.
-  const auto bsize = 10 * (tmp.size() + 1) * node_size1;
-
-  type1 t1;
-  if (!run_tests(t1, tmp))
-    return false;
-
-  if (!test_with_node_alloc<std::size_t, std::size_t>())
-    return false;
-
-  if (!test_with_node_alloc<unsigned int, std::size_t>())
-    return false;
-
-  if (!test_with_node_alloc<unsigned short, std::size_t>())
-    return false;
-
-  if (!test_with_node_alloc<unsigned char, std::size_t>())
-    return false;
-
-  if (!test_with_node_alloc<unsigned int, unsigned int>())
-    return false;
-
-  if (!test_with_node_alloc<unsigned short, unsigned short>())
-    return false;
-
-  if (!test_with_node_alloc<unsigned char, unsigned char>())
-    return false;
-
-  return true;
+  return b1 && b2 && b3 && b4 && b5 && b6 && b7;
 }
 
 int main()
 {
-  const bool b1 = run_tests_all<int>();
-  const bool b2 = run_tests_all<long long int>();
-  const bool b3 = test_node_alloc_size();
-  return (b1 && b2 && b3) ? 0 : 1;
+  const int size = 10;
+  const int a = 1;
+  const int b = std::numeric_limits<int>::max();
+
+  // Random unique integers in the range [a, b].
+  const std::vector<int> tmp = rt::make_rand_data<int>(size, a, b);
+
+  using A1 = std::allocator<int>;
+  using A2 = rt::node_allocator<int, unsigned, 2>;
+  using A3 = rt::node_allocator<int, unsigned, 4>;
+  using A4 = rt::node_allocator<int, unsigned, 128>;
+
+  const bool b1 = run_tests<A1>(tmp);
+  const bool b2 = run_tests<A2>(tmp);
+  const bool b3 = run_tests<A3>(tmp);
+  const bool b4 = run_tests<A4>(tmp);
+  return b1 && b2 && b3 && b4 ? 0 : 1;
 }
 
