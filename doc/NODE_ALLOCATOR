@@ -1,6 +1,6 @@
 WARNING: Under construction
 
-TITLE: Splitting node and array allocation in C++
+TITLE: Splitting node and array allocation in C++ containers
 
 AUTHOR: Marcelo Zimbres
 
@@ -16,51 +16,58 @@ Allocators
 ======================================================================
 
   - Abstraction to memory allocation inside containers.
-  - All standard containers with the exception of std::array request
-    memory from their allocator internally.
+  - All containers with dynamic size request memory from
+    their allocator internally.
+  - The allocator is part of the container type.
 
     template<class T, class Allocator = std::allocator<T>>
     class list;
 
-Allocator interface used by the container
+  Basic usage
 
   std::allocator<int> alloc;
   int* p = alloc.allocate(n);
   alloc.deallocate(p, n);
 
-Splitting containers according to their allocation properties
+NOTE: Containers do not interact directly with the allocator but throgh
+std::allocator_traits.
+
+Allocation patterns in the standard library.
 ======================================================================
 
-If we exclude std::array that does not use an allocator, we can divide
-containers in two groups.
+Allocation can divide containers in three groups.
 
-(A) Array allocation: arbitrary n
+(A) Perform only array allocation. (i.e. arbitrary n)
 
-  alloc.allocate(n);
+  std::vector
 
-  std::vector - std::deque - std::unordered_set
-  std::unordered_map - std::unordered_multiset
+(B) Perform only node allocation. (i.e. compile time n)
+
+  std::list
+  std::forward_list
+  std::set
+  std::multiset
+  std::map
+  std::multimap
+
+(C) Perfom both array and node allocation.
+
+  std::deque
+  std::unordered_set
+  std::unordered_multiset
+  std::unordered_map
   std::unordered_multimap
   
-(B) Node allocation: n = 1
+Summary: From 12 containers
 
-  alloc.allocate(1);
-
-  std::list - std::forward_list - std::set - std::multiset
-  std::map - std::multimap - std::deque - std::unordered_set
-  std::unordered_map - std::unordered_multiset
-  std::unordered_multimap
-
-From 12 containers
-
-  - 10 perform node allocation (excluding std::deque).
+  - 11 perform node allocation.
   - 6 perform exclusively node-allocation.
-  - 4 perform both node and array allcation.
+  - 5 perform both node and array allcation.
 
-Seems like node-allocation is important concept in containers,
-but how is this information useful?
+Node allocation is a pretty common pattern. Should it be standardized?
+(See node allocator proposal.)
 
-Node allcation
+Node allocation
 ======================================================================
 
 Node allocation
@@ -68,7 +75,7 @@ Node allocation
   - Simple and straighforward implementation.
   - Suitable for realtime/embedded.
   - Reduces memory fragmentation.
-  - Basic building block used in array allcations as well.
+  - Basic building block used in array allocations as well.
 
   1 - Get a big block of memory.
   2 - Divide it in n small blocks.
@@ -77,6 +84,7 @@ Node allocation
        |     | |     | |     | |     | |     | |     |  |     |     
        |     V |     V |     V |     V |     V |     V  |     V   
   |_______|_______|_______|_______|_______|_______|_______|   0
+
      /\    
      ||      
      ||   
@@ -92,6 +100,60 @@ Array allocation
   - malloc: suitable for large memory blocks, overused, hundreds of
     loc, system calls, etc.
   - May use node allocation as a building block.
+
+Further benefits of node allocation: Reducing memory usage.
+======================================================================
+
+Node allocation
+
+  - Allocate a block big enough to store n elements.
+  - Link the elements in stack-like fashion.
+  - If more elements are needed, allocate another block
+    and repeat the precedure.
+  - The underlying data structure of a node allocator is deque-like.
+
+  If nodes are stored in a deque-like data structure, why do I address
+  the elements with pointers?
+
+  - A deque-like data structure supports indexed access to elements.
+  - Pointers can be a big overhead for small element types.
+
+Example: Nodes of a liked list.
+
+  struct node {
+    node* links[2]; // Support for 2^64 elements.
+    int value;
+  };
+
+  - sizeof (node) = 24 bytes
+
+  struct node {
+    unsigned short links[2]; // Support for 2^16 elements.
+    int value;
+  };
+
+  - sizeof (node) = 8 bytes.
+  
+Conclusion: Massive reduction of how much memory a container uses.
+Benefits: More data in the cache.
+
+How can we support this in C++
+======================================================================
+
+Let us have a look on how node is usually defined
+
+template <class T, class Ptr>
+struct node {
+  using link_type = typename std::pointer_traits<Ptr>::template
+    rebind<node<T, Ptr>>;
+  link_type link[2];
+  T key;
+};
+
+  - The pointer type is passed as a template argument (fancy poiter
+    support).
+  - A Pointer has to be allowed to rebind to a non-pointer type.
+
 
 Avoiding (or preventing) array allocation.
 ======================================================================
@@ -158,6 +220,4 @@ Benefits
 ======================================================================
 
 Performance, realtime, low-fragmentation.
-
-
 
