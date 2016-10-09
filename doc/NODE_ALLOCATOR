@@ -35,7 +35,8 @@ std::allocator_traits.
 Allocation patterns in the standard library.
 ======================================================================
 
-Allocation can divide containers in three groups.
+Containers can be divided in three groups regarding their allocation
+pattern
 
 (A) Perform only array allocation. (i.e. arbitrary n)
 
@@ -62,7 +63,7 @@ Summary: From 12 containers
 
   - 11 perform node allocation.
   - 6 perform exclusively node-allocation.
-  - 5 perform both node and array allcation.
+  - 5 perform both node and array allocation.
 
 Node allocation is a pretty common pattern. Should it be standardized?
 (See node allocator proposal.)
@@ -80,6 +81,7 @@ Node allocation
   1 - Get a big block of memory.
   2 - Divide it in n small blocks.
   3 - Link the blocks. (Forward list).
+
         _____   _____   _____   _____   _____   _____    _____   
        |     | |     | |     | |     | |     | |     |  |     |     
        |     V |     V |     V |     V |     V |     V  |     V   
@@ -92,13 +94,12 @@ Node allocation
 
 Array allocation
 
-  - Complex.
+  - Many possible strategies. Which one should I use?
   - Has to handle different sizes.
-  - Many possible strategies.
   - No silver bullet. Every problem requires a different approach.
   - Users do not want to care about this unless there is need.
   - malloc: suitable for large memory blocks, overused, hundreds of
-    loc, system calls, etc.
+    LOC, system calls, etc.
   - May use node allocation as a building block.
 
 Further benefits of node allocation: Reducing memory usage.
@@ -112,30 +113,31 @@ Node allocation
     and repeat the precedure.
   - The underlying data structure of a node allocator is deque-like.
 
-  If nodes are stored in a deque-like data structure, why do I address
-  the elements with pointers?
+Do we need pointers?
 
   - A deque-like data structure supports indexed access to elements.
   - Pointers can be a big overhead for small element types.
+  - We only need a big enough integer.
+  - A 2 bytes integer can address 2^16 = 65536 elements.
 
 Example: Nodes of a liked list.
 
-  struct node {
+  struct node1 {
     node* links[2]; // Support for 2^64 elements.
     int value;
   };
 
-  - sizeof (node) = 24 bytes
+  - sizeof (node1) = 24 bytes
 
-  struct node {
+  struct node2 {
     unsigned short links[2]; // Support for 2^16 elements.
     int value;
   };
 
-  - sizeof (node) = 8 bytes.
+  - sizeof (node2) = 8 bytes.
   
 Conclusion: Massive reduction of how much memory a container uses.
-Benefits: More data in the cache.
+Benefits: More data in the cache closer to the processor.
 
 How can we support this in C++
 ======================================================================
@@ -150,10 +152,20 @@ struct node {
   T key;
 };
 
-  - The pointer type is passed as a template argument (fancy poiter
+  - The pointer type is passed as a template argument (fancy pointer
     support).
   - A Pointer has to be allowed to rebind to a non-pointer type.
+  - has to extend the std::allocator_traits to convert a link-type
+    into a pointer to the element.
+ 
+Convertion of a link into a pointer requires the allocator
 
+    auto ptr = alloc_traits::make_ptr(alloc, p->link[0]);
+
+The function make_ptr is noop for ordinary pointers
+
+Exposing the container node type.
+======================================================================
 
 Avoiding (or preventing) array allocation.
 ======================================================================

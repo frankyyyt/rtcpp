@@ -1,0 +1,509 @@
+\documentclass[10pt,aspectratio=169]{beamer}
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+%\usepackage[latin1]{inputenc}
+%\usepackage[T1]{fontenc}
+\usepackage{verbatim}
+\usepackage{listings}
+
+\lstset{
+  language=C++,                 % the language of the code
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  keywordstyle=\color{blue},       % keyword style
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{blue},       % comment style
+  deletekeywords={},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  morekeywords={using, static_assert},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=10pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{black}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{red},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+%\makeatletter
+%\define@key{beamerframe}{t}[true]{% top
+%\beamer@frametopskip=.2cm plus .5\paperheight\relax%
+%\beamer@framebottomskip=0pt plus 1fill\relax%
+%\beamer@frametopskipautobreak=\beamer@frametopskip\relax%
+%\beamer@framebottomskipautobreak=\beamer@framebottomskip\relax%
+%\def\beamer@initfirstlineunskip{}%
+%}
+%\makeatother   
+
+%__________________________________________________________
+
+% Possible themes
+
+%\usetheme{AnnArbor}       % Bad color
+%\usetheme{Antibes}       % Not good
+%\usetheme{Bergen}        % Wastes space
+%\usetheme{Berkeley}      % Very good
+%\usetheme{Berlin}        % Very good
+%\usetheme{Boadilla}      % Good
+%\usetheme{CambridgeUS}   % Very good but no section list
+%\usetheme{Copenhagen}    %  Limpo
+%\usetheme{Dresden}       %  Vale a pena tambem
+%\usetheme{Frankfurt}     % limpo, com lista mas sem pagina
+%\usetheme{Goettingen}    % Lista de secoes na lateral esquerda
+%\usetheme{Hannover}      %  Lista de secoes na lateral direita sem pagina
+%\usetheme{Ilmenau}       % Com secao e sub
+%\usetheme{JuanLesPins}   % Mais ou menos
+%\usetheme{Luebeck}       % Limpo e bem organizado
+\usetheme{Madrid}        % So titulo e com pagina
+%\usetheme{Malmoe}        % Nao tem caixa para o titulo
+%\usetheme{Marburg}       % Bem organizado, sem caixa pra titulo e com lista na direita
+%\usetheme{Montpellier}   % Nao gosto do design
+%\usetheme{PaloAlto}      % Boa escolha
+%\usetheme{Pittsburgh}    % Fraco
+%\usetheme{Rochester}     % So caixa pro titulo
+%\usetheme{Singapore}     % Fraco
+%\usetheme{Szeged}        % Legal
+%\usetheme{Warsaw}        % Bom
+%\usetheme{boxes}         % Fraco
+%\usetheme{default}       % Fraco
+%__________________________________________________________
+
+% Possible color themes
+
+%\usecolortheme{albatross}
+\usecolortheme{beaver}         % Acho que é esse.
+%\usecolortheme{beetle}        % Bom mas escuro
+%\usecolortheme{crane}         % muito boa    
+%\usecolortheme{default}        
+%\usecolortheme{dolphin}      
+%\usecolortheme{dove}          % legal
+%\usecolortheme{fly}    
+%\usecolortheme{lily}       
+%\usecolortheme{orchid}       
+%\usecolortheme{seagull}       % excelente mas cinza
+%\usecolortheme{seahorse}     
+%\usecolortheme{sidebartab}    
+%\usecolortheme{whale}       
+%\usecolortheme{wolverine}       
+
+\colorlet{zeroed}{orange!50!black}
+\colorlet{dgfile}{red!80!black}
+\tikzstyle{dgfile}=[draw,fill=dgfile,shape=rectangle,minimum width=2cm,inner sep=1ex]
+\tikzstyle{zeroed}=[draw,fill=zeroed,shape=rectangle,minimum width=2cm,inner sep=1ex]
+\def\dgfile{\node[style=dgfile]}
+\def\zeroed{\node[style=zeroed]}
+
+%__________________________________________________________
+% Apenas para o tema madrid
+
+\defbeamertemplate*{footline}{my infolines theme}
+{
+  \leavevmode%
+    \hbox{%
+      \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+        \usebeamerfont{author in head/foot}\insertshortauthor~~\insertshortinstitute
+        \end{beamercolorbox}%
+        \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+        \usebeamerfont{title in head/foot}\insertshorttitle
+        \end{beamercolorbox}%
+        \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+        \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+      \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+      \end{beamercolorbox}}%
+        \vskip0pt%
+}
+%__________________________________________________________
+
+%\mode<presentation>
+%{
+%  \setbeamercovered{transparent}
+%   \setbeamertemplate{footline}[frame number]
+%  % or whatever (possibly just delete it)
+%}
+
+\title[Node allocation] {Node allocation}
+
+\subtitle
+{Marcelo Zimbres}
+
+%\author[]
+%{Aluno: Marcelo Zimbres Silva. \\
+% Orientador: Ernesto Kemp.}
+
+\institute[Marcelo Zimbres - Software Developer - Physicist]
+{
+  %IFGW - Unicamp
+}
+
+\date[11 July 2016 - Magstadt - Germany] {11 July 2016 - Magstadt}
+
+\subject{Node allocation}
+
+% If you have a file called "university-logo-filename.xxx", where xxx
+% is a graphic format that can be processed by latex or pdflatex,
+% resp., then you can add a logo as follows:
+
+%\pgfdeclareimage[height=1.2cm]{Wavelet}{fig/skymapJ8j2N127.pdf}
+%\logo{\pgfuseimage{Wavelet}}
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+%\AtBeginSubsection[]
+%{
+%  \begin{frame}<beamer>{Outline}
+%    \tableofcontents[currentsection,currentsubsection]
+%  \end{frame}
+%}
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents[]
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+% Since this a solution template for a generic talk, very little can
+% be said about how it should be structured. However, the talk length
+% of between 15min and 45min and the theme suggest that you stick to
+% the following rules:  
+
+% - Exactly two or three sections (other than the summary).
+% - At *most* three subsections per section.
+% - Talk about 30s to 2min per frame. So there should be between about
+%   15 and 30 frames, all told.
+
+\begin{frame}{Target audience}{}
+\begin{itemize}
+    \item Realtime/embedded programming.
+    \item Games, high performace, 24/7 availability.
+    \item Should be usefull for c++ programmers in general.
+    \item Implementation available on github.
+\end{itemize}
+\end{frame}
+
+\section{Short review}
+\begin{frame}[fragile]{\texttt{C++} Allocators}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+\item Abstraction to memory allocation inside containers.
+\item All containers with dynamic size request memory from
+their allocator internally.
+\item The allocator is part of the container type.
+\item Containers do not interact directly with the allocator but with
+\texttt{std::allocator\_traits}.
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+Part of the type.
+\begin{lstlisting}
+template<class T, class Allocator>
+class list;
+\end{lstlisting}
+
+Basic usage
+\begin{lstlisting}
+std::allocator<int> alloc;
+auto* p = alloc.allocate(n);
+alloc.deallocate(p, n);
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+\section{Allocation patterns}
+
+\begin{frame}[fragile]{Containers and their allocation patterns}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+Array allocation only (i.e. runtime n)
+\begin{itemize}
+\item \texttt{std::vector}
+\end{itemize}
+
+Node allocation only (i.e. compile time n)
+\begin{itemize}
+\item \texttt{std::list}
+\item \texttt{std::forward\_list}
+\item \texttt{std::set}
+\item \texttt{std::multiset}
+\item \texttt{std::map}
+\item \texttt{std::multimap}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+Both node and array allocation.
+\begin{itemize}
+\item \texttt{std::deque}
+\item \texttt{std::unordered\_set}
+\item \texttt{std::unordered\_multiset}
+\item \texttt{std::unordered\_map}
+\item \texttt{std::unordered\_multimap}
+\end{itemize}
+Summary
+\begin{itemize}
+\item 11 perform node allocation.
+\item 6 perform exclusively node-allocation.
+\item 5 perform both node and array allocation.
+\item Node allocation is pretty common.
+\end{itemize}
+
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Should node allocation be standardized}{Proposal to the ISO \texttt{C++} Standards Committee}
+\vspace{-3cm}
+    \begin{center}
+        \includegraphics[scale=0.6]{fig/prop1.pdf} \\
+    \end{center}
+\end{frame}
+
+\section{Node allocation}
+
+\begin{frame}[fragile]{Containers and their allocation patterns}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+
+Node Allocation
+
+\begin{itemize}
+\item Simple and straighforward implementation.
+\item Suitable for realtime/embedded.
+\item Reduces memory fragmentation.
+\item Basic building block used in array allocations as well.
+\end{itemize}
+
+\begin{enumerate}
+\item Get a big block of memory.
+\item Divide it in n small blocks.
+\item Link the blocks. (Forward list).
+\end{enumerate}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+Array allcation
+\begin{itemize}
+\item Many possible strategies. Which one should I use?
+\item Has to handle different sizes.
+\item No silver bullet. Every problem requires a different approach.
+\item Users do not want to care about this unless there is need.
+\item malloc: suitable for large memory blocks, overused, hundreds of
+\item LOC, system calls, etc.
+\item May use node allocation as a building block.
+\end{itemize}
+
+\end{column}
+\end{columns}
+\end{frame}
+
+\subsection[Node allocation]{Node allocation}
+\begin{frame}{Illustration}{Illustration}
+
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+   \uncover<1-> {
+      \dgfile (head) at (-5,4) {Head};
+   }
+   \uncover<2-> {
+      \dgfile (node1) at (-2,4) {Node$_1$};
+      \draw[thick,->,rounded corners=10pt,color=black] (head) -- (node1);
+   }
+   \uncover<3-> {
+      \dgfile (node2) at (1,4) {Node$_2$};
+      \draw[thick,->,rounded corners=10pt,color=black] (node1) -- (node2);
+   }
+   \uncover<4-> {
+      \dgfile (node3) at (4,4) {Node$_3$};
+      \draw[thick,->,rounded corners=10pt,color=black] (node2) -- (node3);
+   }
+   \uncover<5-> {
+      \dgfile (node4) at (7,4) {Node$_4$};
+      \draw[thick,->,rounded corners=10pt,color=black] (node3) -- (node4);
+   }
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{Pooling}{Pooling}
+
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+   \uncover<1-> {
+      \dgfile (node0) at (-5.0,4) {Node$_0$};
+      \dgfile (node1) at (-3.0,4) {Node$_1$};
+      \dgfile (node2) at (-1.0,4) {Node$_2$};
+      \dgfile (node3) at (1.0,4) {Node$_3$};
+      \dgfile (node4) at (3.0,4) {Node$_4$};
+      \dgfile (node5) at (5.0,4) {Node$_5$};
+      \dgfile (node6) at (7.0,4) {Node$_6$};
+   }
+
+   \uncover<2-> {
+      \draw[thick,->,rounded corners=10pt,color=black] (node0.north) -- (-4,5) -- (node1.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node1.north) -- (-2,5) -- (node2.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node2.north) -- ( 0,5) -- (node3.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node3.north) -- ( 2,5) -- (node4.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node4.north) -- ( 4,5) -- (node5.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node5.north) -- ( 6,5) -- (node6.north);
+%      \draw[thick,->,rounded corners=10pt,color=black] (node5.north) -- (-2,4.5) -- (node6.north);
+   }
+
+   \uncover<3-> {
+
+      \dgfile (node7) at (-5.0,0) {Node$_{7}$};
+      \dgfile (node8) at (-3.0,0) {Node$_{8}$};
+      \dgfile (node9) at (-1.0,0) {Node$_{9}$};
+      \dgfile (node10) at ( 1.0,0) {Node$_{10}$};
+      \dgfile (node11) at ( 3.0,0) {Node$_{11}$};
+      \dgfile (node12) at ( 5.0,0) {Node$_{12}$};
+      \dgfile (node13) at ( 7.0,0) {Node$_{13}$};
+   }
+
+   \uncover<4-> {
+
+      \draw[thick,->,rounded corners=10pt,color=black] (node6.south) -- (-4,2) --  (node7.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node7.north) --  (-4,1) -- (node8.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node8.north) --  (-2,1) -- (node9.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node9.north) --  ( 0,1) -- (node10.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node10.north) -- ( 2,1) -- (node11.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node11.north) -- ( 4,1) -- (node12.north);
+   }
+\end{tikzpicture}
+
+\end{frame}
+%__________________________________________________________
+
+\section[Memory Usage]{Memory Usage}
+
+\begin{frame}<beamer>{Outline}
+   \tableofcontents[currentsection,currentsubsection]
+\end{frame}
+
+%\subsection[Eldorado]{Eldorado Research institute}
+%
+%\begin{frame}{Eldorado Institute (Campinas)}
+%    \begin{columns}
+%        \begin{column}{0.5\textwidth}
+%
+%        \end{column}
+%
+%        \begin{column}{0.5\textwidth}
+%
+%        \end{column}
+%    \end{columns}
+%\end{frame}
+
+%__________________________________________________________
+
+\section[Freetime]{Freetime project}
+\begin{frame}<beamer>{Outline}
+   \tableofcontents[currentsection,currentsubsection]
+\end{frame}
+
+\subsection[RTCPP]{Realtime \texttt{C++}}
+
+%\begin{frame}[t]{Memory fragmentation}
+%    \begin{columns}
+%      \begin{column}{0.5\textwidth}
+%          \vspace{0.6cm}
+%          \begin{itemize}
+%          \item Fragmented memory
+%          \item Wastes memory
+%          \item Inefficient, cache unfriendly
+%          \end{itemize}
+%          \vspace{0.2cm}
+%          \begin{center}
+%              \includegraphics[scale=0.18]{fig/tetris_frag.pdf} \\
+%          \end{center}
+%      \end{column}
+%  
+%      \begin{column}{0.5\textwidth}
+%          %\vspace{-1cm}
+%          %\bigskip
+%          \begin{itemize}
+%          \item Optimal memory use
+%          \item No wasted memory
+%          \item Efficient, cache friendly
+%          \end{itemize}
+%          \vspace{0.5cm}
+%          \begin{center}
+%              \includegraphics[scale=0.7]{fig/tetris.jpg} \\
+%          \end{center}
+%      \end{column}
+%    \end{columns}
+%\end{frame}
+
+\begin{frame}{Cache Hierarchy - Latency}{}
+    \begin{columns}
+        \begin{column}{0.4\textwidth}
+            Intel Haswell Mobile 
+            \begin{itemize}
+                \item Register: Fastest
+                \item L0: 6 KiB
+                \item L1: 128 KiB - 700 GiB/s
+                \item L2: 1 MiB - 200 GiB/s
+                \item L3: 6 MiB - 100 GB/s
+                \item L4: 128 MiB - 40 GB/s
+                \item Main memory – GiB - 10 GB/s
+            \end{itemize}
+        \end{column}
+
+        %\begin{column}{0.6\textwidth}
+        %    \begin{center}
+        %        \includegraphics[scale=0.7]{fig/cache.jpg} \\
+        %    \end{center}
+        %\end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Realtime node-based containers}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \texttt{std::unordered\_set}
+            \begin{center}
+                \includegraphics[scale=0.6]{fig/unordered_set_with_frag.pdf} \\
+            \end{center}
+        \end{column}
+
+        \begin{column}{0.5\textwidth}
+            \texttt{std::set}
+            \begin{center}
+                \includegraphics[scale=0.6]{fig/set_bench.pdf} \\
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{}
+    \vspace{1cm}
+    \begin{center}
+        {\Large \bf Thank you! Questions?} 
+    \end{center}
+\end{frame}
+
+\end{document}
+
+
