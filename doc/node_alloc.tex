@@ -201,7 +201,7 @@
 \end{itemize}
 \end{frame}
 
-\section{Short review}
+\section{Review of memory allocations \texttt{C++} containers}
 \begin{frame}[fragile]{\texttt{C++} Allocators}
 \begin{columns}
 \begin{column}{0.5\textwidth}
@@ -296,14 +296,75 @@ Node Allocation
 \item Basic building block used in array allocations as well.
 \end{itemize}
 
-\begin{enumerate}
-\item Get a big block of memory.
-\item Divide it in n small blocks.
-\item Link the blocks. (Forward list).
-\end{enumerate}
 \end{column}
 
 \begin{column}{0.5\textwidth}
+\begin{enumerate}
+\item<alert@2> Get $N$ nodes at once.
+\item<alert@3> Link them as a stack.
+\item<alert@4> Repeat if more nodes are inserted.
+\end{enumerate}
+
+\end{column}
+\end{columns}
+
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+   \uncover<2-> {
+      \dgfile (node0) at (-5.0,4) {Node$_0$};
+      \dgfile (node1) at (-3.0,4) {Node$_1$};
+      \dgfile (node2) at (-1.0,4) {Node$_2$};
+      \dgfile (node3) at (1.0,4) {Node$_3$};
+      \dgfile (node4) at (3.0,4) {Node$_4$};
+      \dgfile (node5) at (5.0,4) {Node$_5$};
+      \dgfile (node6) at (7.0,4) {Node$_6$};
+   }
+
+   \uncover<3-> {
+      \draw[thick,->,rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
+   }
+
+   \uncover<4-> {
+
+      \dgfile (node7) at (-5.0,2) {Node$_{7}$};
+      \dgfile (node8) at (-3.0,2) {Node$_{8}$};
+      \dgfile (node9) at (-1.0,2) {Node$_{9}$};
+      \dgfile (node10) at ( 1.0,2) {Node$_{10}$};
+      \dgfile (node11) at ( 3.0,2) {Node$_{11}$};
+      \dgfile (node12) at ( 5.0,2) {Node$_{12}$};
+      \dgfile (node13) at ( 7.0,2) {Node$_{13}$};
+   }
+
+   \uncover<4-> {
+
+      \draw[thick,->,rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
+      \draw[thick,->,rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
+   }
+\end{tikzpicture}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{Underlying data structure}
+\begin{itemize}
+\item The underlying data structure is a deque.
+\item We do not have to address nodes with pointers.
+\item For less than $256$ elements a \texttt{char} has enough bits.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Array Allocation}
 Array allcation
 \begin{itemize}
 \item Many possible strategies. Which one should I use?
@@ -315,9 +376,9 @@ Array allcation
 \item May use node allocation as a building block.
 \end{itemize}
 
-\end{column}
-\end{columns}
 \end{frame}
+
+
 
 \subsection[Node allocation]{Node allocation}
 \begin{frame}{Illustration}{Illustration}
@@ -347,55 +408,6 @@ Array allcation
 
 \end{frame}
 
-\begin{frame}{Pooling}{Pooling}
-
-\begin{tikzpicture}[scale=1.0, rounded corners]
-
-   \uncover<1-> {
-      \dgfile (node0) at (-5.0,4) {Node$_0$};
-      \dgfile (node1) at (-3.0,4) {Node$_1$};
-      \dgfile (node2) at (-1.0,4) {Node$_2$};
-      \dgfile (node3) at (1.0,4) {Node$_3$};
-      \dgfile (node4) at (3.0,4) {Node$_4$};
-      \dgfile (node5) at (5.0,4) {Node$_5$};
-      \dgfile (node6) at (7.0,4) {Node$_6$};
-   }
-
-   \uncover<2-> {
-      \draw[thick,->,rounded corners=10pt,color=black] (node0.north) -- (-4,5) -- (node1.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node1.north) -- (-2,5) -- (node2.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node2.north) -- ( 0,5) -- (node3.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node3.north) -- ( 2,5) -- (node4.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node4.north) -- ( 4,5) -- (node5.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node5.north) -- ( 6,5) -- (node6.north);
-%      \draw[thick,->,rounded corners=10pt,color=black] (node5.north) -- (-2,4.5) -- (node6.north);
-   }
-
-   \uncover<3-> {
-
-      \dgfile (node7) at (-5.0,0) {Node$_{7}$};
-      \dgfile (node8) at (-3.0,0) {Node$_{8}$};
-      \dgfile (node9) at (-1.0,0) {Node$_{9}$};
-      \dgfile (node10) at ( 1.0,0) {Node$_{10}$};
-      \dgfile (node11) at ( 3.0,0) {Node$_{11}$};
-      \dgfile (node12) at ( 5.0,0) {Node$_{12}$};
-      \dgfile (node13) at ( 7.0,0) {Node$_{13}$};
-   }
-
-   \uncover<4-> {
-
-      \draw[thick,->,rounded corners=10pt,color=black] (node6.south) -- (-4,2) --  (node7.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node7.north) --  (-4,1) -- (node8.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node8.north) --  (-2,1) -- (node9.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node9.north) --  ( 0,1) -- (node10.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node10.north) -- ( 2,1) -- (node11.north);
-      \draw[thick,->,rounded corners=10pt,color=black] (node11.north) -- ( 4,1) -- (node12.north);
-   }
-\end{tikzpicture}
-
-\end{frame}
-%__________________________________________________________
-
 \section[Memory Usage]{Memory Usage}
 
 \begin{frame}<beamer>{Outline}
@@ -418,7 +430,7 @@ Array allcation
 
 %__________________________________________________________
 
-\section[Freetime]{Freetime project}
+\section[Implementation]{Implementation}
 \begin{frame}<beamer>{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
