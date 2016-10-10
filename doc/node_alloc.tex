@@ -97,12 +97,33 @@
 %\usecolortheme{whale}       
 %\usecolortheme{wolverine}       
 
-\colorlet{zeroed}{orange!50!black}
+\colorlet{nodeU}{red!80!black}
+\colorlet{nodeD}{red!80!black}
+\colorlet{nodeO}{red!80!black}
+\colorlet{valueU}{orange!50!black}
+\colorlet{valueD}{orange!50!black}
+\colorlet{valueO}{orange!50!black}
 \colorlet{dgfile}{red!80!black}
+
 \tikzstyle{dgfile}=[draw,fill=dgfile,shape=rectangle,minimum width=2cm,inner sep=1ex]
-\tikzstyle{zeroed}=[draw,fill=zeroed,shape=rectangle,minimum width=2cm,inner sep=1ex]
+\tikzstyle{nodeU}=[draw,fill=nodeU,shape=rectangle,minimum width=0.5cm  ,inner sep=1ex]
+\tikzstyle{nodeD}=[draw,fill=nodeD,shape=rectangle,minimum width=1cm  ,inner sep=1ex]
+\tikzstyle{nodeQ}=[draw,fill=nodeD,shape=rectangle,minimum width=2cm  ,inner sep=1ex]
+\tikzstyle{nodeO}=[draw,fill=nodeO,shape=rectangle,minimum width=4cm  ,inner sep=1ex]
+\tikzstyle{valueU}=[draw,fill=valueU,shape=rectangle,minimum width=0.5cm,inner sep=1ex]
+\tikzstyle{valueD}=[draw,fill=valueD,shape=rectangle,minimum width=1cm,inner sep=1ex]
+\tikzstyle{valueQ}=[draw,fill=valueD,shape=rectangle,minimum width=2cm,inner sep=1ex]
+\tikzstyle{valueO}=[draw,fill=valueO,shape=rectangle,minimum width=4cm,inner sep=1ex]
+
 \def\dgfile{\node[style=dgfile]}
-\def\zeroed{\node[style=zeroed]}
+\def\nodeU{\node[style=nodeU]}
+\def\nodeD{\node[style=nodeD]}
+\def\nodeQ{\node[style=nodeQ]}
+\def\nodeO{\node[style=nodeO]}
+\def\valueU{\node[style=valueU]}
+\def\valueD{\node[style=valueD]}
+\def\valueQ{\node[style=valueQ]}
+\def\valueO{\node[style=valueO]}
 
 %__________________________________________________________
 % Apenas para o tema madrid
@@ -414,21 +435,39 @@ Array allcation
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
 
-%\subsection[Eldorado]{Eldorado Research institute}
-%
-%\begin{frame}{Eldorado Institute (Campinas)}
-%    \begin{columns}
-%        \begin{column}{0.5\textwidth}
-%
-%        \end{column}
-%
-%        \begin{column}{0.5\textwidth}
-%
-%        \end{column}
-%    \end{columns}
-%\end{frame}
+\begin{frame}{Size reduction}{Node sizes of \texttt{std::forward\_list<int>}}
 
-%__________________________________________________________
+\begin{enumerate}
+\item<alert@1> We need less than $256$ elements with value in the range $[0, 256]$
+\item<alert@2> We need less than $2^{16}$ elements with value in the range $[0, 2^{16}]$
+\item<alert@3> We need less than $2^{32}$ elements with value in the range $[0, 2^{32}]$
+\item<alert@4> We need less than $2^{64}$ elements with value in the range $[0, 2^{64}]$
+\end{enumerate}
+
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+   \uncover<1-> {
+      \nodeU (next) at (0.25,5) {N};
+      \valueU (value) at (0.76,5) {V};
+   }
+
+   \uncover<2-> {
+      \nodeD (next) at (0.5,4) {Next};
+      \valueD (value) at (1.6,4) {Value};
+   }
+
+   \uncover<3-> {
+      \nodeQ (next) at (1,3) {Next};
+      \valueQ (value) at (3,3) {Value};
+   }
+   \uncover<4-> {
+      \nodeO (next) at (2,2) {Next};
+      \valueO (value) at (6,2) {Value};
+   }
+\end{tikzpicture}
+
+\end{frame}
+
 
 \section[Implementation]{Implementation}
 \begin{frame}<beamer>{Outline}
