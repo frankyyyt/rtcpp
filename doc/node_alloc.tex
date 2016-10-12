@@ -418,29 +418,6 @@ Array allcation
 
 \end{frame}
 
-\begin{frame}{Cache Hierarchy - Latency}{Why it is important to reduce memory usage}
-    \begin{columns}
-        \begin{column}{0.4\textwidth}
-            Intel Haswell Mobile 
-            \begin{itemize}
-                \item Register: Fastest
-                \item L0: 6 KiB
-                \item L1: 128 KiB - 700 GiB/s
-                \item L2: 1 MiB - 200 GiB/s
-                \item L3: 6 MiB - 100 GB/s
-                \item L4: 128 MiB - 40 GB/s
-                \item Main memory – GiB - 10 GB/s
-            \end{itemize}
-        \end{column}
-
-        %\begin{column}{0.6\textwidth}
-        %    \begin{center}
-        %        \includegraphics[scale=0.7]{fig/cache.jpg} \\
-        %    \end{center}
-        %\end{column}
-    \end{columns}
-\end{frame}
-
 \begin{frame}[fragile]{Underlying data structure}
 \begin{columns}
 \begin{column}{0.5\textwidth}
@@ -487,6 +464,116 @@ Array allcation
 
 \end{frame}
 
+\begin{frame}{Cache Hierarchy - Latency}{Why it is important to reduce memory usage}
+    \begin{columns}
+        \begin{column}{0.4\textwidth}
+            Intel Haswell Mobile 
+            \begin{itemize}
+                \item Register: Fastest
+                \item L0: 6 KiB
+                \item L1: 128 KiB - 700 GiB/s
+                \item L2: 1 MiB - 200 GiB/s
+                \item L3: 6 MiB - 100 GB/s
+                \item L4: 128 MiB - 40 GB/s
+                \item Main memory – GiB - 10 GB/s
+            \end{itemize}
+        \end{column}
+
+        %\begin{column}{0.6\textwidth}
+        %    \begin{center}
+        %        \includegraphics[scale=0.7]{fig/cache.jpg} \\
+        %    \end{center}
+        %\end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Linked list travesal illustration}
+\begin{enumerate}
+\item<alert@1> Initial memory state
+\item<alert@2> After awhile
+\item<alert@2> Should we traverse the list chasing the pointers?
+\item<alert@2> Or perhaps iterate sequentially though the whole
+storage (deque) ignoring unused (red) nodes.
+\item<alert@2> On heavily loaded storage traversing the later
+can be much faster.
+\end{enumerate}
+
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+   \uncover<1> {
+      \nodeQ (node0) at (-5.0,4) {Node$_0$};
+      \nodeQ (node1) at (-3.0,4) {Node$_1$};
+      \nodeQ (node2) at (-1.0,4) {Node$_2$};
+      \nodeQ (node3) at (1.0,4) {Node$_3$};
+      \nodeQ (node4) at (3.0,4) {Node$_4$};
+      \nodeQ (node5) at (5.0,4) {Node$_5$};
+      \nodeQ (node6) at (7.0,4) {Node$_6$};
+      \nodeQ (node7) at (-5.0,2) {Node$_{7}$};
+      \nodeQ (node8) at (-3.0,2) {Node$_{8}$};
+      \nodeQ (node9) at (-1.0,2) {Node$_{9}$};
+      \nodeQ (node10) at ( 1.0,2) {Node$_{10}$};
+      \nodeQ (node11) at ( 3.0,2) {Node$_{11}$};
+      \nodeQ (node12) at ( 5.0,2) {Node$_{12}$};
+      \nodeQ (node13) at ( 7.0,2) {Node$_{13}$};
+
+      \draw[thick,<-,rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
+      \draw[thick,<-,rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
+      \draw[thick,<-,rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
+      \draw[thick,<-,rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
+      \draw[thick,<-,rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
+      \draw[thick,<-,rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
+
+
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
+   }
+
+   \uncover<2-> {
+      \valueQ (node0) at (-5.0,4) {Node$_0$};
+      \valueQ (node1) at (-3.0,4) {Node$_1$};
+      \nodeQ (node2) at (-1.0,4) {Node$_2$};
+      \valueQ (node3) at (1.0,4) {Node$_3$};
+      \nodeQ (node4) at (3.0,4) {Node$_4$};
+      \valueQ (node5) at (5.0,4) {Node$_5$};
+      \nodeQ (node6) at (7.0,4) {Node$_6$};
+      \nodeQ (node7) at (-5.0,2) {Node$_{7}$};
+      \valueQ (node8) at (-3.0,2) {Node$_{8}$};
+      \nodeQ (node9) at (-1.0,2) {Node$_{9}$};
+      \valueQ (node10) at ( 1.0,2) {Node$_{10}$};
+      \nodeQ (node11) at ( 3.0,2) {Node$_{11}$};
+      \nodeQ (node12) at ( 5.0,2) {Node$_{12}$};
+      \valueQ (node13) at ( 7.0,2) {Node$_{13}$};
+
+      \draw[very thick,->,rounded corners=10pt,color=black] (node0.south) -- (node8.north);
+      \draw[very thick,->,rounded corners=10pt,color=black] (node1.north) -- (-1,4.7) -- (node3.north);
+      %\draw[thick,<-,rounded corners=10pt,color=black] (node2.north) -- ( 1,4.7) -- (node4.north);
+      \draw[very thick,->,rounded corners=10pt,color=black] (node3.north) -- ( 3,4.7) -- (node5.north);
+      %\draw[thick,<-,rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
+      \draw[very thick,->,rounded corners=10pt,color=black] (node5.south) -- (node13.north);
+      %\draw[thick,<-,rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
+      %\draw[thick,<-,rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
+      \draw[very thick,->,rounded corners=10pt,color=black] (node8.north) -- (node1.south);
+      %\draw[thick,<-,rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
+      %\draw[thick,<-,rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
+      %\draw[thick,<-,rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
+      \draw[very thick,->,rounded corners=10pt,color=black] (node13.south) -- (4,1.0) -- (node10.south);
+
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node2.south) -- (1,3) -- (node4.south);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node4.south) -- (5,3) -- (node6.south);
+      \draw[thick,<-,dashed, rounded corners=10pt,color=black] (node6.south) -- (node12.north);
+      \draw[thick,->,dashed, rounded corners=10pt,color=black] (node11.south) -- (4,1)-- (node12.south);
+      \draw[thick,->,dashed, rounded corners=10pt,color=black] (node9.south) -- (1,1)-- (node11.south);
+      \draw[thick,->,dashed, rounded corners=10pt,color=black] (node7.south) -- (-3,1)-- (node9.south);
+   }
+
+\end{tikzpicture}
+
+\end{frame}
 
 
 \subsection[Node allocation]{Node allocation}
