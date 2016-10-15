@@ -144,30 +144,27 @@
 }
 %__________________________________________________________
 
-%\mode<presentation>
-%{
-%  \setbeamercovered{transparent}
-%   \setbeamertemplate{footline}[frame number]
-%  % or whatever (possibly just delete it)
-%}
+\mode<presentation>
+{
+  %\setbeamercovered{transparent}
+   %\setbeamertemplate{footline}[frame number]
+  % or whatever (possibly just delete it)
+}
 
-\title[Node allocation] {Node allocation}
+\title[] {Node allocation}
 
-\subtitle
-{Marcelo Zimbres}
+\subtitle[] {How can we improve \texttt{C++} memory menagement}
 
-%\author[]
-%{Aluno: Marcelo Zimbres Silva. \\
-% Orientador: Ernesto Kemp.}
+\author[] {Marcelo Zimbres}
 
 \institute[Marcelo Zimbres - Software Developer - Physicist]
 {
-  %IFGW - Unicamp
+  Presentation to WG21-SG14
 }
 
-\date[11 July 2016 - Magstadt - Germany] {11 July 2016 - Magstadt}
+\date[15 October 2016 - Magstadt - Germany] {14 October 2016 - Magstadt}
 
-\subject{Node allocation}
+\subject{Node allocation 3}
 
 % If you have a file called "university-logo-filename.xxx", where xxx
 % is a graphic format that can be processed by latex or pdflatex,
@@ -178,12 +175,12 @@
 
 % Delete this, if you do not want the table of contents to pop up at
 % the beginning of each subsection:
-%\AtBeginSubsection[]
-%{
-%  \begin{frame}<beamer>{Outline}
-%    \tableofcontents[currentsection,currentsubsection]
-%  \end{frame}
-%}
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>{Outline}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
 
 % If you wish to uncover everything in a step-wise fashion, uncomment
 % the following command: 
@@ -197,7 +194,7 @@
 \end{frame}
 
 \begin{frame}{Outline}
-  \tableofcontents[]
+  \tableofcontents[pausesections]
   % You might wish to add the option [pausesections]
 \end{frame}
 
@@ -211,18 +208,36 @@
 % - Talk about 30s to 2min per frame. So there should be between about
 %   15 and 30 frames, all told.
 
-\begin{frame}{Target audience}{}
+\begin{frame}[t]{Target audience - Goals}{}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+Goals.
+\begin{itemize}
+    \item Provide building blocks to memory allocation
+    \item Use static type information to improve memory management
+    \item Reduce memory footprint of linked data structures
+    \item Reduce dependency on global state and on undefined behaviour
+    \item Allow fine tunning
+    \item Reduce complexity
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+Target audience
 \begin{itemize}
     \item Realtime/embedded programming.
     \item Games, high performace, 24/7 availability.
     \item Should be usefull for c++ programmers in general.
     \item Implementation available on github.
 \end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
 \part{Node allocation}
 
 \section{Review of memory allocations \texttt{C++} containers}
+
 \begin{frame}[fragile]{\texttt{C++} Allocators}
 \begin{columns}
 \begin{column}{0.5\textwidth}
@@ -295,26 +310,30 @@ Summary
 \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Allocation strategies} {\texttt{malloc}, \texttt{TCalloc}, etc}
+\begin{frame}[]{Allocation strategies}
+{\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
+\texttt{nedmalloc}, \texttt{hoard}, etc}
 \begin{columns}
 \begin{column}{0.5\textwidth}
-Typical strategy
+Typical goals
 \begin{itemize}
-\item<alert@1> Avoid fragmentation.
-\item<alert@1> Pooling for small types
-\item<alert@2> Pre allocate large number of same size blocks.
-\item<alert@3> Avoid serialization on cuncurrent calls.
+\item<alert@1> Avoid fragmentation. Improve locality.
+\item<alert@2> Small sizes: Up $170$ pre-allocated lists.
+\item<alert@3> Large sizes: Best fit, rounding on memory pages.
+\item<alert@4> Avoid serialization on cuncurrent calls.
+\item<alert@5> Bookkeeping information on blocks.
+\item<alert@2> Rounding allocation sizes to fit pre-allocated buffers.
 \end{itemize}
 
 \end{column}
 
 \begin{column}{0.5\textwidth}
-Comments
+Thoughts
 \begin{itemize}
-\item<alert@1> Allocate a big chunck a pe-link.
-\item<alert@2> Why? Block size is known at compile type.
-Do not have to care about unfit sizes.
-\item<alert@3> Do not use a global allocator?
+\item<alert@1> Hang same-size allocations on different pre-linked buffers.
+\item<alert@2> Sizes are known at compile time. We can avoid this.
+\item<alert@3> Do not use a global allocator.
+\item<alert@4> Not needed if blocks have alway the same size.
 \end{itemize}
 
 \end{column}
@@ -330,7 +349,7 @@ Do not have to care about unfit sizes.
 
 \section{Node allocation}
 
-\begin{frame}[fragile]{Containers and their allocation patterns}
+\begin{frame}[t]{Containers and their allocation patterns}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 
@@ -368,12 +387,12 @@ Node Allocation
    }
 
    \uncover<3-> {
-      \draw[thick,<-,rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
+      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
+      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
+      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
+      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
+      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
+      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
    }
 
    \uncover<4-> {
@@ -389,13 +408,13 @@ Node Allocation
 
    \uncover<5-> {
 
-      \draw[thick,<-,rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
-      \draw[thick,<-,rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
+      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
+      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
+      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
+      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
+      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
+      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
+      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
    }
 \end{tikzpicture}
 
@@ -416,7 +435,7 @@ Array allcation
 
 \end{frame}
 
-\begin{frame}[fragile]{Underlying data structure}
+\begin{frame}[transparent]{Node sizes according to the number of elements needed}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 \begin{enumerate}
@@ -462,28 +481,28 @@ Array allcation
 
 \end{frame}
 
-\begin{frame}{Cache Hierarchy - Latency}{Why it is important to reduce memory usage}
-    \begin{columns}
-        \begin{column}{0.4\textwidth}
-            Intel Haswell Mobile 
-            \begin{itemize}
-                \item Register: Fastest
-                \item L0: 6 KiB
-                \item L1: 128 KiB - 700 GiB/s
-                \item L2: 1 MiB - 200 GiB/s
-                \item L3: 6 MiB - 100 GB/s
-                \item L4: 128 MiB - 40 GB/s
-                \item Main memory – GiB - 10 GB/s
-            \end{itemize}
-        \end{column}
-
-        %\begin{column}{0.6\textwidth}
-        %    \begin{center}
-        %        \includegraphics[scale=0.7]{fig/cache.jpg} \\
-        %    \end{center}
-        %\end{column}
-    \end{columns}
-\end{frame}
+%\begin{frame}{Cache Hierarchy - Latency}{Why it is important to reduce memory usage}
+%    \begin{columns}
+%        \begin{column}{0.4\textwidth}
+%            Intel Haswell Mobile 
+%            \begin{itemize}
+%                \item Register: Fastest
+%                \item L0: 6 KiB
+%                \item L1: 128 KiB - 700 GiB/s
+%                \item L2: 1 MiB - 200 GiB/s
+%                \item L3: 6 MiB - 100 GB/s
+%                \item L4: 128 MiB - 40 GB/s
+%                \item Main memory – GiB - 10 GB/s
+%            \end{itemize}
+%        \end{column}
+%
+%        %\begin{column}{0.6\textwidth}
+%        %    \begin{center}
+%        %        \includegraphics[scale=0.7]{fig/cache.jpg} \\
+%        %    \end{center}
+%        %\end{column}
+%    \end{columns}
+%\end{frame}
 
 \begin{frame}[fragile]{Linked list travesal illustration}
 \begin{columns}
@@ -701,14 +720,102 @@ std::copy(std::begin(alloc), std::end(alloc),
 \part{How to get node allocation in the STL}
 
 \section[Implementation]{Implementation}
+
 \begin{frame}<beamer>{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
 
-\section[Proposal]{Proposal}
-\section[Exposing the node type]{Exposing the node type}
-\section[Node size reduction]{Node size reduction}
-\section[Avoid pointer chasing]{Avoid pointer chasing}
+\subsection[Proposal]{Proposal}
+\begin{frame}[fragile]{Node allocation support}
+
+\begin{lstlisting}
+template<class Alloc>
+struct allocator_traits {
+  // Equal to Alloc::node_allocation_only if present,
+  // std::false_type otherwise. Array allocation with
+  // allocate(n) is ruled out if it is std::true_type.
+  using node_allocation_only = std::false_type
+  // Calls a.allocate_node() if present otherwise calls
+  // Alloc::allocate(1). Memory allocate with this function
+  // must be deallocated with deallocate_node.
+  pointer allocate_node(Alloc& a);
+  // Calls a.deallocate_node(pointer) if present otherwise
+  // calls Alloc::deallocate(p, 1). Can only be used with
+  // memory allocated with allocate_node.
+  void deallocate_node(Alloc& a, pointer p);
+};
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Node allocation implementation}
+
+\begin{lstlisting}
+pointer allocate(std::size_t /*can't handle n*/)
+{
+  pointer q = avail; // The next free node
+  if (avail)
+    avail = avail->next;
+
+  return q;
+}
+
+void deallocate(pointer p, std::size_t /*can't handle n*/)
+{
+  p->next = avail;
+  avail = p;
+}
+
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Exposing the node type}{Fancy pointers}
+
+\begin{lstlisting}
+// Cannot always hold for general A1 nd A2.
+static_assert( std::is_same< std::list<T, A1>::node_type
+                           , std::list<T, A2>::node_type>, "");
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Exposing the node type}{Node type interface}
+
+\begin{lstlisting}
+template <class T, class Ptr>
+struct node_type {
+  using value_type = T;
+  using pointer = // Usually taken from std::pointer_traits<Ptr>
+  template<class U, class K>
+  struct rebind { using other = node_type<U , K>; };
+  // ... implementation details
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Example}
+
+\begin{lstlisting}
+using alloc_t = rt::node_allocator<int>;
+using node_type = typename std::list<int, alloc_t>::node_type;
+
+// Buffer for 100 elements.
+std::array<char, 100 * sizeof (node_type)> buffer = {{}};
+alloc_t alloc(buffer);
+
+std::list<int, alloc_t> l1(alloc);
+// Inserts elements. Allocation and deallocation implemented
+// with 6 lines of code.
+l1 = {27, 1, 60};
+...
+\end{lstlisting}
+
+\end{frame}
+
+\subsection[Exposing the node type]{Exposing the node type}
+\subsection[Node size reduction]{Node size reduction}
+\subsection[Avoid pointer chasing]{Avoid pointer chasing}
 
 \begin{frame}{Realtime node-based containers}
     \begin{columns}
