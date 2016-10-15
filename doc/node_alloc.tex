@@ -104,7 +104,7 @@
 \colorlet{dgfile}{red!80!black}
 
 \tikzstyle{dgfile}=[draw,fill=dgfile,shape=rectangle,minimum width=2cm,inner sep=1ex]
-\tikzstyle{nodeU}=[draw,fill=nodeU,shape=rectangle,minimum width=0.5cm  ,inner sep=1ex]
+\tikzstyle{nodeU}=[draw,fill=nodeU,shape=rectangle,minimum height=0.5cm  ,minimum width=0.5cm  ,inner sep=1ex]
 \tikzstyle{nodeD}=[draw,fill=nodeD,shape=rectangle,minimum width=1cm  ,inner sep=1ex]
 \tikzstyle{nodeQ}=[draw,fill=nodeD,shape=rectangle,minimum width=2cm  ,inner sep=1ex]
 \tikzstyle{nodeO}=[draw,fill=nodeO,shape=rectangle,minimum width=4cm  ,inner sep=1ex]
@@ -310,7 +310,7 @@ Summary
 \end{columns}
 \end{frame}
 
-\begin{frame}[]{Allocation strategies}
+\begin{frame}{Allocation strategies}
 {\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
 \texttt{nedmalloc}, \texttt{hoard}, etc}
 \begin{columns}
@@ -420,6 +420,79 @@ Node Allocation
 
 
 \end{frame}
+
+%___________________________________________________________________
+
+\begin{frame}[t]{Pools of blocks with different size}
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+      \nodeU (node0) at  (0.0,4.0) {};
+      \nodeU (node1) at  (0.5,4.0) {};
+      \nodeU (node2) at  (1.0,4.0) {};
+      \nodeU (node3) at  (1.5,4.0) {};
+      \nodeU (node4) at  (2.0,4.0) {};
+      \nodeU (node5) at  (2.5,4.0) {};
+      \nodeU (node6) at  (3.0,4.0) {};
+      \nodeU (node7) at  (3.5,4.0) {};
+      \nodeU (node8) at  (4.0,4.0) {};
+      \nodeU (node9) at  (4.5,4.0) {};
+      \nodeU (node10) at (5.0,4.0) {};
+      \nodeU (node11) at (5.5,4.0) {};
+      \nodeU (node12) at (6.0,4.0) {};
+      \nodeU (node13) at (6.5,4.0) {};
+      \nodeU (node14) at (7.0,4.0) {};
+      \nodeU (node15) at (7.5,4.0) {};
+      \nodeU (node16) at (8.0,4.0) {};
+      \nodeU (node17) at (8.5,4.0) {};
+      \nodeU (node18) at (9.0,4.0) {};
+      \nodeU (node19) at (9.5,4.0) {};
+
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node0.north) --  (0.25,4.7) -- (node1.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node1.north) --  (0.75,4.7) -- (node2.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node2.north) --  (1.25,4.7) -- (node3.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node3.north) --  (1.75,4.7) -- (node4.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node4.north) --  (2.25,4.7) -- (node5.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node5.north) --  (2.75,4.7) -- (node6.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node6.north) --  (3.25,4.7) -- (node7.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node7.north) --  (3.75,4.7) -- (node8.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node8.north) --  (4.25,4.7) -- (node9.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node9.north) --  (4.75,4.7) -- (node10.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node10.north) -- (5.25,4.7) -- (node11.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node11.north) -- (5.75,4.7) -- (node12.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node12.north) -- (6.25,4.7) -- (node13.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node13.north) -- (6.75,4.7) -- (node14.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node14.north) -- (7.25,4.7) -- (node15.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node15.north) -- (7.75,4.7) -- (node16.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node16.north) -- (8.25,4.7) -- (node17.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node17.north) -- (8.75,4.7) -- (node18.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node18.north) -- (9.25,4.7) -- (node19.north);
+
+      \nodeD (Dnode0)  at  ( 0.0,2.5) {};
+      \nodeD (Dnode1)  at  ( 1.0,2.5) {};
+      \nodeD (Dnode2)  at  ( 2.0,2.5) {};
+      \nodeD (Dnode3)  at  ( 3.0,2.5) {};
+      \nodeD (Dnode4)  at  ( 4.0,2.5) {};
+      \nodeD (Dnode5)  at  ( 5.0,2.5) {};
+      \nodeD (Dnode6)  at  ( 6.0,2.5) {};
+      \nodeD (Dnode7)  at  ( 7.0,2.5) {};
+      \nodeD (Dnode8)  at  ( 8.0,2.5) {};
+      \nodeD (Dnode9)  at  ( 9.0,2.5) {};
+      \nodeD (Dnode10) at  (10.0,2.5) {};
+
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode0.north) --  (0.50,3.0) -- (Dnode1.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode1.north) --  (1.50,3.0) -- (Dnode2.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode2.north) --  (2.50,3.0) -- (Dnode3.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode3.north) --  (3.50,3.0) -- (Dnode4.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode4.north) --  (4.50,3.0) -- (Dnode5.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode5.north) --  (5.50,3.0) -- (Dnode6.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode6.north) --  (6.50,3.0) -- (Dnode7.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode7.north) --  (7.50,3.0) -- (Dnode8.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode8.north) --  (8.50,3.0) -- (Dnode9.north);
+      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode9.north) --  (9.50,3.0) -- (Dnode10.north);
+\end{tikzpicture}
+\end{frame}
+
+%_________________________________________________________________________
 
 \begin{frame}[fragile]{Array Allocation}
 Array allcation
