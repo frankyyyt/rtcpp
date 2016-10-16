@@ -1,12 +1,11 @@
 \documentclass[10pt,aspectratio=169]{beamer}
 \usepackage{tikz}
 \usepackage[utf8]{inputenc}
-%\usepackage[T1]{fontenc}
 \usepackage[english]{babel}
-%\usepackage[latin1]{inputenc}
-%\usepackage[T1]{fontenc}
 \usepackage{verbatim}
 \usepackage{listings}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
 
 \lstset{
   language=C++,                 % the language of the code
@@ -97,31 +96,30 @@
 %\usecolortheme{whale}       
 %\usecolortheme{wolverine}       
 
-\colorlet{nodeU}{red!80!black}
-\colorlet{nodeD}{red!80!black}
-\colorlet{nodeO}{red!80!black}
-\colorlet{value}{yellow!50!black}
-\colorlet{dgfile}{red!80!black}
+\colorlet{memC}{red!80!black}
+\colorlet{eleC}{yellow!50!black}
 
-\tikzstyle{dgfile}=[draw,fill=dgfile,shape=rectangle,minimum width=2cm,inner sep=1ex]
-\tikzstyle{nodeU}=[draw,fill=nodeU,shape=rectangle,minimum height=0.5cm  ,minimum width=0.5cm  ,inner sep=1ex]
-\tikzstyle{nodeD}=[draw,fill=nodeD,shape=rectangle,minimum width=1cm  ,inner sep=1ex]
-\tikzstyle{nodeQ}=[draw,fill=nodeD,shape=rectangle,minimum width=2cm  ,inner sep=1ex]
-\tikzstyle{nodeO}=[draw,fill=nodeO,shape=rectangle,minimum width=4cm  ,inner sep=1ex]
-\tikzstyle{valueU}=[draw,fill=value,shape=rectangle,minimum width=0.5cm,inner sep=1ex]
-\tikzstyle{valueD}=[draw,fill=value,shape=rectangle,minimum width=1cm,inner sep=1ex]
-\tikzstyle{valueQ}=[draw,fill=value,shape=rectangle,minimum width=2cm,inner sep=1ex]
-\tikzstyle{valueO}=[draw,fill=value,shape=rectangle,minimum width=4cm,inner sep=1ex]
+\tikzstyle{mbu}=[draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=0.5cm  ,minimum width=0.5cm  ,inner sep=1ex]
+\tikzstyle{mbd}=[draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=0.5cm  ,minimum width=1.0cm  ,inner sep=1ex]
+\tikzstyle{mbq}=[draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=0.5cm  ,minimum width=2.0cm  ,inner sep=1ex]
+\tikzstyle{mbo}=[draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=0.5cm  ,minimum width=4.0cm  ,inner sep=1ex]
 
-\def\dgfile{\node[style=dgfile]}
-\def\nodeU{\node[style=nodeU]}
-\def\nodeD{\node[style=nodeD]}
-\def\nodeQ{\node[style=nodeQ]}
-\def\nodeO{\node[style=nodeO]}
-\def\valueU{\node[style=valueU]}
-\def\valueD{\node[style=valueD]}
-\def\valueQ{\node[style=valueQ]}
-\def\valueO{\node[style=valueO]}
+\tikzstyle{ebu}=[draw,node distance=0cm, fill=eleC,shape=rectangle,minimum height=0.5cm  ,minimum width=0.5cm  ,inner sep=1ex]
+\tikzstyle{ebd}=[draw,node distance=0cm, fill=eleC,shape=rectangle,minimum height=0.5cm  ,minimum width=1.0cm  ,inner sep=1ex]
+\tikzstyle{ebq}=[draw,node distance=0cm, fill=eleC,shape=rectangle,minimum height=0.5cm  ,minimum width=2.0cm  ,inner sep=1ex]
+\tikzstyle{ebo}=[draw,node distance=0cm, fill=eleC,shape=rectangle,minimum height=0.5cm  ,minimum width=4.0cm  ,inner sep=1ex]
+
+\tikzstyle{marrow}=[very thick,-, color=memC]
+
+\def\mbu{\node[style=mbu]}
+\def\mbd{\node[style=mbd]}
+\def\mbq{\node[style=mbq]}
+\def\mbo{\node[style=mbo]}
+\def\ebu{\node[style=ebu]}
+\def\ebd{\node[style=ebd]}
+\def\ebq{\node[style=ebq]}
+\def\ebo{\node[style=ebo]}
+\def\marrow{\draw[style=marrow]}
 
 %__________________________________________________________
 % Apenas para o tema madrid
@@ -377,44 +375,41 @@ Node Allocation
 \begin{tikzpicture}[scale=1.0, rounded corners]
 
    \uncover<2-> {
-      \dgfile (node0) at (-5.0,4) {Node$_0$};
-      \dgfile (node1) at (-3.0,4) {Node$_1$};
-      \dgfile (node2) at (-1.0,4) {Node$_2$};
-      \dgfile (node3) at (1.0,4) {Node$_3$};
-      \dgfile (node4) at (3.0,4) {Node$_4$};
-      \dgfile (node5) at (5.0,4) {Node$_5$};
-      \dgfile (node6) at (7.0,4) {Node$_6$};
+      \mbq (node0) at (2.0,4.0) {Block$_0$};
+      \mbq (node1) [right=of node0] {Block$_1$};
+      \mbq (node2) [right=of node1] {Block$_2$};
+      \mbq (node3) [right=of node2] {Block$_3$};
+      \mbq (node4) [right=of node3] {Block$_4$};
+      \mbq (node5) [right=of node4] {Block$_5$};
+      \mbq (node6) [right=of node5] {Block$_6$};
    }
 
    \uncover<3-> {
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
+      \marrow (node0.north) to [bend right=-65] (node1.north);
+      \marrow (node1.north) to [bend right=-65] (node2.north);
+      \marrow (node2.north) to [bend right=-65] (node3.north);
+      \marrow (node3.north) to [bend right=-65] (node4.north);
+      \marrow (node4.north) to [bend right=-65] (node5.north);
+      \marrow (node5.north) to [bend right=-65] (node6.north);
    }
 
    \uncover<4-> {
-
-      \dgfile (node7) at (-5.0,2) {Node$_{7}$};
-      \dgfile (node8) at (-3.0,2) {Node$_{8}$};
-      \dgfile (node9) at (-1.0,2) {Node$_{9}$};
-      \dgfile (node10) at ( 1.0,2) {Node$_{10}$};
-      \dgfile (node11) at ( 3.0,2) {Node$_{11}$};
-      \dgfile (node12) at ( 5.0,2) {Node$_{12}$};
-      \dgfile (node13) at ( 7.0,2) {Node$_{13}$};
+      \mbq (node7)  at (2.0,2.0)     {Block$_7$};
+      \mbq (node8)  [right=of node7] {Block$_8$};
+      \mbq (node9)  [right=of node8] {Block$_9$};
+      \mbq (node10) [right=of node9] {Block$_{10}$};
+      \mbq (node11) [right=of node10] {Block$_{11}$};
+      \mbq (node12) [right=of node11] {Block$_{12}$};
+      \mbq (node13) [right=of node12] {Block$_{13}$};
    }
 
    \uncover<5-> {
-
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
+      \marrow (node6.south) -- (2.5, 3.0) -- (node7.north);
+      \marrow (node7.north) to [bend right=-65] (node8.north);
+      \marrow (node8.north) to [bend right=-65] (node9.north);
+      \marrow (node9.north) to [bend right=-65] (node10.north);
+      \marrow (node10.north) to [bend right=-65] (node11.north);
+      \marrow (node11.north) to [bend right=-65] (node12.north);
    }
 \end{tikzpicture}
 
@@ -426,69 +421,125 @@ Node Allocation
 \begin{frame}[t]{Pools of blocks with different size}
 \begin{tikzpicture}[scale=1.0, rounded corners]
 
-      \nodeU (node0) at  (0.0,4.0) {};
-      \nodeU (node1) at  (0.5,4.0) {};
-      \nodeU (node2) at  (1.0,4.0) {};
-      \nodeU (node3) at  (1.5,4.0) {};
-      \nodeU (node4) at  (2.0,4.0) {};
-      \nodeU (node5) at  (2.5,4.0) {};
-      \nodeU (node6) at  (3.0,4.0) {};
-      \nodeU (node7) at  (3.5,4.0) {};
-      \nodeU (node8) at  (4.0,4.0) {};
-      \nodeU (node9) at  (4.5,4.0) {};
-      \nodeU (node10) at (5.0,4.0) {};
-      \nodeU (node11) at (5.5,4.0) {};
-      \nodeU (node12) at (6.0,4.0) {};
-      \nodeU (node13) at (6.5,4.0) {};
-      \nodeU (node14) at (7.0,4.0) {};
-      \nodeU (node15) at (7.5,4.0) {};
-      \nodeU (node16) at (8.0,4.0) {};
-      \nodeU (node17) at (8.5,4.0) {};
-      \nodeU (node18) at (9.0,4.0) {};
-      \nodeU (node19) at (9.5,4.0) {};
+      \mbu (node0) at  (0.25,4.0) {};
+      \mbu (node1) [right=of node0] {};
+      \mbu (node2) [right=of node1] {};
+      \mbu (node3) [right=of node2] {};
+      \mbu (node4) [right=of node3] {};
+      \mbu (node5) [right=of node4] {};
+      \mbu (node6) [right=of node5] {};
+      \mbu (node7) [right=of node6] {};
+      \mbu (node8) [right=of node7] {};
+      \mbu (node9) [right=of node8] {};
 
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node0.north) --  (0.25,4.7) -- (node1.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node1.north) --  (0.75,4.7) -- (node2.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node2.north) --  (1.25,4.7) -- (node3.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node3.north) --  (1.75,4.7) -- (node4.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node4.north) --  (2.25,4.7) -- (node5.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node5.north) --  (2.75,4.7) -- (node6.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node6.north) --  (3.25,4.7) -- (node7.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node7.north) --  (3.75,4.7) -- (node8.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node8.north) --  (4.25,4.7) -- (node9.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node9.north) --  (4.75,4.7) -- (node10.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node10.north) -- (5.25,4.7) -- (node11.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node11.north) -- (5.75,4.7) -- (node12.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node12.north) -- (6.25,4.7) -- (node13.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node13.north) -- (6.75,4.7) -- (node14.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node14.north) -- (7.25,4.7) -- (node15.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node15.north) -- (7.75,4.7) -- (node16.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node16.north) -- (8.25,4.7) -- (node17.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node17.north) -- (8.75,4.7) -- (node18.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node18.north) -- (9.25,4.7) -- (node19.north);
+      \mbu (node10) [right=of node9] {};
+      \mbu (node11) [right=of node10] {};
+      \mbu (node12) [right=of node11] {};
+      \mbu (node13) [right=of node12] {};
+      \mbu (node14) [right=of node13] {};
+      \mbu (node15) [right=of node14] {};
+      \mbu (node16) [right=of node15] {};
+      \mbu (node17) [right=of node16] {};
+      \mbu (node18) [right=of node17] {};
+      \mbu (node19) [right=of node18] {};
 
-      \nodeD (Dnode0)  at  ( 0.0,2.5) {};
-      \nodeD (Dnode1)  at  ( 1.0,2.5) {};
-      \nodeD (Dnode2)  at  ( 2.0,2.5) {};
-      \nodeD (Dnode3)  at  ( 3.0,2.5) {};
-      \nodeD (Dnode4)  at  ( 4.0,2.5) {};
-      \nodeD (Dnode5)  at  ( 5.0,2.5) {};
-      \nodeD (Dnode6)  at  ( 6.0,2.5) {};
-      \nodeD (Dnode7)  at  ( 7.0,2.5) {};
-      \nodeD (Dnode8)  at  ( 8.0,2.5) {};
-      \nodeD (Dnode9)  at  ( 9.0,2.5) {};
-      \nodeD (Dnode10) at  (10.0,2.5) {};
+      \mbu (node20) [right=of node19] {};
+      \mbu (node21) [right=of node20] {};
+      \mbu (node22) [right=of node21] {};
+      \mbu (node23) [right=of node22] {};
+      \mbu (node24) [right=of node23] {};
+      \mbu (node25) [right=of node24] {};
+      \mbu (node26) [right=of node25] {};
+      \mbu (node27) [right=of node26] {};
+      \mbu (node28) [right=of node27] {};
 
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode0.north) --  (0.50,3.0) -- (Dnode1.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode1.north) --  (1.50,3.0) -- (Dnode2.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode2.north) --  (2.50,3.0) -- (Dnode3.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode3.north) --  (3.50,3.0) -- (Dnode4.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode4.north) --  (4.50,3.0) -- (Dnode5.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode5.north) --  (5.50,3.0) -- (Dnode6.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode6.north) --  (6.50,3.0) -- (Dnode7.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode7.north) --  (7.50,3.0) -- (Dnode8.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode8.north) --  (8.50,3.0) -- (Dnode9.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (Dnode9.north) --  (9.50,3.0) -- (Dnode10.north);
+      \marrow (node0.north) to [bend right=-65] (node1.north);
+      \marrow (node1.north) to [bend right=-65] (node2.north);
+      \marrow (node2.north) to [bend right=-65] (node3.north);
+      \marrow (node3.north) to [bend right=-65] (node4.north);
+      \marrow (node4.north) to [bend right=-65] (node5.north);
+      \marrow (node5.north) to [bend right=-65] (node6.north);
+      \marrow (node6.north) to [bend right=-65] (node7.north);
+      \marrow (node7.north) to [bend right=-65] (node8.north);
+      \marrow (node8.north) to [bend right=-65] (node9.north);
+
+      \marrow (node9.north) to  [bend right=-65]  (node10.north);
+      \marrow (node10.north) to [bend right=-65] (node11.north);
+      \marrow (node11.north) to [bend right=-65] (node12.north);
+      \marrow (node12.north) to [bend right=-65] (node13.north);
+      \marrow (node13.north) to [bend right=-65] (node14.north);
+      \marrow (node14.north) to [bend right=-65] (node15.north);
+      \marrow (node15.north) to [bend right=-65] (node16.north);
+      \marrow (node16.north) to [bend right=-65] (node17.north);
+      \marrow (node17.north) to [bend right=-65] (node18.north);
+      \marrow (node18.north) to [bend right=-65] (node19.north);
+
+      \marrow (node19.north) to [bend right=-65] (node20.north);
+      \marrow (node20.north) to [bend right=-65] (node21.north);
+      \marrow (node21.north) to [bend right=-65] (node22.north);
+      \marrow (node22.north) to [bend right=-65] (node23.north);
+      \marrow (node23.north) to [bend right=-65] (node24.north);
+      \marrow (node24.north) to [bend right=-65] (node25.north);
+      \marrow (node25.north) to [bend right=-65] (node26.north);
+      \marrow (node26.north) to [bend right=-65] (node27.north);
+      \marrow (node27.north) to [bend right=-65] (node28.north);
+
+      % next
+      \mbd (Unode0) at  (0.5,2.0) {};
+      \mbd (Unode1)  [right=of Unode0] {};
+      \mbd (Unode2)  [right=of Unode1] {};
+      \mbd (Unode3)  [right=of Unode2] {};
+      \mbd (Unode4)  [right=of Unode3] {};
+      \mbd (Unode5)  [right=of Unode4] {};
+      \mbd (Unode6)  [right=of Unode5] {};
+      \mbd (Unode7)  [right=of Unode6] {};
+      \mbd (Unode8)  [right=of Unode7] {};
+      \mbd (Unode9)  [right=of Unode8] {};
+      \mbd (Unode10) [right=of Unode9] {};
+      \mbd (Unode11) [right=of Unode10] {};
+      \mbd (Unode12) [right=of Unode11] {};
+      \mbd (Unode13) [right=of Unode12] {};
+      \mbd (Unode14) [right=of Unode13] {};
+
+      \marrow (Unode0.north) to  [bend right=-65] (Unode1.north);
+      \marrow (Unode1.north) to  [bend right=-65] (Unode2.north);
+      \marrow (Unode2.north) to  [bend right=-65] (Unode3.north);
+      \marrow (Unode3.north) to  [bend right=-65] (Unode4.north);
+      \marrow (Unode4.north) to  [bend right=-65] (Unode5.north);
+      \marrow (Unode5.north) to  [bend right=-65] (Unode6.north);
+      \marrow (Unode6.north) to  [bend right=-65] (Unode7.north);
+      \marrow (Unode7.north) to  [bend right=-65] (Unode8.north);
+      \marrow (Unode8.north) to  [bend right=-65] (Unode9.north);
+      \marrow (Unode9.north) to  [bend right=-65] (Unode10.north);
+      \marrow (Unode10.north) to [bend right=-65] (Unode11.north);
+      \marrow (Unode11.north) to [bend right=-65] (Unode12.north);
+      \marrow (Unode12.north) to [bend right=-65] (Unode13.north);
+      \marrow (Unode13.north) to [bend right=-65] (Unode14.north);
+      % next
+      \mbq (Qnode0) at  (1.0,0.0) {};
+      \mbq (Qnode1)  [right=of Qnode0] {};
+      \mbq (Qnode2)  [right=of Qnode1] {};
+      \mbq (Qnode3)  [right=of Qnode2] {};
+      \mbq (Qnode4)  [right=of Qnode3] {};
+      \mbq (Qnode5)  [right=of Qnode4] {};
+      \mbq (Qnode6)  [right=of Qnode5] {};
+
+      \marrow (Qnode0.north) to  [bend right=-65] (Qnode1.north);
+      \marrow (Qnode1.north) to  [bend right=-65] (Qnode2.north);
+      \marrow (Qnode2.north) to  [bend right=-65] (Qnode3.north);
+      \marrow (Qnode3.north) to  [bend right=-65] (Qnode4.north);
+      \marrow (Qnode4.north) to  [bend right=-65] (Qnode5.north);
+      \marrow (Qnode5.north) to  [bend right=-65] (Qnode6.north);
+      % next
+      \mbo (Onode0) at  (2.0,-2.0) {};
+      \mbo (Onode1)  [right=of Onode0] {};
+      \mbo (Onode2)  [right=of Onode1] {};
+      \mbo (Onode3)  [right=of Onode2] {};
+
+      \marrow (Onode0.north) to [bend right=-65] (Onode1.north);
+      \marrow (Onode1.north) to [bend right=-65] (Onode2.north);
+      \marrow (Onode2.north) to [bend right=-65] (Onode3.north);
+
 \end{tikzpicture}
 \end{frame}
 
@@ -521,22 +572,22 @@ Array allcation
 \begin{tikzpicture}[scale=1.0, rounded corners]
 
    \uncover<1-> {
-      \nodeU (next) at (0.25,5) {N};
-      \valueU (value) at (0.77,5) {V};
+      \mbu (nextu) at (0.25, 5) {N};
+      \ebu (valueu) [right=of nextu] {V};
    }
 
    \uncover<2-> {
-      \nodeD (next) at (0.5,4) {Next};
-      \valueD (value) at (1.6,4) {Value};
+      \mbd (nextd) at (0.5,4) {Next};
+      \ebd (valued) [right=of nextd] {Value};
    }
 
    \uncover<3-> {
-      \nodeQ (next) at (1,3) {Next};
-      \valueQ (value) at (3,3) {Value};
+      \mbq (nextq) at (1,3) {Next};
+      \ebq (valueq) [right=of nextq] {Value};
    }
    \uncover<4-> {
-      \nodeO (next) at (2,2) {Next};
-      \valueO (value) at (6,2) {Value};
+      \mbo (nexto) at (2,2) {Next};
+      \ebo (valueo) [right=of nexto] {Value};
    }
 \end{tikzpicture}
 
@@ -606,53 +657,53 @@ Latency on Intel Haswell Mobile
 \begin{tikzpicture}[scale=1.0, rounded corners]
 
    \uncover<1> {
-      \nodeQ (node0) at (-5.0,4) {Block$_0$};
-      \nodeQ (node1) at (-3.0,4) {Block$_1$};
-      \nodeQ (node2) at (-1.0,4) {Block$_2$};
-      \nodeQ (node3) at (1.0,4) {Block$_3$};
-      \nodeQ (node4) at (3.0,4) {Block$_4$};
-      \nodeQ (node5) at (5.0,4) {Block$_5$};
-      \nodeQ (node6) at (7.0,4) {Block$_6$};
-      \nodeQ (node7) at (-5.0,2) {Block$_{7}$};
-      \nodeQ (node8) at (-3.0,2) {Block$_{8}$};
-      \nodeQ (node9) at (-1.0,2) {Block$_{9}$};
-      \nodeQ (node10) at ( 1.0,2) {Block$_{10}$};
-      \nodeQ (node11) at ( 3.0,2) {Block$_{11}$};
-      \nodeQ (node12) at ( 5.0,2) {Block$_{12}$};
-      \nodeQ (node13) at ( 7.0,2) {Block$_{13}$};
+      \mbq (node0) at (-5.0,4) {Block$_0$};
+      \mbq (node1) at (-3.0,4) {Block$_1$};
+      \mbq (node2) at (-1.0,4) {Block$_2$};
+      \mbq (node3) at (1.0,4) {Block$_3$};
+      \mbq (node4) at (3.0,4) {Block$_4$};
+      \mbq (node5) at (5.0,4) {Block$_5$};
+      \mbq (node6) at (7.0,4) {Block$_6$};
+      \mbq (node7) at (-5.0,2) {Block$_{7}$};
+      \mbq (node8) at (-3.0,2) {Block$_{8}$};
+      \mbq (node9) at (-1.0,2) {Block$_{9}$};
+      \mbq (node10) at ( 1.0,2) {Block$_{10}$};
+      \mbq (node11) at ( 3.0,2) {Block$_{11}$};
+      \mbq (node12) at ( 5.0,2) {Block$_{12}$};
+      \mbq (node13) at ( 7.0,2) {Block$_{13}$};
 
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
-      \draw[very thick,<-, dashed, rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
+      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
+      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
+      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
+      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
+      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
+      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
 
 
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
-      \draw[very thick,<-,dashed, rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
+      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
+      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
+      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
+      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
+      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
+      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
+      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
    }
 
    \uncover<2-> {
-      \valueQ (node0) at (-5.0,4) {Node$_0$};
-      \valueQ (node1) at (-3.0,4) {Node$_1$};
-      \nodeQ (node2) at (-1.0,4) {Block$_2$};
-      \valueQ (node3) at (1.0,4) {Node$_3$};
-      \nodeQ (node4) at (3.0,4) {Block$_4$};
-      \valueQ (node5) at (5.0,4) {Node$_5$};
-      \nodeQ (node6) at (7.0,4) {Block$_6$};
-      \nodeQ (node7) at (-5.0,2) {Block$_{7}$};
-      \valueQ (node8) at (-3.0,2) {Node$_{8}$};
-      \nodeQ (node9) at (-1.0,2) {Block$_{9}$};
-      \valueQ (node10) at ( 1.0,2) {Node$_{10}$};
-      \nodeQ (node11) at ( 3.0,2) {Block$_{11}$};
-      \nodeQ (node12) at ( 5.0,2) {Block$_{12}$};
-      \valueQ (node13) at ( 7.0,2) {Node$_{13}$};
+      \ebq (node0) at (-5.0,4) {Node$_0$};
+      \ebq (node1) at (-3.0,4) {Node$_1$};
+      \mbq (node2) at (-1.0,4) {Block$_2$};
+      \ebq (node3) at (1.0,4) {Node$_3$};
+      \mbq (node4) at (3.0,4) {Block$_4$};
+      \ebq (node5) at (5.0,4) {Node$_5$};
+      \mbq (node6) at (7.0,4) {Block$_6$};
+      \mbq (node7) at (-5.0,2) {Block$_{7}$};
+      \ebq (node8) at (-3.0,2) {Node$_{8}$};
+      \mbq (node9) at (-1.0,2) {Block$_{9}$};
+      \ebq (node10) at ( 1.0,2) {Node$_{10}$};
+      \mbq (node11) at ( 3.0,2) {Block$_{11}$};
+      \mbq (node12) at ( 5.0,2) {Block$_{12}$};
+      \ebq (node13) at ( 7.0,2) {Node$_{13}$};
    }
 
    \uncover<2> {
@@ -665,12 +716,12 @@ Latency on Intel Haswell Mobile
    }
 
    \uncover<2> {
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node2.north) -- (3,4.7) -- (node6.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node6.south) -- (5,3) -- (node4.south);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node4.south) -- (node11.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node11.north) -- (1,3)-- (node9.north);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node7.south) -- (0,1.3)-- (node12.south);
-      \draw[very thick,->,dashed, rounded corners=10pt,color=black] (node12.north) -- (node2.south);
+      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node2.north) -- (3,4.7) -- (node6.north);
+      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node6.south) -- (5,3) -- (node4.south);
+      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node4.south) -- (node11.north);
+      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node11.north) -- (1,3)-- (node9.north);
+      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node7.south) -- (0,1.3)-- (node12.south);
+      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node12.north) -- (node2.south);
    }
 
    \uncover<3> {
@@ -733,22 +784,22 @@ std::copy(std::begin(alloc), std::end(alloc),
 %\begin{tikzpicture}[scale=1.0, rounded corners]
 %
 %   \uncover<1-> {
-%      \dgfile (head) at (-5,4) {Head};
+%      \mbq (head) at (-5,4) {Head};
 %   }
 %   \uncover<2-> {
-%      \dgfile (node1) at (-2,4) {Node$_1$};
+%      \mbq (node1) at (-2,4) {Node$_1$};
 %      \draw[thick,->,rounded corners=10pt,color=black] (head) -- (node1);
 %   }
 %   \uncover<3-> {
-%      \dgfile (node2) at (1,4) {Node$_2$};
+%      \mbq (node2) at (1,4) {Node$_2$};
 %      \draw[thick,->,rounded corners=10pt,color=black] (node1) -- (node2);
 %   }
 %   \uncover<4-> {
-%      \dgfile (node3) at (4,4) {Node$_3$};
+%      \mbq (node3) at (4,4) {Node$_3$};
 %      \draw[thick,->,rounded corners=10pt,color=black] (node2) -- (node3);
 %   }
 %   \uncover<5-> {
-%      \dgfile (node4) at (7,4) {Node$_4$};
+%      \mbq (node4) at (7,4) {Node$_4$};
 %      \draw[thick,->,rounded corners=10pt,color=black] (node3) -- (node4);
 %   }
 %\end{tikzpicture}
@@ -769,22 +820,22 @@ std::copy(std::begin(alloc), std::end(alloc),
 %\begin{tikzpicture}[scale=1.0, rounded corners]
 %
 %   \uncover<1-> {
-%      \nodeU (next) at (0.25,5) {N};
-%      \valueU (value) at (0.77,5) {V};
+%      \mbu (next) at (0.25,5) {N};
+%      \ebu (value) at (0.77,5) {V};
 %   }
 %
 %   \uncover<2-> {
-%      \nodeD (next) at (0.5,4) {Next};
-%      \valueD (value) at (1.6,4) {Value};
+%      \mbd (next) at (0.5,4) {Next};
+%      \ebd (value) at (1.6,4) {Value};
 %   }
 %
 %   \uncover<3-> {
-%      \nodeQ (next) at (1,3) {Next};
-%      \valueQ (value) at (3,3) {Value};
+%      \mbq (next) at (1,3) {Next};
+%      \ebq (value) at (3,3) {Value};
 %   }
 %   \uncover<4-> {
-%      \nodeO (next) at (2,2) {Next};
-%      \valueO (value) at (6,2) {Value};
+%      \mbo (next) at (2,2) {Next};
+%      \ebo (value) at (6,2) {Value};
 %   }
 %\end{tikzpicture}
 %
