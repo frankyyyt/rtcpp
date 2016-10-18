@@ -9,12 +9,12 @@
 
 \lstset{
   language=C++,                 % the language of the code
-  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  backgroundcolor=\color{white!85!black},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
   basicstyle=\ttfamily\footnotesize,        % the size of the fonts that are used for the code
   columns=fullflexible
   breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
   breaklines=true,                 % sets automatic line breaking
-  keywordstyle=\color{blue},       % keyword style
+  keywordstyle=\color{blue!50!black},       % keyword style
   captionpos=b,                    % sets the caption-position to bottom
   commentstyle=\color{blue},       % comment style
   deletekeywords={},            % if you want to delete keywords from the given language
@@ -22,9 +22,9 @@
   extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
   frame=single,                    % adds a frame around the code
   keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
-  morekeywords={using, static_assert},            % if you want to add more keywords to the set
+  morekeywords={using, static_assert, uint8_t, uint16_t, uint32_t, size_t},            % if you want to add more keywords to the set
   numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
-  numbersep=10pt,                   % how far the line-numbers are from the code
+  numbersep=7pt,                   % how far the line-numbers are from the code
   numberstyle=\tiny\color{black}, % the style that is used for the line-numbers
   rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
   showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
@@ -97,7 +97,7 @@
 %\usecolortheme{whale}       
 %\usecolortheme{wolverine}       
 
-\colorlet{memC}{red!80!black}
+\colorlet{memC}{orange!50!black}
 \colorlet{eleC}{yellow!50!black}
 
 \tikzstyle{mbu}=[draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=0.5cm  ,minimum width=0.5cm  ,inner sep=1ex]
@@ -167,7 +167,7 @@
 
 \author[] {Marcelo Zimbres}
 
-\institute[Marcelo Zimbres - Software Developer - Physicist]
+\institute[Marcelo Zimbres ]
 {
   Presentation to WG21-SG14
 }
@@ -199,10 +199,12 @@
 
 \begin{document}
 
+%____________________________________________________________
 \begin{frame}
   \titlepage
 \end{frame}
 
+%____________________________________________________________
 \begin{frame}{Outline}
   \tableofcontents[pausesections]
   % You might wish to add the option [pausesections]
@@ -218,6 +220,7 @@
 % - Talk about 30s to 2min per frame. So there should be between about
 %   15 and 30 frames, all told.
 
+%____________________________________________________________
 \begin{frame}[t]{Target audience - Goals}{}
 \begin{columns}
 \begin{column}{0.5\textwidth}
@@ -244,41 +247,7 @@ Target audience
 \end{columns}
 \end{frame}
 
-\part{Node allocation}
-
-\section{Review of memory allocations \texttt{C++} containers}
-
-\begin{frame}[fragile]{\texttt{C++} Allocators}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\begin{itemize}
-\item Abstraction to memory allocation inside containers.
-\item All containers with dynamic size request memory from
-their allocator internally.
-\item The allocator is part of the container type.
-\item Containers do not interact directly with the allocator but with
-\texttt{std::allocator\_traits}.
-\end{itemize}
-\end{column}
-
-\begin{column}{0.5\textwidth}
-Part of the type.
-\begin{lstlisting}
-template<class T, class Allocator>
-class list;
-\end{lstlisting}
-
-Basic usage
-\begin{lstlisting}
-std::allocator<int> alloc;
-auto* p = alloc.allocate(n);
-alloc.deallocate(p, n);
-\end{lstlisting}
-\end{column}
-\end{columns}
-\end{frame}
-
-\section{Allocation patterns}
+\section{STL and memory management}
 
 \begin{frame}{Containers and their allocation patterns}
 \begin{columns}
@@ -320,6 +289,39 @@ Summary
 \end{columns}
 \end{frame}
 
+%____________________________________________________________
+\begin{frame}[fragile]{How containers aquire memory: Allocators}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+\item Abstraction to memory allocation inside containers.
+\item All containers with dynamic size request memory from
+their allocator internally.
+\item The allocator is part of the container type.
+\item Containers do not interact directly with the allocator but with
+\texttt{std::allocator\_traits}.
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+Part of the type.
+\begin{lstlisting}
+template<class T, class Allocator>
+class list;
+\end{lstlisting}
+
+Basic usage
+\begin{lstlisting}
+std::allocator<int> alloc;
+auto* p = alloc.allocate(n);
+alloc.deallocate(p, n);
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+\section{Common allocation goals and strategies}
+%____________________________________________________________
 \begin{frame}{Allocation strategies}
 {\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
 \texttt{nedmalloc}, \texttt{hoard}, etc}
@@ -350,6 +352,7 @@ Thoughts
 \end{columns}
 \end{frame}
 
+%____________________________________________________________
 \begin{frame}{Should node allocation be standardized}{Proposal to the ISO \texttt{C++} Standards Committee}
 \vspace{-3cm}
     \begin{center}
@@ -359,7 +362,8 @@ Thoughts
 
 \section{Node allocation}
 
-\begin{frame}[t]{Containers and their allocation patterns}
+%____________________________________________________________
+\begin{frame}[t]{Node allocation illustration}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 
@@ -429,11 +433,31 @@ Node Allocation
 
 \end{frame}
 
-%___________________________________________________________________
+%____________________________________________________________
+\begin{frame}[fragile]{Node allocation implementation}{As simple as it gets}
 
+\begin{lstlisting}
+pointer allocate(std::size_t /*can't handle n*/)
+{
+  pointer q = avail; // The next free node
+  if (avail)
+    avail = avail->next;
+
+  return q;
+}
+
+void deallocate(pointer p, std::size_t /*can't handle n*/)
+{
+  p->next = avail;
+  avail = p;
+}
+
+\end{lstlisting}
+\end{frame}
+
+%___________________________________________________________________
 \begin{frame}[t]{Pools of blocks with different size}
 \begin{tikzpicture}[scale=1.0, rounded corners]
-
       % next
       \mbd (Unode0) at  (0.5,2.0)       {1};
       \mbd (Unode1)  [right=of Unode0]  {2};
@@ -508,42 +532,23 @@ Array allcation
 
 \end{frame}
 
-\begin{frame}[fragile]{Node allocation implementation}
-
-\begin{lstlisting}
-pointer allocate(std::size_t /*can't handle n*/)
-{
-  pointer q = avail; // The next free node
-  if (avail)
-    avail = avail->next;
-
-  return q;
-}
-
-void deallocate(pointer p, std::size_t /*can't handle n*/)
-{
-  p->next = avail;
-  avail = p;
-}
-
-\end{lstlisting}
-
-\end{frame}
-
+%____________________________________________________________
 \begin{frame}[fragile]{Node sizes according to the number of elements needed}
 \begin{columns}
 \begin{column}{0.5\textwidth}
-\begin{enumerate}
-\item<alert@1> $N \le 256$ with $T \in [0, 256]$
-\item<alert@2> $N \le 2^{16}$ with $T \in [0, 2^{16}]$
-\item<alert@3> $N \le 2^{32}$ with $T \in [0, 2^{32}]$
-\item<alert@4> $N \le 2^{64}$ with $T \in [0, 2^{64}]$
-\end{enumerate}
+%\begin{enumerate}
+%\item<alert@1> $N \le 256$ with $T \in [0, 256]$
+%\item<alert@2> $N \le 2^{16}$ with $T \in [0, 2^{16}]$
+%\item<alert@3> $N \le 2^{32}$ with $T \in [0, 2^{32}]$
+%\item<alert@4> $N \le 2^{64}$ with $T \in [0, 2^{64}]$
+%\end{enumerate}
+
+Node sizes of a \texttt{std::forwar\_list<T>}.
 
 \begin{tikzpicture}[scale=1.0, rounded corners]
 
    \uncover<1-> {
-      \mbu (nextu) at (0.25, 5) {N};
+      \mbu (nextu) at (0.25, 6) {N};
       \ebu (valueu) [right=of nextu] {V};
    }
 
@@ -553,11 +558,11 @@ void deallocate(pointer p, std::size_t /*can't handle n*/)
    }
 
    \uncover<3-> {
-      \mbq (nextq) at (1,3) {Next};
+      \mbq (nextq) at (1,2) {Next};
       \ebq (valueq) [right=of nextq] {Value};
    }
    \uncover<4-> {
-      \mbo (nexto) at (2,2) {Next};
+      \mbo (nexto) at (2,0) {Next};
       \ebo (valueo) [right=of nexto] {Value};
    }
 \end{tikzpicture}
@@ -565,16 +570,25 @@ void deallocate(pointer p, std::size_t /*can't handle n*/)
 \end{column}
 \begin{column}{0.5\textwidth}
 
-\begin{itemize}
-\item The underlying data structure is a deque.
-\item We do not have to address nodes with pointers.
-\item For less than $256$ elements a \texttt{char} has enough bits.
-\end{itemize}
-
 \begin{lstlisting}
-struct node {
-  node* next;
-  int value;
+struct node1 {     // sizeof (node2) = 4
+  std::uint8_t n;  // 256 elements.
+  std::uint8_t v;  // [0, 256]
+};
+
+struct node2 {     // sizeof (node2) = 4
+  std::uint16_t n; // 2^16 elements.
+  std::uint16_t v; // [0, 2^16]
+};
+
+struct node3 {     // sizeof (node3) = 8
+  std::uint32_t n; // 2^32 elements.
+  std::uint32_t v; // [0, 2^32]
+};
+
+struct node4 {     // sizeof (node4) = 16
+  node* next;      // Full address space
+  std::size_t v;
 };
 
 \end{lstlisting}
@@ -584,6 +598,7 @@ struct node {
 
 \end{frame}
 
+%____________________________________________________________
 %\begin{frame}{Cache Hierarchy - Latency}{Why it is important to reduce memory usage}
 %    \begin{columns}
 %        \begin{column}{0.4\textwidth}
@@ -607,6 +622,7 @@ struct node {
 %    \end{columns}
 %\end{frame}
 
+%____________________________________________________________
 \begin{frame}[fragile]{Linked list travesal illustration}
 \begin{columns}
 \begin{column}{0.6\textwidth}
@@ -636,53 +652,54 @@ Latency on Intel Haswell Mobile
 \begin{tikzpicture}[scale=1.0, rounded corners]
 
    \uncover<1> {
-      \mbq (node0) at (-5.0,4) {Block$_0$};
-      \mbq (node1) at (-3.0,4) {Block$_1$};
-      \mbq (node2) at (-1.0,4) {Block$_2$};
-      \mbq (node3) at (1.0,4) {Block$_3$};
-      \mbq (node4) at (3.0,4) {Block$_4$};
-      \mbq (node5) at (5.0,4) {Block$_5$};
-      \mbq (node6) at (7.0,4) {Block$_6$};
-      \mbq (node7) at (-5.0,2) {Block$_{7}$};
-      \mbq (node8) at (-3.0,2) {Block$_{8}$};
-      \mbq (node9) at (-1.0,2) {Block$_{9}$};
-      \mbq (node10) at ( 1.0,2) {Block$_{10}$};
-      \mbq (node11) at ( 3.0,2) {Block$_{11}$};
-      \mbq (node12) at ( 5.0,2) {Block$_{12}$};
-      \mbq (node13) at ( 7.0,2) {Block$_{13}$};
+      \mbq (node0)  at (-5.0,4.0) {Block$_0$};
+      \mbq (node1)  [right=of node0] {Block$_1$};
+      \mbq (node2)  [right=of node1] {Block$_2$};
+      \mbq (node3)  [right=of node2] {Block$_3$};
+      \mbq (node4)  [right=of node3] {Block$_4$};
+      \mbq (node5)  [right=of node4] {Block$_5$};
+      \mbq (node6)  [right=of node5] {Block$_6$};
 
-      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
-      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
-      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
-      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
-      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
-      \draw[very thick,<-, densely dotted, rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
+      \mbq (node7)  at (-5.0,2.0)     {Block$_7$};
+      \mbq (node8)  [right=of node7] {Block$_8$};
+      \mbq (node9)  [right=of node8] {Block$_9$};
+      \mbq (node10) [right=of node9] {Block$_{10}$};
+      \mbq (node11) [right=of node10] {Block$_{11}$};
+      \mbq (node12) [right=of node11] {Block$_{12}$};
+      \mbq (node13) [right=of node12] {Block$_{13}$};
 
+      \marrow (node0.north) to [bend right=-25] (node1.north);
+      \marrow (node1.north) to [bend right=-25] (node2.north);
+      \marrow (node2.north) to [bend right=-25] (node3.north);
+      \marrow (node3.north) to [bend right=-25] (node4.north);
+      \marrow (node4.north) to [bend right=-25] (node5.north);
+      \marrow (node5.north) to [bend right=-25] (node6.north);
 
-      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
-      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
-      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
-      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
-      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
-      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
-      \draw[very thick,<-,densely dotted, rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
+      \marrow (node6.south)  -- (-4.2, 3.0) -- (node7.north);
+      \marrow (node7.north)  to [bend right=-25] (node8.north);
+      \marrow (node8.north)  to [bend right=-25] (node9.north);
+      \marrow (node9.north)  to [bend right=-25] (node10.north);
+      \marrow (node10.north) to [bend right=-25] (node11.north);
+      \marrow (node11.north) to [bend right=-25] (node12.north);
+      \marrow (node12.north) to [bend right=-25] (node13.north);
    }
 
    \uncover<2-> {
-      \ebq (node0) at (-5.0,4) {Node$_0$};
-      \ebq (node1) at (-3.0,4) {Node$_1$};
-      \mbq (node2) at (-1.0,4) {Block$_2$};
-      \ebq (node3) at (1.0,4) {Node$_3$};
-      \mbq (node4) at (3.0,4) {Block$_4$};
-      \ebq (node5) at (5.0,4) {Node$_5$};
-      \mbq (node6) at (7.0,4) {Block$_6$};
-      \mbq (node7) at (-5.0,2) {Block$_{7}$};
-      \ebq (node8) at (-3.0,2) {Node$_{8}$};
-      \mbq (node9) at (-1.0,2) {Block$_{9}$};
-      \ebq (node10) at ( 1.0,2) {Node$_{10}$};
-      \mbq (node11) at ( 3.0,2) {Block$_{11}$};
-      \mbq (node12) at ( 5.0,2) {Block$_{12}$};
-      \ebq (node13) at ( 7.0,2) {Node$_{13}$};
+      \ebq (node0)  at (-5.0,4.0) {Node$_0$};
+      \ebq (node1)  [right=of node0] {Node$_1$};
+      \mbq (node2)  [right=of node1] {Block$_2$};
+      \ebq (node3)  [right=of node2] {Node$_3$};
+      \mbq (node4)  [right=of node3] {Block$_4$};
+      \ebq (node5)  [right=of node4] {Node$_5$};
+      \mbq (node6)  [right=of node5] {Block$_6$};
+
+      \mbq (node7)  at (-5.0,2.0)     {Block$_7$};
+      \ebq (node8)  [right=of node7] {Node$_8$};
+      \mbq (node9)  [right=of node8] {Block$_9$};
+      \ebq (node10) [right=of node9] {Node$_{10}$};
+      \mbq (node11) [right=of node10] {Block$_{11}$};
+      \mbq (node12) [right=of node11] {Block$_{12}$};
+      \ebq (node13) [right=of node12] {Node$_{13}$};
    }
 
    \uncover<2> {
@@ -695,12 +712,12 @@ Latency on Intel Haswell Mobile
    }
 
    \uncover<2> {
-      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node2.north) -- (3,4.7) -- (node6.north);
-      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node6.south) -- (5,3) -- (node4.south);
-      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node4.south) -- (node11.north);
-      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node11.north) -- (1,3)-- (node9.north);
-      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node7.south) -- (0,1.3)-- (node12.south);
-      \draw[very thick,->,densely dotted, rounded corners=10pt,color=black] (node12.north) -- (node2.south);
+      \marrow (node2.north) to [bend right=-25] (node6.north);
+      \marrow (node6.south) to [bend right=-25] (node4.south);
+      \marrow (node4.south) -- (node11.north);
+      \marrow (node11.north) to [bend right=-25] (node9.north);
+      \marrow (node7.south) to [bend right=-25] (node12.south);
+      \marrow (node12.north) -- (node2.south);
    }
 
    \uncover<3> {
@@ -733,6 +750,7 @@ Latency on Intel Haswell Mobile
 
 \end{frame}
 
+%____________________________________________________________
 \begin{frame}[fragile]{Alternative to pointer chasing}
 Code example
 \begin{itemize}
@@ -758,6 +776,7 @@ std::copy(std::begin(alloc), std::end(alloc),
 
 
 \subsection[Node allocation]{Node allocation}
+%____________________________________________________________
 %\begin{frame}{Illustration}{Illustration}
 %
 %\begin{tikzpicture}[scale=1.0, rounded corners]
@@ -787,6 +806,7 @@ std::copy(std::begin(alloc), std::end(alloc),
 
 \section[Memory Usage]{Memory Usage}
 
+%____________________________________________________________
 %\begin{frame}{Size reduction}{Node sizes of \texttt{std::forward\_list<int>}}
 %
 %\begin{enumerate}
@@ -824,11 +844,13 @@ std::copy(std::begin(alloc), std::end(alloc),
 
 \section[Implementation]{Implementation}
 
+%____________________________________________________________
 \begin{frame}<beamer>{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
 
 \subsection[Proposal]{Proposal}
+%____________________________________________________________
 \begin{frame}[fragile]{Node allocation support}
 
 \begin{lstlisting}
@@ -851,6 +873,7 @@ struct allocator_traits {
 
 \end{frame}
 
+%____________________________________________________________
 \begin{frame}[fragile]{Exposing the node type}{Fancy pointers}
 
 \begin{lstlisting}
@@ -861,6 +884,7 @@ static_assert( std::is_same< std::list<T, A1>::node_type
 
 \end{frame}
 
+%____________________________________________________________
 \begin{frame}[fragile]{Exposing the node type}{Node type interface}
 
 \begin{lstlisting}
@@ -875,6 +899,7 @@ struct node_type {
 
 \end{frame}
 
+%____________________________________________________________
 \begin{frame}[fragile]{Example}
 
 \begin{lstlisting}
@@ -898,6 +923,7 @@ l1 = {27, 1, 60};
 \subsection[Node size reduction]{Node size reduction}
 \subsection[Avoid pointer chasing]{Avoid pointer chasing}
 
+%____________________________________________________________
 \begin{frame}{Realtime node-based containers}
     \begin{columns}
         \begin{column}{0.5\textwidth}
@@ -916,6 +942,7 @@ l1 = {27, 1, 60};
     \end{columns}
 \end{frame}
 
+%____________________________________________________________
 \begin{frame}{}
     \vspace{1cm}
     \begin{center}
