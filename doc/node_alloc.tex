@@ -9,21 +9,21 @@
 
 \lstset{
   language=C++,                 % the language of the code
-  backgroundcolor=\color{white!85!black},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
   basicstyle=\ttfamily\footnotesize,        % the size of the fonts that are used for the code
-  columns=fullflexible
+  columns=fullflexible,
   breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
   breaklines=true,                 % sets automatic line breaking
-  keywordstyle=\color{blue!50!black},       % keyword style
+  keywordstyle=\color{blue!80!black},       % keyword style
   captionpos=b,                    % sets the caption-position to bottom
-  commentstyle=\color{blue},       % comment style
+  commentstyle=\color{green!50!black},       % comment style
   deletekeywords={},            % if you want to delete keywords from the given language
   escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
   extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
-  frame=single,                    % adds a frame around the code
+  frame=no,                    % adds a frame around the code
   keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
   morekeywords={using, static_assert, uint8_t, uint16_t, uint32_t, size_t},            % if you want to add more keywords to the set
-  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
   numbersep=7pt,                   % how far the line-numbers are from the code
   numberstyle=\tiny\color{black}, % the style that is used for the line-numbers
   rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
@@ -116,6 +116,8 @@
 \tikzstyle{lbo}=[node distance=0cm, shape=rectangle,minimum height=0.5cm, minimum width=4.0cm, inner sep=1ex]
 
 \tikzstyle{marrow}=[very thick, densely dotted,>=stealth,->, color=black]
+\tikzstyle{earrow}=[very thick, >=stealth,->, color=black]
+\tikzstyle{rearrow}=[very thick, >=stealth,<-, color=black]
 
 \def\mbu{\node[style=mbu]}
 \def\mbd{\node[style=mbd]}
@@ -132,6 +134,8 @@
 \def\lbo{\node[style=lbo]}
 
 \def\marrow{\draw[style=marrow]}
+\def\earrow{\draw[style=earrow]}
+\def\rearrow{\draw[style=rearrow]}
 
 %__________________________________________________________
 % Apenas para o tema madrid
@@ -185,12 +189,13 @@
 
 % Delete this, if you do not want the table of contents to pop up at
 % the beginning of each subsection:
-\AtBeginSubsection[]
-{
-  \begin{frame}<beamer>{Outline}
-    \tableofcontents[currentsection,currentsubsection]
-  \end{frame}
-}
+%\AtBeginSubsection[]
+%{
+%  \begin{frame}<beamer>{Outline}
+%    %\tableofcontents[currentsection,currentsubsection]
+%    \tableofcontents
+%  \end{frame}
+%}
 
 % If you wish to uncover everything in a step-wise fashion, uncomment
 % the following command: 
@@ -205,10 +210,16 @@
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}{Outline}
-  \tableofcontents[pausesections]
-  % You might wish to add the option [pausesections]
-\end{frame}
+%\begin{frame}{Outline}
+%  \tableofcontents[pausesections]
+%  % You might wish to add the option [pausesections]
+%\end{frame}
+
+%____________________________________________________________
+%\begin{frame}<beamer>{Outline}
+%   \tableofcontents[currentsection,currentsubsection]
+%\end{frame}
+
 
 % Since this a solution template for a generic talk, very little can
 % be said about how it should be structured. However, the talk length
@@ -247,7 +258,14 @@ Target audience
 \end{columns}
 \end{frame}
 
+%____________________________________________________________
+\begin{frame}<beamer>{Outline}
+   %\tableofcontents[currentsection,currentsubsection]
+   \tableofcontents
+\end{frame}
+
 \section{STL and memory management}
+\subsection{Allocation patterns}
 
 \begin{frame}{Containers and their allocation patterns}
 \begin{columns}
@@ -289,6 +307,7 @@ Summary
 \end{columns}
 \end{frame}
 
+\subsection{Review allocators}
 %____________________________________________________________
 \begin{frame}[fragile]{How containers aquire memory: Allocators}
 \begin{columns}
@@ -320,7 +339,14 @@ alloc.deallocate(p, n);
 \end{columns}
 \end{frame}
 
-\section{Common allocation goals and strategies}
+\section{Typical allocation goals and strategies}
+\subsection{Goals}
+
+%____________________________________________________________
+\begin{frame}<beamer>{Outline}
+   \tableofcontents[currentsection,currentsubsection]
+\end{frame}
+
 %____________________________________________________________
 \begin{frame}{Allocation strategies}
 {\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
@@ -352,15 +378,6 @@ Thoughts
 \end{columns}
 \end{frame}
 
-%____________________________________________________________
-\begin{frame}{Should node allocation be standardized}{Proposal to the ISO \texttt{C++} Standards Committee}
-\vspace{-3cm}
-    \begin{center}
-        \includegraphics[scale=0.6]{fig/prop1.pdf} \\
-    \end{center}
-\end{frame}
-
-\section{Node allocation}
 
 %____________________________________________________________
 \begin{frame}[t]{Node allocation illustration}
@@ -432,6 +449,8 @@ Node Allocation
 
 
 \end{frame}
+
+\subsection{Node allocation as a building block}
 
 %____________________________________________________________
 \begin{frame}[fragile]{Node allocation implementation}{As simple as it gets}
@@ -532,324 +551,22 @@ Array allcation
 
 \end{frame}
 
-%____________________________________________________________
-\begin{frame}[fragile]{Node sizes according to the number of elements needed}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-%\begin{enumerate}
-%\item<alert@1> $N \le 256$ with $T \in [0, 256]$
-%\item<alert@2> $N \le 2^{16}$ with $T \in [0, 2^{16}]$
-%\item<alert@3> $N \le 2^{32}$ with $T \in [0, 2^{32}]$
-%\item<alert@4> $N \le 2^{64}$ with $T \in [0, 2^{64}]$
-%\end{enumerate}
-
-Node sizes of a \texttt{std::forwar\_list<T>}.
-
-\begin{tikzpicture}[scale=1.0, rounded corners]
-
-   \uncover<1-> {
-      \mbu (nextu) at (0.25, 6) {N};
-      \ebu (valueu) [right=of nextu] {V};
-   }
-
-   \uncover<2-> {
-      \mbd (nextd) at (0.5,4) {Next};
-      \ebd (valued) [right=of nextd] {Value};
-   }
-
-   \uncover<3-> {
-      \mbq (nextq) at (1,2) {Next};
-      \ebq (valueq) [right=of nextq] {Value};
-   }
-   \uncover<4-> {
-      \mbo (nexto) at (2,0) {Next};
-      \ebo (valueo) [right=of nexto] {Value};
-   }
-\end{tikzpicture}
-
-\end{column}
-\begin{column}{0.5\textwidth}
-
-\begin{lstlisting}
-struct node1 {     // sizeof (node2) = 4
-  std::uint8_t n;  // 256 elements.
-  std::uint8_t v;  // [0, 256]
-};
-
-struct node2 {     // sizeof (node2) = 4
-  std::uint16_t n; // 2^16 elements.
-  std::uint16_t v; // [0, 2^16]
-};
-
-struct node3 {     // sizeof (node3) = 8
-  std::uint32_t n; // 2^32 elements.
-  std::uint32_t v; // [0, 2^32]
-};
-
-struct node4 {     // sizeof (node4) = 16
-  node* next;      // Full address space
-  std::size_t v;
-};
-
-\end{lstlisting}
-
-\end{column}
-\end{columns}
-
-\end{frame}
-
-%____________________________________________________________
-%\begin{frame}{Cache Hierarchy - Latency}{Why it is important to reduce memory usage}
-%    \begin{columns}
-%        \begin{column}{0.4\textwidth}
-%            Intel Haswell Mobile 
-%            \begin{itemize}
-%                \item Register: Fastest
-%                \item L0: 6 KiB
-%                \item L1: 128 KiB - 700 GiB/s
-%                \item L2: 1 MiB - 200 GiB/s
-%                \item L3: 6 MiB - 100 GB/s
-%                \item L4: 128 MiB - 40 GB/s
-%                \item Main memory – GiB - 10 GB/s
-%            \end{itemize}
-%        \end{column}
-%
-%        %\begin{column}{0.6\textwidth}
-%        %    \begin{center}
-%        %        \includegraphics[scale=0.7]{fig/cache.jpg} \\
-%        %    \end{center}
-%        %\end{column}
-%    \end{columns}
-%\end{frame}
-
-%____________________________________________________________
-\begin{frame}[fragile]{Linked list travesal illustration}
-\begin{columns}
-\begin{column}{0.6\textwidth}
-Can we avoid pointers chasing?
-\begin{enumerate}
-\item<alert@1> Initial memory state. Available memory.
-\item<alert@2> After insertion and removal we have chaos.
-\item<alert@3> Traversal chasing pointers jumps to slow memory.
-\item<alert@4> Alternative: Visit blocks sequentially. Ignore unused.
-\item<alert@4> Much faster if many blocks in use.
-\end{enumerate}
-\end{column}
-\begin{column}{0.4\textwidth}
-Latency on Intel Haswell Mobile 
-\begin{itemize}
-    \item<alert@3> L0: 6 KiB
-    \item<alert@3> L1: 128 KiB - 700 GiB/s
-    \item<alert@3> L2: 1 MiB - 200 GiB/s
-    \item<alert@3> L3: 6 MiB - 100 GB/s
-    \item<alert@3> L4: 128 MiB - 40 GB/s
-    \item<alert@3> Main memory – GiB - 10 GB/s
-\end{itemize}
-
-\end{column}
-\end{columns}
-
-\begin{tikzpicture}[scale=1.0, rounded corners]
-
-   \uncover<1> {
-      \mbq (node0)  at (-5.0,4.0) {Block$_0$};
-      \mbq (node1)  [right=of node0] {Block$_1$};
-      \mbq (node2)  [right=of node1] {Block$_2$};
-      \mbq (node3)  [right=of node2] {Block$_3$};
-      \mbq (node4)  [right=of node3] {Block$_4$};
-      \mbq (node5)  [right=of node4] {Block$_5$};
-      \mbq (node6)  [right=of node5] {Block$_6$};
-
-      \mbq (node7)  at (-5.0,2.0)     {Block$_7$};
-      \mbq (node8)  [right=of node7] {Block$_8$};
-      \mbq (node9)  [right=of node8] {Block$_9$};
-      \mbq (node10) [right=of node9] {Block$_{10}$};
-      \mbq (node11) [right=of node10] {Block$_{11}$};
-      \mbq (node12) [right=of node11] {Block$_{12}$};
-      \mbq (node13) [right=of node12] {Block$_{13}$};
-
-      \marrow (node0.north) to [bend right=-25] (node1.north);
-      \marrow (node1.north) to [bend right=-25] (node2.north);
-      \marrow (node2.north) to [bend right=-25] (node3.north);
-      \marrow (node3.north) to [bend right=-25] (node4.north);
-      \marrow (node4.north) to [bend right=-25] (node5.north);
-      \marrow (node5.north) to [bend right=-25] (node6.north);
-
-      \marrow (node6.south)  -- (-4.2, 3.0) -- (node7.north);
-      \marrow (node7.north)  to [bend right=-25] (node8.north);
-      \marrow (node8.north)  to [bend right=-25] (node9.north);
-      \marrow (node9.north)  to [bend right=-25] (node10.north);
-      \marrow (node10.north) to [bend right=-25] (node11.north);
-      \marrow (node11.north) to [bend right=-25] (node12.north);
-      \marrow (node12.north) to [bend right=-25] (node13.north);
-   }
-
-   \uncover<2-> {
-      \ebq (node0)  at (-5.0,4.0) {Node$_0$};
-      \ebq (node1)  [right=of node0] {Node$_1$};
-      \mbq (node2)  [right=of node1] {Block$_2$};
-      \ebq (node3)  [right=of node2] {Node$_3$};
-      \mbq (node4)  [right=of node3] {Block$_4$};
-      \ebq (node5)  [right=of node4] {Node$_5$};
-      \mbq (node6)  [right=of node5] {Block$_6$};
-
-      \mbq (node7)  at (-5.0,2.0)     {Block$_7$};
-      \ebq (node8)  [right=of node7] {Node$_8$};
-      \mbq (node9)  [right=of node8] {Block$_9$};
-      \ebq (node10) [right=of node9] {Node$_{10}$};
-      \mbq (node11) [right=of node10] {Block$_{11}$};
-      \mbq (node12) [right=of node11] {Block$_{12}$};
-      \ebq (node13) [right=of node12] {Node$_{13}$};
-   }
-
-   \uncover<2> {
-      \draw[very thick,->,rounded corners=10pt,color=black] (node0.south) -- (node8.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node1.north) -- (1,4.7) -- (node5.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node3.south) -- (-1,3) -- (node1.south);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node8.south) -- (2, 1.3) -- (node13.south);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node10.north) -- (node3.south);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node13.north) -- (4,3) -- (node10.north);
-   }
-
-   \uncover<2> {
-      \marrow (node2.north) to [bend right=-25] (node6.north);
-      \marrow (node6.south) to [bend right=-25] (node4.south);
-      \marrow (node4.south) -- (node11.north);
-      \marrow (node11.north) to [bend right=-25] (node9.north);
-      \marrow (node7.south) to [bend right=-25] (node12.south);
-      \marrow (node12.north) -- (node2.south);
-   }
-
-   \uncover<3> {
-      \draw[very thick,->,rounded corners=10pt,color=black] (node0.south) -- (node8.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node1.north) -- (1,4.7) -- (node5.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node3.south) -- (-1,3) -- (node1.south);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node8.south) -- (2, 1.3) -- (node13.south);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node10.north) -- (node3.south);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node13.north) -- (4,3) -- (node10.north);
-   }
-
-
-   \uncover<4> {
-      \draw[very thick,->,rounded corners=10pt,color=black] (node0.north) -- (-4,4.7) -- (node1.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node1.north) -- (-2,4.7) -- (node2.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node2.north) -- ( 0,4.7) -- (node3.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node3.north) -- ( 2,4.7) -- (node4.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node4.north) -- ( 4,4.7) -- (node5.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node5.north) -- ( 6,4.7) -- (node6.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node6.south) --  (-4,3) --  (node7.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node7.north) --  (-4,2.7) -- (node8.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node8.north) --  (-2,2.7) -- (node9.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node9.north) --  ( 0,2.7) -- (node10.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node10.north) -- ( 2,2.7) -- (node11.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node11.north) -- ( 4,2.7) -- (node12.north);
-      \draw[very thick,->,rounded corners=10pt,color=black] (node12.north) -- ( 6,2.7) -- (node13.north);
-   }
-
-\end{tikzpicture}
-
-\end{frame}
-
-%____________________________________________________________
-\begin{frame}[fragile]{Alternative to pointer chasing}
-Code example
-\begin{itemize}
-\item User provides a function to mark the \texttt{value\_type}
-as {\it in use}.
-\item \texttt{allocate(1)} and \texttt{deallocate(1)} calls that 
-function.
-\item The node type must obviously be exposed.
-\end{itemize}
-
-\begin{lstlisting}
-using node_type = std::list<int>::node_type;
-// Allocator configured to allocator chuncks of 256
-// elements at once.
-using alloc_type = node_allocator<node_type, 256>;
-std::list<int, node_allocator<>> l = {1, 2, 3, 4, 5};
-auto alloc = l.get_allocator();
-std::copy(std::begin(alloc), std::end(alloc),
- std::ostream_iterator<node_type>(std::cout, " "))
-\end{lstlisting}
-
-\end{frame}
-
-
-\subsection[Node allocation]{Node allocation}
-%____________________________________________________________
-%\begin{frame}{Illustration}{Illustration}
-%
-%\begin{tikzpicture}[scale=1.0, rounded corners]
-%
-%   \uncover<1-> {
-%      \mbq (head) at (-5,4) {Head};
-%   }
-%   \uncover<2-> {
-%      \mbq (node1) at (-2,4) {Node$_1$};
-%      \draw[thick,->,rounded corners=10pt,color=black] (head) -- (node1);
-%   }
-%   \uncover<3-> {
-%      \mbq (node2) at (1,4) {Node$_2$};
-%      \draw[thick,->,rounded corners=10pt,color=black] (node1) -- (node2);
-%   }
-%   \uncover<4-> {
-%      \mbq (node3) at (4,4) {Node$_3$};
-%      \draw[thick,->,rounded corners=10pt,color=black] (node2) -- (node3);
-%   }
-%   \uncover<5-> {
-%      \mbq (node4) at (7,4) {Node$_4$};
-%      \draw[thick,->,rounded corners=10pt,color=black] (node3) -- (node4);
-%   }
-%\end{tikzpicture}
-%
-%\end{frame}
-
-\section[Memory Usage]{Memory Usage}
-
-%____________________________________________________________
-%\begin{frame}{Size reduction}{Node sizes of \texttt{std::forward\_list<int>}}
-%
-%\begin{enumerate}
-%\item<alert@1> $N \le 256$ with $T \in [0, 256]$
-%\item<alert@2> $N \le 2^{16}$ with $T \in [0, 2^{16}]$
-%\item<alert@3> $N \le 2^{32}$ with $T \in [0, 2^{32}]$
-%\item<alert@4> $N \le 2^{64}$ with $T \in [0, 2^{64}]$
-%\end{enumerate}
-%
-%\begin{tikzpicture}[scale=1.0, rounded corners]
-%
-%   \uncover<1-> {
-%      \mbu (next) at (0.25,5) {N};
-%      \ebu (value) at (0.77,5) {V};
-%   }
-%
-%   \uncover<2-> {
-%      \mbd (next) at (0.5,4) {Next};
-%      \ebd (value) at (1.6,4) {Value};
-%   }
-%
-%   \uncover<3-> {
-%      \mbq (next) at (1,3) {Next};
-%      \ebq (value) at (3,3) {Value};
-%   }
-%   \uncover<4-> {
-%      \mbo (next) at (2,2) {Next};
-%      \ebo (value) at (6,2) {Value};
-%   }
-%\end{tikzpicture}
-%
-%\end{frame}
-
-\part{How to get node allocation in the STL}
-
-\section[Implementation]{Implementation}
+\section{Supporting node-allocation in the STL}
+\subsection{Proposal}
 
 %____________________________________________________________
 \begin{frame}<beamer>{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
 
-\subsection[Proposal]{Proposal}
+%____________________________________________________________
+\begin{frame}{Should node allocation be standardized}{Proposal to the ISO \texttt{C++} Standards Committee}
+\vspace{-3cm}
+    \begin{center}
+        \includegraphics[scale=0.6]{fig/prop1.pdf} \\
+    \end{center}
+\end{frame}
+
 %____________________________________________________________
 \begin{frame}[fragile]{Node allocation support}
 
@@ -919,12 +636,8 @@ l1 = {27, 1, 60};
 
 \end{frame}
 
-\subsection[Exposing the node type]{Exposing the node type}
-\subsection[Node size reduction]{Node size reduction}
-\subsection[Avoid pointer chasing]{Avoid pointer chasing}
-
 %____________________________________________________________
-\begin{frame}{Realtime node-based containers}
+\begin{frame}{Bechmarks}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \texttt{std::unordered\_set}
@@ -940,6 +653,253 @@ l1 = {27, 1, 60};
             \end{center}
         \end{column}
     \end{columns}
+\end{frame}
+
+\subsection{Traversal without pointer chasing}
+
+%____________________________________________________________
+\begin{frame}[fragile]{Linked list travesal illustration}
+\begin{columns}
+\begin{column}{0.6\textwidth}
+Can we avoid pointers chasing?
+\begin{enumerate}
+\item<alert@1> Initial memory state. Available memory.
+\item<alert@2> After insertion and removal we have chaos.
+\item<alert@3> Traversal chasing pointers jumps to slow memory.
+\item<alert@4> Alternative: Visit blocks sequentially. Ignore unused.
+\item<alert@4> Much faster if many blocks in use.
+\end{enumerate}
+\end{column}
+\begin{column}{0.4\textwidth}
+%Latency on Intel Haswell Mobile 
+%\begin{itemize}
+%    \item<alert@3> L0: 6 KiB
+%    \item<alert@3> L1: 128 KiB - 700 GiB/s
+%    \item<alert@3> L2: 1 MiB - 200 GiB/s
+%    \item<alert@3> L3: 6 MiB - 100 GB/s
+%    \item<alert@3> L4: 128 MiB - 40 GB/s
+%    \item<alert@3> Main memory – GiB - 10 GB/s
+%\end{itemize}
+
+\end{column}
+\end{columns}
+
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+   \uncover<1> {
+      \mbq (node0)  at (-5.0,4.0) {Block$_0$};
+      \mbq (node1)  [right=of node0] {Block$_1$};
+      \mbq (node2)  [right=of node1] {Block$_2$};
+      \mbq (node3)  [right=of node2] {Block$_3$};
+      \mbq (node4)  [right=of node3] {Block$_4$};
+      \mbq (node5)  [right=of node4] {Block$_5$};
+      \mbq (node6)  [right=of node5] {Block$_6$};
+
+      \mbq (node7)  at (-5.0,2.0)     {Block$_7$};
+      \mbq (node8)  [right=of node7] {Block$_8$};
+      \mbq (node9)  [right=of node8] {Block$_9$};
+      \mbq (node10) [right=of node9] {Block$_{10}$};
+      \mbq (node11) [right=of node10] {Block$_{11}$};
+      \mbq (node12) [right=of node11] {Block$_{12}$};
+      \mbq (node13) [right=of node12] {Block$_{13}$};
+
+      \marrow (node0.north) to [bend right=-25] (node1.north);
+      \marrow (node1.north) to [bend right=-25] (node2.north);
+      \marrow (node2.north) to [bend right=-25] (node3.north);
+      \marrow (node3.north) to [bend right=-25] (node4.north);
+      \marrow (node4.north) to [bend right=-25] (node5.north);
+      \marrow (node5.north) to [bend right=-25] (node6.north);
+
+      \marrow (node6.south)  -- (-4.2, 3.0) -- (node7.north);
+      \marrow (node7.north)  to [bend right=-25] (node8.north);
+      \marrow (node8.north)  to [bend right=-25] (node9.north);
+      \marrow (node9.north)  to [bend right=-25] (node10.north);
+      \marrow (node10.north) to [bend right=-25] (node11.north);
+      \marrow (node11.north) to [bend right=-25] (node12.north);
+      \marrow (node12.north) to [bend right=-25] (node13.north);
+   }
+
+   \uncover<2-> {
+      \ebq (node0)  at (-5.0,4.0) {Node$_0$};
+      \ebq (node1)  [right=of node0] {Node$_1$};
+      \mbq (node2)  [right=of node1] {Block$_2$};
+      \ebq (node3)  [right=of node2] {Node$_3$};
+      \mbq (node4)  [right=of node3] {Block$_4$};
+      \ebq (node5)  [right=of node4] {Node$_5$};
+      \mbq (node6)  [right=of node5] {Block$_6$};
+
+      \mbq (node7)  at (-5.0,2.0)     {Block$_7$};
+      \ebq (node8)  [right=of node7] {Node$_8$};
+      \mbq (node9)  [right=of node8] {Block$_9$};
+      \ebq (node10) [right=of node9] {Node$_{10}$};
+      \mbq (node11) [right=of node10] {Block$_{11}$};
+      \mbq (node12) [right=of node11] {Block$_{12}$};
+      \ebq (node13) [right=of node12] {Node$_{13}$};
+   }
+
+   \uncover<2> {
+      \earrow (node0.south) -- (node8.north);
+      \earrow (node1.north) to [bend right=-15] (node5.north);
+      \earrow (node3.south) to [bend right=-15] (node1.south);
+      \earrow (node8.south) to [bend right=15] (node13.south);
+      \earrow (node10.north) -- (node3.south);
+      \earrow (node13.north) to [bend right=15] (node10.north);
+   }
+
+   \uncover<2> {
+      \marrow (node2.north) to [bend right=-15] (node6.north);
+      \marrow (node6.south) to [bend right=-15] (node4.south);
+      \marrow (node4.south) -- (node11.north);
+      \marrow (node11.north) to [bend right=15] (node9.north);
+      \marrow (node7.south) to [bend right=15] (node12.south);
+      \marrow (node12.north) -- (node2.south);
+   }
+
+   \uncover<3> {
+      \earrow (node0.south) -- (node8.north);
+      \earrow (node1.north) to [bend right=-25] (node5.north);
+      \earrow (node3.south) to [bend right=-25] (node1.south);
+      \earrow (node8.south) to [bend right=25] (node13.south);
+      \earrow (node10.north) -- (node3.south);
+      \earrow (node13.north) to [bend right=25] (node10.north);
+   }
+
+
+   \uncover<4> {
+      \rearrow (node0.north) to [bend right=-25] (node1.north);
+      \rearrow (node1.north) to [bend right=-25] (node2.north);
+      \rearrow (node2.north) to [bend right=-25] (node3.north);
+      \rearrow (node3.north) to [bend right=-25] (node4.north);
+      \rearrow (node4.north) to [bend right=-25] (node5.north);
+      \rearrow (node5.north) to [bend right=-25] (node6.north);
+
+      \rearrow (node6.south)  -- (-4.2, 3.0) -- (node7.north);
+      \rearrow (node7.north)  to [bend right=-25] (node8.north);
+      \rearrow (node8.north)  to [bend right=-25] (node9.north);
+      \rearrow (node9.north)  to [bend right=-25] (node10.north);
+      \rearrow (node10.north) to [bend right=-25] (node11.north);
+      \rearrow (node11.north) to [bend right=-25] (node12.north);
+      \rearrow (node12.north) to [bend right=-25] (node13.north);
+   }
+
+\end{tikzpicture}
+
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}{Cache Hierarchy - Latency}{Why it is important to reduce memory usage}
+    \begin{columns}
+        \begin{column}{0.4\textwidth}
+            Intel Haswell Mobile 
+            \begin{itemize}
+                \item Register: Fastest
+                \item L0: 6 KiB
+                \item L1: 128 KiB - 700 GiB/s
+                \item L2: 1 MiB - 200 GiB/s
+                \item L3: 6 MiB - 100 GB/s
+                \item L4: 128 MiB - 40 GB/s
+                \item Main memory – GiB - 10 GB/s
+            \end{itemize}
+        \end{column}
+
+        %\begin{column}{0.6\textwidth}
+        %    \begin{center}
+        %        \includegraphics[scale=0.7]{fig/cache.jpg} \\
+        %    \end{center}
+        %\end{column}
+    \end{columns}
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]{Alternative to pointer chasing}
+Code example
+\begin{itemize}
+\item User provides a function to mark the \texttt{value\_type}
+as {\it in use}.
+\item \texttt{allocate(1)} and \texttt{deallocate(1)} calls that 
+function.
+\item The node type must obviously be exposed.
+\end{itemize}
+
+\begin{lstlisting}
+using node_type = std::list<int>::node_type;
+// Allocator configured to allocator chuncks of 256
+// elements at once.
+using alloc_type = node_allocator<node_type, 256>;
+std::list<int, node_allocator<>> l = {1, 2, 3, 4, 5};
+auto alloc = l.get_allocator();
+std::copy(std::begin(alloc), std::end(alloc),
+ std::ostream_iterator<node_type>(std::cout, " "))
+\end{lstlisting}
+
+\end{frame}
+
+\subsection{Reducing the pointer overhead in nodes}
+
+%____________________________________________________________
+\begin{frame}[fragile]{Node sizes according to the number of elements needed}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+%\begin{enumerate}
+%\item<alert@1> $N \le 256$ with $T \in [0, 256]$
+%\item<alert@2> $N \le 2^{16}$ with $T \in [0, 2^{16}]$
+%\item<alert@3> $N \le 2^{32}$ with $T \in [0, 2^{32}]$
+%\item<alert@4> $N \le 2^{64}$ with $T \in [0, 2^{64}]$
+%\end{enumerate}
+
+Node sizes of a \texttt{std::forwar\_list<T>}.
+
+\begin{tikzpicture}[scale=1.0, rounded corners]
+
+   \uncover<1-> {
+      \mbu (nextu) at (0.25, 6) {N};
+      \ebu (valueu) [right=of nextu] {V};
+   }
+
+   \uncover<2-> {
+      \mbd (nextd) at (0.5,4) {Next};
+      \ebd (valued) [right=of nextd] {Value};
+   }
+
+   \uncover<3-> {
+      \mbq (nextq) at (1,2) {Next};
+      \ebq (valueq) [right=of nextq] {Value};
+   }
+   \uncover<4-> {
+      \mbo (nexto) at (2,0) {Next};
+      \ebo (valueo) [right=of nexto] {Value};
+   }
+\end{tikzpicture}
+
+\end{column}
+\begin{column}{0.5\textwidth}
+
+\begin{lstlisting}
+struct node1 {     // sizeof (node2) = 4
+  std::uint8_t n;  // 256 elements.
+  std::uint8_t v;  // [0, 256]
+};
+
+struct node2 {     // sizeof (node2) = 4
+  std::uint16_t n; // 2^16 elements.
+  std::uint16_t v; // [0, 2^16]
+};
+
+struct node3 {     // sizeof (node3) = 8
+  std::uint32_t n; // 2^32 elements.
+  std::uint32_t v; // [0, 2^32]
+};
+
+struct node4 {     // sizeof (node4) = 16
+  node* next;      // Full address space
+  std::size_t v;
+};
+
+\end{lstlisting}
+
+\end{column}
+\end{columns}
+
 \end{frame}
 
 %____________________________________________________________
