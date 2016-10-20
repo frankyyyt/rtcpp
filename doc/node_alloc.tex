@@ -82,9 +82,9 @@
 % Possible color themes
 
 %\usecolortheme{albatross}
-\usecolortheme{beaver}         % Acho que é esse.
+%\usecolortheme{beaver}         % Acho que é esse.
 %\usecolortheme{beetle}        % Bom mas escuro
-%\usecolortheme{crane}         % muito boa    
+\usecolortheme{crane}         % muito boa    
 %\usecolortheme{default}        
 %\usecolortheme{dolphin}      
 %\usecolortheme{dove}          % legal
@@ -140,22 +140,22 @@
 %__________________________________________________________
 % Apenas para o tema madrid
 
-\defbeamertemplate*{footline}{my infolines theme}
-{
-  \leavevmode%
-    \hbox{%
-      \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
-        \usebeamerfont{author in head/foot}\insertshortauthor~~\insertshortinstitute
-        \end{beamercolorbox}%
-        \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
-        \usebeamerfont{title in head/foot}\insertshorttitle
-        \end{beamercolorbox}%
-        \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
-        \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
-      \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
-      \end{beamercolorbox}}%
-        \vskip0pt%
-}
+%\defbeamertemplate*{footline}{my infolines theme}
+%{
+%  \leavevmode%
+%    \hbox{%
+%      \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+%        \usebeamerfont{author in head/foot}\insertshortauthor~~\insertshortinstitute
+%        \end{beamercolorbox}%
+%        \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+%        \usebeamerfont{title in head/foot}\insertshorttitle
+%        \end{beamercolorbox}%
+%        \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+%        \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+%      \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+%      \end{beamercolorbox}}%
+%        \vskip0pt%
+%}
 %__________________________________________________________
 
 \mode<presentation>
@@ -165,18 +165,18 @@
   % or whatever (possibly just delete it)
 }
 
-\title[] {Node allocation}
+\title[Node allocation in the STL] {Node allocation in the STL}
 
-\subtitle[] {How can we improve \texttt{C++} memory menagement}
+\subtitle[Improving the memory menagement] {Improving the memory menagement}
 
-\author[] {Marcelo Zimbres}
+\author[Marcelo Zimbres] {Marcelo Zimbres}
 
-\institute[Marcelo Zimbres ]
+\institute[Presentation to WG21-SG14]
 {
-  Presentation to WG21-SG14
+  
 }
 
-\date[15 October 2016 - Magstadt - Germany] {14 October 2016 - Magstadt}
+\date[Magstadt - Germany] {14 October 2016 - Magstadt}
 
 \subject{Node allocation 3}
 
@@ -234,32 +234,35 @@
 %____________________________________________________________
 \begin{frame}[t]{Target audience - Goals}{}
 \begin{columns}
-\begin{column}{0.5\textwidth}
-Goals.
+\begin{column}{0.50\textwidth}
+\begin{block} {Goals}
 \begin{itemize}
-    \item Provide building blocks to memory allocation
-    \item Use static type information to improve memory management
-    \item Reduce memory footprint of linked data structures
-    \item Reduce dependency on global state and on undefined behaviour
-    \item Allow fine tunning
-    \item Reduce complexity
+    \item Provide building blocks to memory allocation.
+    \item Use static type information to improve memory management.
+    \item Reduce pointer size overhead in nodes.
+    \item Reduce dependency on global state.
+    \item Allow fine tunning.
+    \item Reduce complexity.
 \end{itemize}
+\end{block}
+
 \end{column}
 
-\begin{column}{0.5\textwidth}
-Target audience
+\begin{column}{0.35\textwidth}
+\begin{block} {Target audience}
 \begin{itemize}
-    \item Realtime/embedded programming.
-    \item Games, high performace, 24/7 availability.
-    \item Should be usefull for c++ programmers in general.
-    \item Implementation available on github.
+    \item Embedded developers.
+    \item Resource constrained sytems.
+    \item High performace.
+    \item 24/7 availability.
 \end{itemize}
+\end{block}
 \end{column}
 \end{columns}
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}<beamer>{Outline}
+\begin{frame}{Outline}
    %\tableofcontents[currentsection,currentsubsection]
    \tableofcontents
 \end{frame}
@@ -269,39 +272,34 @@ Target audience
 
 \begin{frame}{Containers and their allocation patterns}
 \begin{columns}
-\begin{column}{0.5\textwidth}
-Array allocation only (i.e. runtime n)
+\begin{column}[c]{0.45\textwidth}
+\begin{block} {STL containers}
 \begin{itemize}
-\item \texttt{std::vector}
+\item \texttt{\color{green!50!black} std::vector}
+\item \texttt{\color{red!50!black} std::list}
+\item \texttt{\color{red!50!black} std::forward\_list}
+\item \texttt{\color{red!50!black} std::set}
+\item \texttt{\color{red!50!black} std::multiset}
+\item \texttt{\color{red!50!black} std::map}
+\item \texttt{\color{red!50!black} std::multimap}
+\item \texttt{\color{brown!50!black} std::deque}
+\item \texttt{\color{brown!50!black} std::unordered\_set}
+\item \texttt{\color{brown!50!black} std::unordered\_multiset}
+\item \texttt{\color{brown!50!black} std::unordered\_map}
+\item \texttt{\color{brown!50!black} std::unordered\_multimap}
 \end{itemize}
-
-Node allocation only (i.e. compile time n)
-\begin{itemize}
-\item \texttt{std::list}
-\item \texttt{std::forward\_list}
-\item \texttt{std::set}
-\item \texttt{std::multiset}
-\item \texttt{std::map}
-\item \texttt{std::multimap}
-\end{itemize}
+\end{block}
 \end{column}
 
-\begin{column}{0.5\textwidth}
-Both node and array allocation.
-\begin{itemize}
-\item \texttt{std::deque}
-\item \texttt{std::unordered\_set}
-\item \texttt{std::unordered\_multiset}
-\item \texttt{std::unordered\_map}
-\item \texttt{std::unordered\_multimap}
-\end{itemize}
-Summary
+\begin{column}[c]{0.45\textwidth}
+\begin{block} {Summary}
 \begin{itemize}
 \item 11 perform node allocation.
 \item 6 perform exclusively node-allocation.
 \item 5 perform both node and array allocation.
 \item Node allocation is pretty common.
 \end{itemize}
+\end{block}
 
 \end{column}
 \end{columns}
@@ -311,30 +309,29 @@ Summary
 %____________________________________________________________
 \begin{frame}[fragile]{How containers aquire memory: Allocators}
 \begin{columns}
-\begin{column}{0.5\textwidth}
-\begin{itemize}
-\item Abstraction to memory allocation inside containers.
-\item All containers with dynamic size request memory from
-their allocator internally.
-\item The allocator is part of the container type.
-\item Containers do not interact directly with the allocator but with
-\texttt{std::allocator\_traits}.
-\end{itemize}
-\end{column}
-
-\begin{column}{0.5\textwidth}
-Part of the type.
+\begin{column}{0.45\textwidth}
 \begin{lstlisting}
+// List signature.
 template<class T, class Allocator>
 class list;
-\end{lstlisting}
 
-Basic usage
-\begin{lstlisting}
+// Basic usage.
 std::allocator<int> alloc;
 auto* p = alloc.allocate(n);
 alloc.deallocate(p, n);
 \end{lstlisting}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{block} {Allocators}
+\begin{itemize}
+\item Abstraction to memory allocation.
+\item Part of the container type.
+\item Allow customization.
+%\item Containers do not interact directly with the allocator but with
+%\texttt{std::allocator\_traits}.
+\end{itemize}
+\end{block}
 \end{column}
 \end{columns}
 \end{frame}
@@ -343,7 +340,7 @@ alloc.deallocate(p, n);
 \subsection{Goals}
 
 %____________________________________________________________
-\begin{frame}<beamer>{Outline}
+\begin{frame}{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
 
@@ -352,8 +349,8 @@ alloc.deallocate(p, n);
 {\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
 \texttt{nedmalloc}, \texttt{hoard}, etc}
 \begin{columns}
-\begin{column}{0.5\textwidth}
-Typical goals
+\begin{column}{0.45\textwidth}
+\begin{block} {Typical goals}
 \begin{itemize}
 \item<alert@1> Avoid fragmentation. Improve locality.
 \item<alert@2> Small sizes: Up $170$ pre-allocated lists.
@@ -362,45 +359,47 @@ Typical goals
 \item<alert@5> Bookkeeping information on blocks.
 \item<alert@2> Rounding allocation sizes to fit pre-allocated buffers.
 \end{itemize}
-
+\end{block}
 \end{column}
 
-\begin{column}{0.5\textwidth}
-Thoughts
+\begin{column}{0.45\textwidth}
+\begin{block} {Thoughts}
 \begin{itemize}
 \item<alert@1> Hang same-size allocations on different pre-linked buffers.
 \item<alert@2> Sizes are known at compile time. We can avoid this.
 \item<alert@3> Do not use a global allocator.
 \item<alert@4> Not needed if blocks have alway the same size.
 \end{itemize}
+\end{block}
 
 \end{column}
 \end{columns}
 \end{frame}
 
-
 %____________________________________________________________
 \begin{frame}[t]{Node allocation illustration}
 \begin{columns}
-\begin{column}{0.5\textwidth}
+\begin{column}{0.45\textwidth}
 
-Node Allocation
-
+\begin{block} {Node Allocation}
 \begin{itemize}
 \item Simple and straighforward implementation.
 \item Suitable for realtime/embedded.
 \item Reduces memory fragmentation.
 \item Basic building block used in array allocations as well.
 \end{itemize}
+\end{block}
 
 \end{column}
 
-\begin{column}{0.5\textwidth}
+\begin{column}{0.45\textwidth}
+\begin{block} {Procedure}
 \begin{enumerate}
 \item<alert@2> Get $N$ nodes at once.
 \item<alert@3> Link them as a stack.
 \item<alert@4> Repeat if more nodes are inserted.
 \end{enumerate}
+\end{block}
 
 \end{column}
 \end{columns}
@@ -555,7 +554,7 @@ Array allcation
 \subsection{Proposal}
 
 %____________________________________________________________
-\begin{frame}<beamer>{Outline}
+\begin{frame}{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
 
@@ -661,25 +660,16 @@ l1 = {27, 1, 60};
 \begin{frame}[fragile]{Linked list travesal illustration}
 \begin{columns}
 \begin{column}{0.6\textwidth}
-Can we avoid pointers chasing?
+\begin{block} {Can we avoid pointers chasing?}
 \begin{enumerate}
 \item<alert@1> Initial memory state. Available memory.
 \item<alert@2> After insertion and removal we have chaos.
 \item<alert@3> Traversal chasing pointers jumps to slow memory.
 \item<alert@4> Alternative: Visit blocks sequentially. Ignore unused.
-\item<alert@4> Much faster if many blocks in use.
 \end{enumerate}
+\end{block}
 \end{column}
 \begin{column}{0.4\textwidth}
-%Latency on Intel Haswell Mobile 
-%\begin{itemize}
-%    \item<alert@3> L0: 6 KiB
-%    \item<alert@3> L1: 128 KiB - 700 GiB/s
-%    \item<alert@3> L2: 1 MiB - 200 GiB/s
-%    \item<alert@3> L3: 6 MiB - 100 GB/s
-%    \item<alert@3> L4: 128 MiB - 40 GB/s
-%    \item<alert@3> Main memory – GiB - 10 GB/s
-%\end{itemize}
 
 \end{column}
 \end{columns}
@@ -757,11 +747,11 @@ Can we avoid pointers chasing?
 
    \uncover<3> {
       \earrow (node0.south) -- (node8.north);
-      \earrow (node1.north) to [bend right=-25] (node5.north);
-      \earrow (node3.south) to [bend right=-25] (node1.south);
-      \earrow (node8.south) to [bend right=25] (node13.south);
+      \earrow (node1.north) to [bend right=-15] (node5.north);
+      \earrow (node3.south) to [bend right=-15] (node1.south);
+      \earrow (node8.south) to [bend right=15] (node13.south);
       \earrow (node10.north) -- (node3.south);
-      \earrow (node13.north) to [bend right=25] (node10.north);
+      \earrow (node13.north) to [bend right=15] (node10.north);
    }
 
 
@@ -811,8 +801,8 @@ Can we avoid pointers chasing?
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Alternative to pointer chasing}
-Code example
+\begin{frame}[fragile, center]{Alternative to pointer chasing}
+\begin{block} {Code example}
 \begin{itemize}
 \item User provides a function to mark the \texttt{value\_type}
 as {\it in use}.
@@ -820,6 +810,7 @@ as {\it in use}.
 function.
 \item The node type must obviously be exposed.
 \end{itemize}
+\end{block}
 
 \begin{lstlisting}
 using node_type = std::list<int>::node_type;
