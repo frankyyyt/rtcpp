@@ -84,13 +84,13 @@
 %\usecolortheme{albatross}
 %\usecolortheme{beaver}         % Acho que é esse.
 %\usecolortheme{beetle}        % Bom mas escuro
-\usecolortheme{crane}         % muito boa    
+%\usecolortheme{crane}         % muito boa    
 %\usecolortheme{default}        
 %\usecolortheme{dolphin}      
 %\usecolortheme{dove}          % legal
 %\usecolortheme{fly}    
 %\usecolortheme{lily}       
-%\usecolortheme{orchid}       
+\usecolortheme{orchid}       
 %\usecolortheme{seagull}       % excelente mas cinza
 %\usecolortheme{seahorse}     
 %\usecolortheme{sidebartab}    
@@ -99,6 +99,7 @@
 
 \colorlet{memC}{orange!50!black}
 \colorlet{eleC}{yellow!50!black}
+\colorlet{arrC}{green!50!black}
 
 \tikzstyle{mbu}=[draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=0.5cm  ,minimum width=0.5cm  ,inner sep=1ex]
 \tikzstyle{mbd}=[draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=0.5cm  ,minimum width=1.0cm  ,inner sep=1ex]
@@ -268,6 +269,68 @@
 \end{frame}
 
 \section{STL and memory management}
+
+\subsection{Dynamic memory menagement in \texttt{C++}}
+
+%____________________________________________________________
+\begin{frame}[fragile]{Dynamic memory menagement in \texttt{C++}}
+\begin{columns}
+\begin{column}{0.45\textwidth}
+\begin{lstlisting}
+// C
+int* p = malloc(10 * sizeof *p);
+free(p);
+
+// C++
+auto* p = new int[10];
+delete [] p;
+
+// Inside an STL container we use allocators
+std::allocator<int> alloc;
+auto* p = alloc.allocate(10);
+alloc.deallocate(p, 10);
+
+// Part of containers type.
+template <class T, class Allocator>
+class list;
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{block} {Allocators}
+\begin{itemize}
+\item Abstraction to memory allocation inside STL containers.
+\item Allow customization.
+\item Can have state.
+\item Are not used directly but through
+\texttt{std::allocator\_traits}.
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]{Definitions}
+\begin{columns}
+\begin{column}{0.45\textwidth}
+
+\begin{block} {Node allocation}
+I will use the term {\it node allocation} to refer the cases
+where the allocation size is know at compile time.
+\end{block}
+
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{block} {Array allocation}
+When the allocation size is known only at runtime, I will refer to it
+as {\it array allocation}.
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
 \subsection{Allocation patterns}
 
 \begin{frame}{Containers and their allocation patterns}
@@ -301,108 +364,26 @@
 \end{itemize}
 \end{block}
 
-\end{column}
-\end{columns}
-\end{frame}
-
-\subsection{Review allocators}
-%____________________________________________________________
-\begin{frame}[fragile]{How containers aquire memory: Allocators}
-\begin{columns}
-\begin{column}{0.45\textwidth}
-\begin{lstlisting}
-// List signature.
-template<class T, class Allocator>
-class list;
-
-// Basic usage.
-std::allocator<int> alloc;
-auto* p = alloc.allocate(n);
-alloc.deallocate(p, n);
-\end{lstlisting}
-\end{column}
-
-\begin{column}{0.45\textwidth}
-\begin{block} {Allocators}
-\begin{itemize}
-\item Abstraction to memory allocation.
-\item Part of the container type.
-\item Allow customization.
-%\item Containers do not interact directly with the allocator but with
-%\texttt{std::allocator\_traits}.
-\end{itemize}
-\end{block}
-\end{column}
-\end{columns}
-\end{frame}
-
-\section{Typical allocation goals and strategies}
-\subsection{Goals}
-
-%____________________________________________________________
-\begin{frame}{Outline}
-   \tableofcontents[currentsection,currentsubsection]
-\end{frame}
-
-%____________________________________________________________
-\begin{frame}{Allocation strategies}
-{\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
-\texttt{nedmalloc}, \texttt{hoard}, etc}
-\begin{columns}
-\begin{column}{0.45\textwidth}
-\begin{block} {Typical goals}
-\begin{itemize}
-\item<alert@1> Avoid fragmentation. Improve locality.
-\item<alert@2> Small sizes: Up $170$ pre-allocated lists.
-\item<alert@3> Large sizes: Best fit, rounding on memory pages.
-\item<alert@4> Avoid serialization on cuncurrent calls.
-\item<alert@5> Bookkeeping information on blocks.
-\item<alert@2> Rounding allocation sizes to fit pre-allocated buffers.
-\end{itemize}
-\end{block}
-\end{column}
-
-\begin{column}{0.45\textwidth}
-\begin{block} {Thoughts}
-\begin{itemize}
-\item<alert@1> Hang same-size allocations on different pre-linked buffers.
-\item<alert@2> Sizes are known at compile time. We can avoid this.
-\item<alert@3> Do not use a global allocator.
-\item<alert@4> Not needed if blocks have alway the same size.
-\end{itemize}
-\end{block}
+\begin{tikzpicture}[scale=1.0, rounded corners]
+\fill[blue!50!black]  (0cm,0cm) -- (0cm, 2cm) arc (90:270:2cm) -- cycle;
+\fill[red!50!black]   (0cm,0cm) -- (0cm,-2cm) arc (270:360:2cm) -- cycle;
+\fill[green!50!black] (0cm,0cm) -- (2cm, 0cm) arc (0:90:2cm) -- cycle;
+\end{tikzpicture}
 
 \end{column}
 \end{columns}
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[t]{Node allocation illustration}
-\begin{columns}
-\begin{column}{0.45\textwidth}
-
-\begin{block} {Node Allocation}
-\begin{itemize}
-\item Simple and straighforward implementation.
-\item Suitable for realtime/embedded.
-\item Reduces memory fragmentation.
-\item Basic building block used in array allocations as well.
-\end{itemize}
-\end{block}
-
-\end{column}
-
-\begin{column}{0.45\textwidth}
+\begin{frame}[t]{Illustration}
+{How node allocation is implemented in practice}
 \begin{block} {Procedure}
 \begin{enumerate}
-\item<alert@2> Get $N$ nodes at once.
+\item<alert@2> Get a block of memory with $N$ nodes at once.
 \item<alert@3> Link them as a stack.
 \item<alert@4> Repeat if more nodes are inserted.
 \end{enumerate}
 \end{block}
-
-\end{column}
-\end{columns}
 
 \begin{tikzpicture}[scale=1.0, rounded corners]
 
@@ -449,10 +430,51 @@ alloc.deallocate(p, n);
 
 \end{frame}
 
+\section{Node allocation as a building block}
+\subsection{Typical allocation goals and strategies}
+
+%____________________________________________________________
+\begin{frame}{Outline}
+   \tableofcontents[currentsection,currentsubsection]
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}{Allocation strategies}
+{\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
+\texttt{nedmalloc}, \texttt{hoard}, etc}
+\begin{columns}
+\begin{column}{0.45\textwidth}
+\begin{block} {Typical goals and strategies}
+\begin{itemize}
+\item<alert@1> Avoid fragmentation. Improve locality.
+\item<alert@2> Small sizes: Up $170$ pre-allocated lists.
+\item<alert@3> Large sizes: Best fit, rounding on memory pages.
+\item<alert@4> Avoid serialization on cuncurrent calls.
+\item<alert@5> Bookkeeping information on blocks.
+\item<alert@2> Rounding allocation sizes to fit pre-allocated buffers.
+\end{itemize}
+\end{block}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{block} {Thoughts}
+\begin{itemize}
+\item<alert@1> Hang same-size allocations on different pre-linked buffers.
+\item<alert@2> Sizes are known at compile time. We can avoid this.
+\item<alert@3> Do not use a global allocator.
+\item<alert@4> Not needed if blocks have alway the same size.
+\end{itemize}
+\end{block}
+
+\end{column}
+\end{columns}
+\end{frame}
+
 \subsection{Node allocation as a building block}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Node allocation implementation}{As simple as it gets}
+\begin{frame}[fragile]{Node allocation implementation}
+{As simple as it gets}
 
 \begin{lstlisting}
 pointer allocate(std::size_t /*can't handle n*/)
@@ -801,7 +823,7 @@ l1 = {27, 1, 60};
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile, center]{Alternative to pointer chasing}
+\begin{frame}[fragile]{Alternative to pointer chasing}
 \begin{block} {Code example}
 \begin{itemize}
 \item User provides a function to mark the \texttt{value\_type}
