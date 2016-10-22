@@ -355,19 +355,23 @@ as {\it array allocation}.
 \end{column}
 
 \begin{column}[c]{0.45\textwidth}
-\begin{block} {Summary}
-\begin{itemize}
-\item 11 perform node allocation.
-\item 6 perform exclusively node-allocation.
-\item 5 perform both node and array allocation.
-\item Node allocation is pretty common.
-\end{itemize}
-\end{block}
+%\begin{block} {Summary}
+%\begin{itemize}
+%\item 11 perform node allocation.
+%\item 6 perform exclusively node-allocation.
+%\item 5 perform both node and array allocation.
+%\item Node allocation is pretty common.
+%\end{itemize}
+%\end{block}
 
-\begin{tikzpicture}[scale=1.0, rounded corners]
-\fill[blue!50!black]  (0cm,0cm) -- (0cm, 2cm) arc (90:270:2cm) -- cycle;
-\fill[red!50!black]   (0cm,0cm) -- (0cm,-2cm) arc (270:360:2cm) -- cycle;
-\fill[green!50!black] (0cm,0cm) -- (2cm, 0cm) arc (0:90:2cm) -- cycle;
+\begin{tikzpicture}[scale=1.0]
+\fill[blue!50!black]  (180:2.5cm) -- (180: 3cm) arc (180:360:3cm) -- (360:2.5cm) arc (360:180:2.5cm);
+\fill[red!50!black]   (30:2.5cm) -- (30:3cm) arc (30:180:3cm)  -- (180:2.5cm) arc (180:30:2.5cm);
+\fill[green!50!black] (0:2.5cm) -- (0:3cm) arc (0:30:3cm) -- (30:2.5cm) arc (30:0:2.5cm);
+
+\filldraw[blue!50!black] (-2cm,0.5cm) circle (0.08cm) node[right] {\color{black}Only node allocation};
+\filldraw[green!50!black] (-2cm,0.0cm) circle (0.08cm) node[right] {\color{black}Only array allocation};
+\filldraw[red!50!black] (-2cm,-0.5cm) circle (0.08cm) node[right] {\color{black}Both};
 \end{tikzpicture}
 
 \end{column}
@@ -511,23 +515,20 @@ void deallocate(pointer p, std::size_t /*can't handle n*/)
       \mbd (Unode9)  [right=of Unode8]  {10};
       \mbd (Unode10) [right=of Unode9]  {11};
       \mbd (Unode11) [right=of Unode10] {12};
-      \mbd (Unode12) [right=of Unode11] {13};
-      \mbd (Unode13) [right=of Unode12] {14};
-      \lbd (Unode14) [right=of Unode13] {\bf ...};
+      \lbd (Unode12) [right=of Unode11] {\bf ...};
 
-      \marrow (Unode0.north) to  [bend right=-65] (Unode1.north);
-      \marrow (Unode1.north) to  [bend right=-65] (Unode2.north);
-      \marrow (Unode2.north) to  [bend right=-65] (Unode3.north);
-      \marrow (Unode3.north) to  [bend right=-65] (Unode4.north);
-      \marrow (Unode4.north) to  [bend right=-65] (Unode5.north);
-      \marrow (Unode5.north) to  [bend right=-65] (Unode6.north);
-      \marrow (Unode6.north) to  [bend right=-65] (Unode7.north);
-      \marrow (Unode7.north) to  [bend right=-65] (Unode8.north);
-      \marrow (Unode8.north) to  [bend right=-65] (Unode9.north);
-      \marrow (Unode9.north) to  [bend right=-65] (Unode10.north);
-      \marrow (Unode10.north) to [bend right=-65] (Unode11.north);
-      \marrow (Unode11.north) to [bend right=-65] (Unode12.north);
-      \marrow (Unode12.north) to [bend right=-65] (Unode13.north);
+      \marrow (Unode0.north) to  [bend right=-45] (Unode1.north);
+      \marrow (Unode1.north) to  [bend right=-45] (Unode2.north);
+      \marrow (Unode2.north) to  [bend right=-45] (Unode3.north);
+      \marrow (Unode3.north) to  [bend right=-45] (Unode4.north);
+      \marrow (Unode4.north) to  [bend right=-45] (Unode5.north);
+      \marrow (Unode5.north) to  [bend right=-45] (Unode6.north);
+      \marrow (Unode6.north) to  [bend right=-45] (Unode7.north);
+      \marrow (Unode7.north) to  [bend right=-45] (Unode8.north);
+      \marrow (Unode8.north) to  [bend right=-45] (Unode9.north);
+      \marrow (Unode9.north) to  [bend right=-45] (Unode10.north);
+      \marrow (Unode10.north) to [bend right=-45] (Unode11.north);
+      \marrow (Unode11.north) to [bend right=-45] (Unode12.north);
       % next
       \mbq (Qnode0) at  (1.0,0.0)      {1};
       \mbq (Qnode1)  [right=of Qnode0] {2};
@@ -535,23 +536,23 @@ void deallocate(pointer p, std::size_t /*can't handle n*/)
       \mbq (Qnode3)  [right=of Qnode2] {4};
       \mbq (Qnode4)  [right=of Qnode3] {5};
       \mbq (Qnode5)  [right=of Qnode4] {6};
-      \mbq (Qnode6)  [right=of Qnode5] {7};
-      \lbd (Qnode7)  [right=of Qnode6] {\bf ...};
+      \lbq (Qnode6)  [right=of Qnode5] {\bf ...};
 
-      \marrow (Qnode0.north) to  [bend right=-65] (Qnode1.north);
-      \marrow (Qnode1.north) to  [bend right=-65] (Qnode2.north);
-      \marrow (Qnode2.north) to  [bend right=-65] (Qnode3.north);
-      \marrow (Qnode3.north) to  [bend right=-65] (Qnode4.north);
-      \marrow (Qnode4.north) to  [bend right=-65] (Qnode5.north);
-      \marrow (Qnode5.north) to  [bend right=-65] (Qnode6.north);
+      \marrow (Qnode0.north) to  [bend right=-35] (Qnode1.north);
+      \marrow (Qnode1.north) to  [bend right=-35] (Qnode2.north);
+      \marrow (Qnode2.north) to  [bend right=-35] (Qnode3.north);
+      \marrow (Qnode3.north) to  [bend right=-35] (Qnode4.north);
+      \marrow (Qnode4.north) to  [bend right=-35] (Qnode5.north);
+      \marrow (Qnode5.north) to  [bend right=-35] (Qnode6.north);
       % next
       \mbo (Onode0) at  (2.0,-2.0)     {1};
       \mbo (Onode1)  [right=of Onode0] {2};
       \mbo (Onode2)  [right=of Onode1] {3};
-      \lbd (Onode3)  [right=of Onode2] {\bf ...};
+      \lbo (Onode3)  [right=of Onode2] {\bf ...};
 
-      \marrow (Onode0.north) to [bend right=-65] (Onode1.north);
-      \marrow (Onode1.north) to [bend right=-65] (Onode2.north);
+      \marrow (Onode0.north) to [bend right=-25] (Onode1.north);
+      \marrow (Onode1.north) to [bend right=-25] (Onode2.north);
+      \marrow (Onode2.north) to [bend right=-25] (Onode3.north);
 
 \end{tikzpicture}
 \end{frame}
