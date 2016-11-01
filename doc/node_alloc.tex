@@ -97,7 +97,7 @@
 %\usecolortheme{whale}       
 %\usecolortheme{wolverine}       
 
-\colorlet{memC}{yellow!50!black}
+\colorlet{memC}{brown!70!black}
 \colorlet{eleC}{orange!70!black}
 
 \colorlet{alertc}{red!80!black}
@@ -247,6 +247,7 @@
     \item Reduce pointer overhead in nodes.
     \item Alternative to pointer chasing on traversal.
     \item Allow fine tunning and reduce complexity.
+    \item Reduce centralization.
 \end{itemize}
 \end{block}
 
@@ -283,24 +284,25 @@
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
-// C style. Raw memory.
+// C style. Uninitialized memory.
 int* p = malloc(10 * sizeof *p);
 free(p);
 
-// C++ style. Calls constructors.
-auto* p = new int[10];
-delete [] p;
+// C++ style. Initialization.
+auto* p = new int[10]; // Calls ctors
+delete [] p; // Calls dtors
 
-// Smart pointers. Proper way to handle
-// allocated memory dynamicaly.
+// To avoid leaks and other ownership related
+// problems: smart pointers
 std::shared_ptr<int> p;
 std::unique_ptr<int> p;
 std::weak_ptr<int> p;
+...
 \end{lstlisting}
 \end{column}
 
 \begin{column}[t]{0.45\textwidth}
-\begin{block}{Inside STL containers: Allocators}
+\begin{block}{In STL containers: Allocators}
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
@@ -311,9 +313,13 @@ class list;
 // Can have state.
 std::allocator<int> alloc;
 auto* p = alloc.allocate(10); // Allocate
-alloc.construct(p); // Calls constructors
+alloc.construct(p, 12); // Calls constructors
 alloc.destroy(p); // Calls destructors
 alloc.deallocate(p, 10); // Deallocate
+
+// These functions are actually accessed via
+// std::allocator_traits<Allocator>. But this
+// is not important now.
 \end{lstlisting}
 \end{column}
 \end{columns}
@@ -327,28 +333,30 @@ alloc.deallocate(p, 10); // Deallocate
 
 \begin{block} {Node allocation}
 I will use {\bf \color{alertc} node allocation} to refer to
-allocations with compile time sizes.
+allocations that have always the same size.
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
-constexpr int n = 10;
-
-// n is known at compile-time.
-auto* p = alloc.allocate(n);
+// e.g. allocations inside std::list
+auto* p1 = alloc.allocate(1);
+auto* p2 = alloc.allocate(1);
+auto* p3 = alloc.allocate(1);
+auto* p4 = alloc.allocate(1);
 \end{lstlisting}
 
 \end{column}
 
 \begin{column}{0.45\textwidth}
 \begin{block} {Array allocation}
-For runtime allocation sizes I will use the term {\bf \color{alertc} array allocation}.
+For allocations with varying sizes I will use the term {\bf \color{alertc} array allocation}.
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
-int n = 10;
-
-// n is known only at runtime.
-auto* p = alloc.allocate(n);
+// e.g. allocations inside std::vector
+auto* p1 = alloc.allocate(2);
+auto* p2 = alloc.allocate(4);
+auto* p3 = alloc.allocate(8);
+auto* p4 = alloc.allocate(16);
 \end{lstlisting}
 \end{column}
 \end{columns}
@@ -361,12 +369,12 @@ auto* p = alloc.allocate(n);
 \begin{column}[c]{0.45\textwidth}
 
 \begin{tikzpicture}[scale=1.0]
-\fill[nodecontc]  (180:2.5cm) -- (180: 3cm) arc (180:360:3cm) -- (360:2.5cm) arc (360:180:2.5cm);
-\fill[bothcontc]   (30:2.5cm) -- (30:3cm) arc (30:180:3cm)  -- (180:2.5cm) arc (180:30:2.5cm);
-\fill[arraycontc] (0:2.5cm) -- (0:3cm) arc (0:30:3cm) -- (30:2.5cm) arc (30:0:2.5cm);
+\fill[nodecontc]  (180:2.5cm) -- (180: 3.3cm) arc (180:360:3.3cm) -- (360:2.5cm) arc (360:180:2.5cm);
+\fill[bothcontc]   (30:2.5cm) -- (30:3.3cm) arc (30:180:3.3cm)  -- (180:2.5cm) arc (180:30:2.5cm);
+\fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:30:3.3cm) -- (30:2.5cm) arc (30:0:2.5cm);
 
-\filldraw[nodecontc] (-2cm,0.5cm) circle (0.08cm) node[right] {\color{black}Only node allocation (6)};
 \filldraw[arraycontc] (-2cm,0.0cm) circle (0.08cm) node[right] {\color{black}Only array allocation (1)};
+\filldraw[nodecontc] (-2cm,0.5cm) circle (0.08cm) node[right] {\color{black}Only node allocation (6)};
 \filldraw[bothcontc] (-2cm,-0.5cm) circle (0.08cm) node[right] {\color{black}Both (5)};
 \end{tikzpicture}
 \end{column}
@@ -399,38 +407,72 @@ auto* p = alloc.allocate(n);
 \begin{columns}
 \begin{column}[c]{0.45\textwidth}
 \begin{tikzpicture}[scale=1.0]
-\fill[nodecontc]  (30:2.5cm) -- (30:3cm) arc (30:360:3cm) -- (360:2.5cm) arc (360:30:2.5cm);
-\fill[arraycontc] (0:2.5cm) -- (0:3cm) arc (0:30:3cm) -- (30:2.5cm) arc (30:0:2.5cm);
+\fill[bothcontc]  (30:2.5cm) -- (30:3.3cm) arc (30:360:3.3cm) -- (360:2.5cm) arc (360:30:2.5cm);
+\fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:30:3.3cm) -- (30:2.5cm) arc (30:0:2.5cm);
 
 \filldraw[arraycontc] (-2cm,0.25cm) circle (0.08cm) node[right] {\color{black} Only array allocation (1)};
-\filldraw[nodecontc] (-2cm,-0.25cm) circle (0.08cm) node[right] {\color{black} Perform node allocation (11)};
+\filldraw[bothcontc] (-2cm,-0.25cm) circle (0.08cm) node[right] {\color{black} Perform node allocation (11)};
 \end{tikzpicture}
 \end{column}
 
 \begin{column}[c]{0.45\textwidth}
 \begin{tikzpicture}[scale=1.0]
-\fill[nodecontc]  (180:2.5cm) -- (180:3cm) arc (180:360:3cm) -- (360:2.5cm) arc (360:180:2.5cm);
-\fill[arraycontc] (0:2.5cm) -- (0:3cm) arc (0:180:3cm) -- (180:2.5cm) arc (180:0:2.5cm);
+\fill[bothcontc]  (180:2.5cm) -- (180:3.3cm) arc (180:360:3.3cm) -- (360:2.5cm) arc (360:180:2.5cm);
+\fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:180:3.3cm) -- (180:2.5cm) arc (180:0:2.5cm);
 
 \filldraw[arraycontc] (-2cm,0.25cm) circle (0.08cm) node[right] {\color{black} Only node allocation (6)};
-\filldraw[nodecontc] (-2cm,-0.25cm) circle (0.08cm) node[right] {\color{black} Perform array allocation (6)};
+\filldraw[bothcontc] (-2cm,-0.25cm) circle (0.08cm) node[right] {\color{black} Perform array allocation (6)};
 \end{tikzpicture}
 \end{column}
 \end{columns}
 \end{frame}
 
 %____________________________________________________________
+\begin{frame}[fragile]
+{Closer look at allocators}
+\begin{columns}
+\begin{column}{0.35\textwidth}
+
+%\begin{block} {\texttt{allocate(n)}}
+%\end{block}
+\begin{lstlisting}
+// Allocate signature.
+pointer allocate(size_type n, ... );
+\end{lstlisting}
+
+\end{column}
+
+\begin{column}{0.55\textwidth}
+\begin{block} {Size management}
+\begin{itemize}
+\item Cannot be informed it will perform only node allocation.
+\item Has to handle any sizes it happens to be called with.
+\item Leads to overly complex strategies (next section).
+\item Leads to overheads: bookkeeping information, searches, 
+encourages centralization.
+\end{itemize}
+
+\end{block}
+
+\begin{block} {Buiding block}
+I will argue in the next slides that node allocation should be seen as a
+building block and deserves it own member functions.
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+%____________________________________________________________
 \begin{frame}[t]{Node allocation illustration}
-{How it is implemented in practice}
+{How it is implemented in practice: pooling}
 \begin{block} {Procedure}
 \begin{enumerate}
 \item<alert@1> Get a continuos block of memory with $N$ nodes at once.
 \item<alert@2> Link them as a stack and repeat if ever run out of memory.
-\item<alert@3> After some allocations and deallocations: chaos.
+\item<alert@3> After some allocations and deallocations.
 \end{enumerate}
 \end{block}
 
-\begin{tikzpicture}[scale=1.0, rounded corners=0.5mm]
+\begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
 
    \uncover<1> {
       \mbq (node0)  at (-5.0,4.0) {Block$_0$};
@@ -533,7 +575,7 @@ auto* p = alloc.allocate(n);
 \begin{block} {Typical goals and strategies}
 \begin{itemize}
 \item<alert@1> Different strategy for small and big sizes.
-\item<alert@2> Small sizes: Up $170$ pre-allocated lists.
+\item<alert@2> Small sizes: Many ($\approx 170$) pre-allocated blocks.
 \item<alert@3> Large sizes: Best fit, rounding on memory pages.
 \item<alert@1> Avoid fragmentation. Improve locality.
 \item<alert@4> Avoid serialization on cuncurrent calls.
@@ -568,7 +610,7 @@ auto* p = alloc.allocate(n);
 \item \texttt{std::malloc} has up to 170 of these lists. Each with sizes of hundreds.
 \end{itemize}
 \vspace{0.5cm}
-\begin{tikzpicture}[scale=1.0, rounded corners=0.5mm]
+\begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
       % next
       \mbd (Unode0) at  (0.5,2.0)       {1};
       \mbd (Unode1)  [right=of Unode0]  {2};
@@ -789,7 +831,7 @@ l1 = {27, 1, 60};
 \end{column}
 \end{columns}
 
-\begin{tikzpicture}[scale=1.0, rounded corners=0.5mm]
+\begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
 
    \uncover<1> {
       \mbq (node0)  at (-5.0,4.0) {Block$_0$};
@@ -986,7 +1028,7 @@ std::copy(std::begin(alloc), std::end(alloc),
 
 Node sizes of a \texttt{std::forwar\_list<T>}.
 
-\begin{tikzpicture}[scale=1.0, rounded corners=0.5mm]
+\begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
 
    \uncover<1-> {
       \mbu (nextu) at (0.25, 6) {N};
