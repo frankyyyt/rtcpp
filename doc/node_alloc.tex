@@ -242,7 +242,7 @@
 \begin{column}{0.50\textwidth}
 \begin{block} {Goals}
 \begin{itemize}
-    \item Provide building blocks to memory allocation.
+    \item Provide building blocks for memory allocation.
     \item Profit from static type information.
     \item Reduce pointer overhead in nodes.
     \item Alternative to pointer chasing on traversal.
@@ -281,43 +281,42 @@
 \begin{columns}
 \begin{column}[t]{0.45\textwidth}
 \begin{block}{User level memory management}
+Stack vs. free storage.
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
-// C style. Uninitialized memory.
-int* p = malloc(10 * sizeof *p);
-free(p);
+// Automatic allocation of an int in the
+// function stack frame.
+int i;
 
-// C++ style. Initialization.
-auto* p = new int[10]; // Calls ctors
-delete [] p; // Calls dtors
+// C style allocation of an int on the
+// free storage. Do not initialize memory.
+int* p = malloc(sizeof *p);
+free(p); // Releases
 
-// To avoid leaks and other ownership related
-// problems: smart pointers
-std::shared_ptr<int> p;
-std::unique_ptr<int> p;
-std::weak_ptr<int> p;
-...
+// C++ style allocation of an int on the
+// free storage. Does initialize memory.
+auto* p = new int; // Calls ctors
+delete p; // Calls dtors
 \end{lstlisting}
 \end{column}
 
 \begin{column}[t]{0.45\textwidth}
 \begin{block}{In STL containers: Allocators}
+Abstraction to dynamic memory allocation inside
+containers.
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
-// Part of containers type.
-template <class T, class Allocator>
-class list;
 
 // Can have state.
 std::allocator<int> alloc;
-auto* p = alloc.allocate(10); // Allocate
+auto* p = alloc.allocate(1); // Allocate
 alloc.construct(p, 12); // Calls constructors
 alloc.destroy(p); // Calls destructors
-alloc.deallocate(p, 10); // Deallocate
+alloc.deallocate(p, 1); // Deallocate
 
-// These functions are actually accessed via
+// Note: These functions are actually accessed via
 // std::allocator_traits<Allocator>. But this
 // is not important now.
 \end{lstlisting}
@@ -454,7 +453,7 @@ encourages centralization.
 
 \end{block}
 
-\begin{block} {Buiding block}
+\begin{block} {Node allocation as a buiding block}
 I will argue in the next slides that node allocation should be seen as a
 building block and deserves it own member functions.
 \end{block}
@@ -466,15 +465,20 @@ building block and deserves it own member functions.
 {How it is implemented in practice: pooling}
 \begin{block} {Procedure}
 \begin{enumerate}
-\item<alert@1> Get a continuos block of memory with $N$ nodes at once.
-\item<alert@2> Link them as a stack and repeat if ever run out of memory.
-\item<alert@3> After some allocations and deallocations.
+\item<alert@1> Get a continuos block of memory with $n$ nodes at once.
+\item<alert@2> Divide in blocks, link them as a stack and repeat if ever run out of memory.
+\item<alert@6> After some allocations and deallocations.
 \end{enumerate}
 \end{block}
 
 \begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
 
    \uncover<1> {
+      \node[draw, node distance=0cm, fill=memC, shape=rectangle,minimum height=0.5cm  ,minimum width=14.0cm  ,inner sep=1ex]
+      (block) at (1cm, 4cm) {Block with enough space for $n$ nodes};
+   }
+
+   \uncover<2> {
       \mbq (node0)  at (-5.0,4.0) {Block$_0$};
       \mbq (node1)  [right=of node0] {Block$_1$};
       \mbq (node2)  [right=of node1] {Block$_2$};
@@ -484,7 +488,44 @@ building block and deserves it own member functions.
       \mbq (node6)  [right=of node5] {Block$_6$};
    }
 
-   \uncover<2> {
+   \uncover<3> {
+      \mbq (node0)  at (-5.0,4.0) {Block$_0$};
+      \mbq (node1)  [right=of node0] {Block$_1$};
+      \mbq (node2)  [right=of node1] {Block$_2$};
+      \mbq (node3)  [right=of node2] {Block$_3$};
+      \mbq (node4)  [right=of node3] {Block$_4$};
+      \mbq (node5)  [right=of node4] {Block$_5$};
+      \mbq (node6)  [right=of node5] {Block$_6$};
+
+      \marrow (node0.north) to [bend right=-25] (node1.north);
+      \marrow (node1.north) to [bend right=-25] (node2.north);
+      \marrow (node2.north) to [bend right=-25] (node3.north);
+      \marrow (node3.north) to [bend right=-25] (node4.north);
+      \marrow (node4.north) to [bend right=-25] (node5.north);
+      \marrow (node5.north) to [bend right=-25] (node6.north);
+   }
+
+   \uncover<4> {
+      \mbq (node0)  at (-5.0,4.0) {Block$_0$};
+      \mbq (node1)  [right=of node0] {Block$_1$};
+      \mbq (node2)  [right=of node1] {Block$_2$};
+      \mbq (node3)  [right=of node2] {Block$_3$};
+      \mbq (node4)  [right=of node3] {Block$_4$};
+      \mbq (node5)  [right=of node4] {Block$_5$};
+      \mbq (node6)  [right=of node5] {Block$_6$};
+
+      \marrow (node0.north) to [bend right=-25] (node1.north);
+      \marrow (node1.north) to [bend right=-25] (node2.north);
+      \marrow (node2.north) to [bend right=-25] (node3.north);
+      \marrow (node3.north) to [bend right=-25] (node4.north);
+      \marrow (node4.north) to [bend right=-25] (node5.north);
+      \marrow (node5.north) to [bend right=-25] (node6.north);
+
+      \node[draw, node distance=0cm, fill=memC, shape=rectangle,minimum height=0.5cm  ,minimum width=14.0cm  ,inner sep=1ex]
+      (block) at (1cm, 2cm) {One more block };
+   }
+
+   \uncover<5> {
       \mbq (node0)  at (-5.0,4.0) {Block$_0$};
       \mbq (node1)  [right=of node0] {Block$_1$};
       \mbq (node2)  [right=of node1] {Block$_2$};
@@ -517,7 +558,7 @@ building block and deserves it own member functions.
       \marrow (node12.north) to [bend right=-25] (node13.north);
    }
 
-   \uncover<3-> {
+   \uncover<6-> {
       \ebq (node0)  at (-5.0,4.0) {Node$_0$};
       \ebq (node1)  [right=of node0] {Node$_1$};
       \mbq (node2)  [right=of node1] {Block$_2$};
@@ -535,7 +576,7 @@ building block and deserves it own member functions.
       \ebq (node13) [right=of node12] {Node$_{13}$};
    }
 
-   \uncover<3-> {
+   \uncover<6-> {
       \earrow (node0.south) -- (node8.north);
       \earrow (node1.north) to [bend right=-15] (node5.north);
       \earrow (node3.south) to [bend right=-15] (node1.south);
@@ -544,7 +585,7 @@ building block and deserves it own member functions.
       \earrow (node13.north) to [bend right=15] (node10.north);
    }
 
-   \uncover<3-> {
+   \uncover<6-> {
       \marrow (node2.north) to [bend right=-15] (node6.north);
       \marrow (node6.south) to [bend right=-15] (node4.south);
       \marrow (node4.south) -- (node11.north);
@@ -934,7 +975,7 @@ l1 = {27, 1, 60};
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}{Cache Hierarchy - Speed}{Why it is so important to avoid jumping around.}
+\begin{frame}{Why it is so important to avoid jumping around}{Cache Hierarchy - Speed}
     \begin{columns}
         \begin{column}{0.33\textwidth}
 
@@ -1016,7 +1057,46 @@ std::copy(std::begin(alloc), std::end(alloc),
 \subsection{Reducing the pointer overhead in nodes}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Node sizes according to the number of elements needed}
+\begin{frame}[fragile]{Reducing the pointer overhead in nodes}
+\begin{quotation}
+\noindent
+It is absolutely idiotic to have 64-bit pointers when I compile a program that
+uses less than 4 gigabytes of RAM. When such pointer values appear inside a
+struct, they not only waste half the memory, they effectively throw away half
+of the cache.
+\end{quotation}
+(Donald Knuth)
+\end{frame}
+
+\begin{frame}[fragile]{Nodes and pointers}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+
+\begin{lstlisting}
+          struct node {
+            node* next;
+            int info;
+          };
+\end{lstlisting}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{block}{Thoughts}
+\begin{itemize}
+\item On a 64 bits system the size of the node on the left is 16 bytes.
+\item 4 bytes by are wasted on padding.
+\item Using 32 bits pointers may not be an option.
+\item Even if it were, for only hundres of elements
+8 or 16 bits are enough to address the elements.
+\end{itemize}
+\end{block}
+
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]{What if I could address elements with integers}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 %\begin{enumerate}
@@ -1026,28 +1106,46 @@ std::copy(std::begin(alloc), std::end(alloc),
 %\item<alert@4> $N \le 2^{64}$ with $T \in [0, 2^{64}]$
 %\end{enumerate}
 
-Node sizes of a \texttt{std::forwar\_list<T>}.
+%Node sizes of a \texttt{std::forwar\_list<T>}.
 
-\begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
+%\begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
+%
+%   \uncover<1-> {
+%      \mbu (nextu) at (0.25, 6) {N};
+%      \ebu (valueu) [right=of nextu] {V};
+%   }
+%
+%   \uncover<2-> {
+%      \mbd (nextd) at (0.5,4) {Next};
+%      \ebd (valued) [right=of nextd] {Value};
+%   }
+%
+%   \uncover<3-> {
+%      \mbq (nextq) at (1,2) {Next};
+%      \ebq (valueq) [right=of nextq] {Value};
+%   }
+%   \uncover<4-> {
+%      \mbo (nexto) at (2,0) {Next};
+%      \ebo (valueo) [right=of nexto] {Value};
+%   }
+%\end{tikzpicture}
 
-   \uncover<1-> {
-      \mbu (nextu) at (0.25, 6) {N};
-      \ebu (valueu) [right=of nextu] {V};
-   }
+\begin{tikzpicture}[scale=1.0]
+\node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.0cm  ,minimum width=1.0cm]
+(node0) at (0cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=3.5cm  ,minimum width=1.0cm]
+(node1) at (1cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=1.75cm  ,minimum width=1.0cm]
+(node2) at (2cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
+(node3) at (3cm,0.0cm) {};
 
-   \uncover<2-> {
-      \mbd (nextd) at (0.5,4) {Next};
-      \ebd (valued) [right=of nextd] {Value};
-   }
+\node[] at (2cm,6.0cm) {\color{black} Size in bytes};
+\filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} 16};
+\filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black}8};
+\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black}4};
+\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black}1};
 
-   \uncover<3-> {
-      \mbq (nextq) at (1,2) {Next};
-      \ebq (valueq) [right=of nextq] {Value};
-   }
-   \uncover<4-> {
-      \mbo (nexto) at (2,0) {Next};
-      \ebo (valueo) [right=of nexto] {Value};
-   }
 \end{tikzpicture}
 
 \end{column}
