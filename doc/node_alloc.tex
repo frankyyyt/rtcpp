@@ -274,51 +274,54 @@
 
 \section{STL and memory management}
 
-\subsection{Dynamic memory menagement in \texttt{C++}}
+\subsection{Dynamic memory allocations in \texttt{C++}}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Dynamic memory menagement in \texttt{C++}}
+\begin{frame}[fragile]{Dynamic memory allocation in \texttt{C++}}
+{Note: I will use {\it Heap} to refer free storage memory.}
 \begin{columns}
 \begin{column}[t]{0.45\textwidth}
-\begin{block}{User level memory management}
-Stack vs. free storage.
+\begin{block}{User level}
+\begin{itemize}
+\item Stack: Restricted lifetime, ``small''.
+\item Heap: No restriction on lifetime and size.
+\end{itemize}
 \end{block}
-\vspace{0.5cm}
+%\vspace{0.5cm}
 \begin{lstlisting}
-// Automatic allocation of an int in the
-// function stack frame.
-int i;
+int i; // Automatic allocation in the stack.
 
-// C style allocation of an int on the
-// free storage. Do not initialize memory.
+// C style heap allocation. No initialization.
 int* p = malloc(sizeof *p);
-free(p); // Releases
+free(p);
 
-// C++ style allocation of an int on the
-// free storage. Does initialize memory.
-auto* p = new int; // Calls ctors
-delete p; // Calls dtors
+// C++ style heap allocation. Initializes.
+auto* p = new int;
+delete p;
 \end{lstlisting}
 \end{column}
 
 \begin{column}[t]{0.45\textwidth}
-\begin{block}{In STL containers: Allocators}
-Abstraction to dynamic memory allocation inside
-containers.
+\begin{block}{In STL containers}
+\begin{itemize}
+\item Stack and heap are abstracted away.
+\item Memory is requested from allocators.
+\end{itemize}
 \end{block}
-\vspace{0.5cm}
+%\vspace{0.5cm}
 \begin{lstlisting}
+std::allocator<T> alloc; // Can have state.
 
-// Can have state.
-std::allocator<int> alloc;
-auto* p = alloc.allocate(1); // Allocate
-alloc.construct(p, 12); // Calls constructors
-alloc.destroy(p); // Calls destructors
-alloc.deallocate(p, 1); // Deallocate
+// Requests enough space for one T.
+auto* p = alloc.allocate(1);
 
-// Note: These functions are actually accessed via
-// std::allocator_traits<Allocator>. But this
-// is not important now.
+alloc.construct(p, T()); // Calls ctor
+alloc.destroy(p); // Calls dtor
+
+// Return memory to the allocator.
+alloc.deallocate(p, 1);
+
+// See also std::allocator_traits.
 \end{lstlisting}
 \end{column}
 \end{columns}
@@ -372,14 +375,14 @@ auto* p4 = alloc.allocate(16);
 \fill[bothcontc]   (30:2.5cm) -- (30:3.3cm) arc (30:180:3.3cm)  -- (180:2.5cm) arc (180:30:2.5cm);
 \fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:30:3.3cm) -- (30:2.5cm) arc (30:0:2.5cm);
 
-\filldraw[arraycontc] (-2cm,0.0cm) circle (0.08cm) node[right] {\color{black}Only array allocation (1)};
-\filldraw[nodecontc] (-2cm,0.5cm) circle (0.08cm) node[right] {\color{black}Only node allocation (6)};
+\filldraw[arraycontc] (-2cm,0.5cm) circle (0.08cm) node[right] {\color{black}Only array allocation (1)};
+\filldraw[nodecontc] (-2cm,0.0cm) circle (0.08cm) node[right] {\color{black}Only node allocation (6)};
 \filldraw[bothcontc] (-2cm,-0.5cm) circle (0.08cm) node[right] {\color{black}Both (5)};
 \end{tikzpicture}
 \end{column}
 
 \begin{column}[c]{0.45\textwidth}
-\begin{block} {STL containers}
+\begin{block} {STL containers (12)}
 \begin{itemize}
 \item \texttt{\color{arraycontc} std::vector}
 \item \texttt{\color{nodecontc} std::list}
@@ -428,7 +431,8 @@ auto* p4 = alloc.allocate(16);
 
 %____________________________________________________________
 \begin{frame}[fragile]
-{Closer look at allocators}
+{Why these information matters}
+{A closer look at allocators}
 \begin{columns}
 \begin{column}{0.35\textwidth}
 
@@ -436,27 +440,28 @@ auto* p4 = alloc.allocate(16);
 %\end{block}
 \begin{lstlisting}
 // Allocate signature.
-pointer allocate(size_type n, ... );
+pointer allocate(size_type n, ...);
+
+void deallocate( pointer p
+               , size_type n);
 \end{lstlisting}
 
 \end{column}
 
 \begin{column}{0.55\textwidth}
-\begin{block} {Size management}
+\begin{block} {Allocators and size management}
 \begin{itemize}
-\item Cannot be informed it will perform only node allocation.
-\item Has to handle any sizes it happens to be called with.
-\item Leads to overly complex strategies (next section).
-\item Leads to overheads: bookkeeping information, searches, 
-encourages centralization.
+\item Allocation size is a runtime variable.
+\item Node allocation is known at compile time.
+\item Blesses array allocation. Unaware of node allocation.
+\item No simple implementation. Has to handle any sizes.
+\item Leads to overly complex strategies.
+\item Leads to overheads like bookkeeping information.
+\item Encourages centralization.
 \end{itemize}
 
 \end{block}
 
-\begin{block} {Node allocation as a buiding block}
-I will argue in the next slides that node allocation should be seen as a
-building block and deserves it own member functions.
-\end{block}
 \end{column}
 \end{columns}
 \end{frame}
@@ -465,7 +470,7 @@ building block and deserves it own member functions.
 {How it is implemented in practice: pooling}
 \begin{block} {Procedure}
 \begin{enumerate}
-\item<alert@1> Get a continuos block of memory with $n$ nodes at once.
+\item<alert@1> Get a continuos block of memory with enough space for $n$ nodes.
 \item<alert@2> Divide in blocks, link them as a stack and repeat if ever run out of memory.
 \item<alert@6> After some allocations and deallocations.
 \end{enumerate}
@@ -522,7 +527,7 @@ building block and deserves it own member functions.
       \marrow (node5.north) to [bend right=-25] (node6.north);
 
       \node[draw, node distance=0cm, fill=memC, shape=rectangle,minimum height=0.5cm  ,minimum width=14.0cm  ,inner sep=1ex]
-      (block) at (1cm, 2cm) {One more block };
+      (block) at (1cm, 2cm) {Run out of memory, get another block. };
    }
 
    \uncover<5> {
@@ -598,7 +603,31 @@ building block and deserves it own member functions.
 
 \end{frame}
 
-\section{Node allocation as a building block}
+%____________________________________________________________
+\begin{frame}[fragile]
+{Simplicity matters}
+{How node allocation is implemented}
+
+\begin{center}
+\begin{lstlisting}
+                         pointer allocate_node()
+                         {
+                           pointer q = avail; // The next free node
+                           if (avail)
+                             avail = avail->next;
+                         
+                           return q;
+                         }
+                         
+                         void deallocate_node(pointer p)
+                         {
+                           p->next = avail;
+                           avail = p;
+                         }
+
+\end{lstlisting}
+\end{center}
+\end{frame}
 
 %____________________________________________________________
 \begin{frame}{Outline}
@@ -608,33 +637,32 @@ building block and deserves it own member functions.
 \subsection{Typical allocation goals and strategies}
 
 %____________________________________________________________
-\begin{frame}{Allocation strategies}
+\begin{frame}{Typical allocation goals and strategies}
 {\texttt{malloc}, \texttt{jemalloc}, \texttt{tcmalloc},
 \texttt{nedmalloc}, \texttt{hoard}, etc.}
 \begin{columns}
 \begin{column}{0.47\textwidth}
 \begin{block} {Typical goals and strategies}
 \begin{itemize}
-\item<alert@1> Different strategy for small and big sizes.
-\item<alert@2> Small sizes: Many ($\approx 170$) pre-allocated blocks.
-\item<alert@3> Large sizes: Best fit, rounding on memory pages.
-\item<alert@1> Avoid fragmentation. Improve locality.
-\item<alert@4> Avoid serialization on cuncurrent calls.
-\item<alert@4> Thread local buffers.
-\item<alert@5> Bookkeeping information on blocks.
-\item<alert@2> Rounding allocation sizes to fit pre-allocated buffers.
+\item Different strategy for small and big sizes.
+\item Small sizes: Many pre-allocated blocks.
+\item Large sizes: Best fit, rounding on memory pages.
+\item Avoid fragmentation. Improve locality.
+\item Avoid serialization on cuncurrent calls.
+\item Thread local buffers.
+\item Bookkeeping information on blocks.
+\item Rounding allocation sizes to fit pre-allocated buffers.
 \end{itemize}
 \end{block}
 \end{column}
 
 \begin{column}{0.47\textwidth}
-\begin{block} {Thoughts}
-\begin{itemize}
-\item<alert@1> Hang same-size allocations on different pre-linked buffers.
-\item<alert@2> Sizes are known at compile time. We can avoid this.
-\item<alert@3> Do not use a global allocator.
-\item<alert@4> Not needed if blocks have alway the same size.
-\end{itemize}
+\begin{block} {Centralization is bad}
+If basic building blocks were available i.e. node allocation,
+many of these problems could be properly handled e.g.
+bookkeeping information, rounding, size searches
+are unnecessary on node allocation. Compile time information would not
+be thrown away.
 \end{block}
 
 \end{column}
@@ -644,12 +672,15 @@ building block and deserves it own member functions.
 \subsection{Node allocation as a building block}
 
 %___________________________________________________________________
-\begin{frame}[t]{Pools of blocks with different size}
+\begin{frame}[t]{Pools of blocks with different sizes}
+\begin{block}{Why all this if the exact sizes are available
+at compile time?}
 \begin{itemize}
 \item Many pre-allocated sizes. Possibly thread local.
 \item Small sizes are rounded to one of these.
-\item \texttt{std::malloc} has up to 170 of these lists. Each with sizes of hundreds.
+\item \texttt{std::malloc} has up to 170 of these lists.
 \end{itemize}
+\end{block}
 \vspace{0.5cm}
 \begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
       % next
@@ -707,35 +738,9 @@ building block and deserves it own member functions.
 \end{tikzpicture}
 \end{frame}
 
-%____________________________________________________________
-\begin{frame}[fragile]{Node allocation implementation}
-{As simple as it gets}
-
-\begin{center}
-\begin{lstlisting}
-pointer allocate_node()
-{
-  pointer q = avail; // The next free node
-  if (avail)
-    avail = avail->next;
-
-  return q;
-}
-
-void deallocate_node()
-{
-  p->next = avail;
-  avail = p;
-}
-
-\end{lstlisting}
-\end{center}
-\end{frame}
-
 %_________________________________________________________________________
 
-\begin{frame}[fragile]{Array Allocation}
-Array allcation
+\begin{frame}[fragile]{Further thoughts}
 \begin{itemize}
 \item Many possible strategies. Which one should I use?
 \item Has to handle different sizes.
@@ -746,6 +751,26 @@ Array allcation
 \item May use node allocation as a building block.
 \end{itemize}
 
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]
+{}
+
+\begin{columns}
+\begin{column}{0.15\textwidth}
+\end{column}
+\begin{column}{0.70\textwidth}
+\begin{center}
+ \Large \bf 
+  I've been arguing that node allocation is an important concept and deserves
+  support in the STL. Now lets us see how to do it and what further benefits
+  it will bring.
+\end{center}
+\end{column}
+\begin{column}{0.15\textwidth}
+\end{column}
+\end{columns}
 \end{frame}
 
 \section{Supporting node-allocation in the STL}
