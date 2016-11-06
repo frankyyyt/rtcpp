@@ -278,7 +278,7 @@
 
 %____________________________________________________________
 \begin{frame}[fragile]{Dynamic memory allocation in \texttt{C++}}
-{Note: I will use {\it Heap} to refer free storage memory.}
+{Note: I will use {\it Heap} to refer to free storage memory.}
 \begin{columns}
 \begin{column}[t]{0.45\textwidth}
 \begin{block}{User level}
@@ -304,8 +304,8 @@ delete p;
 \begin{column}[t]{0.45\textwidth}
 \begin{block}{In STL containers}
 \begin{itemize}
-\item Stack and heap are abstracted away.
-\item Memory is requested from allocators.
+\item Stack and heap abstracted away.
+\item Memory requested from allocators.
 \end{itemize}
 \end{block}
 %\vspace{0.5cm}
@@ -318,7 +318,7 @@ auto* p = alloc.allocate(1);
 alloc.construct(p, T()); // Calls ctor
 alloc.destroy(p); // Calls dtor
 
-// Return memory to the allocator.
+// Returns memory to the allocator.
 alloc.deallocate(p, 1);
 
 // See also std::allocator_traits.
@@ -452,7 +452,7 @@ void deallocate( pointer p
 \begin{block} {Allocators and size management}
 \begin{itemize}
 \item Allocation size is a runtime variable.
-\item Node allocation is known at compile time.
+\item Node allocation is however known at compile time.
 \item Blesses array allocation. Unaware of node allocation.
 \item No simple implementation. Has to handle any sizes.
 \item Leads to overly complex strategies.
@@ -629,12 +629,12 @@ void deallocate( pointer p
 \end{center}
 \end{frame}
 
+\subsection{Typical allocation goals and strategies}
+
 %____________________________________________________________
 \begin{frame}{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
-
-\subsection{Typical allocation goals and strategies}
 
 %____________________________________________________________
 \begin{frame}{Typical allocation goals and strategies}
@@ -658,18 +658,21 @@ void deallocate( pointer p
 
 \begin{column}{0.47\textwidth}
 \begin{block} {Centralization is bad}
-If basic building blocks were available i.e. node allocation,
-many of these problems could be properly handled e.g.
-bookkeeping information, rounding, size searches
-are unnecessary on node allocation. Compile time information would not
-be thrown away.
+\begin{itemize}
+\item Which strategy is better for my use case?
+\item Bookkeeping information, rounding, size management
+are unnecessary on node allocation
+\item Unclear behaviour for long running programms.
+\item Compile time information should is thrown away.
+\item<alert@1> Node allocation is a building block.
+\end{itemize}
 \end{block}
 
 \end{column}
 \end{columns}
 \end{frame}
 
-\subsection{Node allocation as a building block}
+%\subsection{Node allocation as a building block}
 
 %___________________________________________________________________
 \begin{frame}[t]{Pools of blocks with different sizes}
@@ -738,48 +741,33 @@ at compile time?}
 \end{tikzpicture}
 \end{frame}
 
-%_________________________________________________________________________
-
-\begin{frame}[fragile]{Further thoughts}
-\begin{itemize}
-\item Many possible strategies. Which one should I use?
-\item Has to handle different sizes.
-\item No silver bullet. Every problem requires a different approach.
-\item Users do not want to care about this unless there is need.
-\item malloc: suitable for large memory blocks, overused, hundreds of
-\item LOC, system calls, etc.
-\item May use node allocation as a building block.
-\end{itemize}
-
-\end{frame}
-
 %____________________________________________________________
 \begin{frame}[fragile]
 {}
 
 \begin{columns}
-\begin{column}{0.15\textwidth}
+\begin{column}{0.10\textwidth}
 \end{column}
-\begin{column}{0.70\textwidth}
-\begin{center}
- \Large \bf 
+\begin{column}{0.80\textwidth}
+\begin{block}{Node allocation is a building block}
   I've been arguing that node allocation is an important concept and deserves
   support in the STL. Now lets us see how to do it and what further benefits
   it will bring.
-\end{center}
+\end{block}
 \end{column}
-\begin{column}{0.15\textwidth}
+\begin{column}{0.10\textwidth}
 \end{column}
 \end{columns}
 \end{frame}
 
 \section{Supporting node-allocation in the STL}
-\subsection{Proposal}
 
 %____________________________________________________________
 \begin{frame}{Outline}
    \tableofcontents[currentsection,currentsubsection]
 \end{frame}
+
+\subsection{Proposal}
 
 %____________________________________________________________
 \begin{frame}{Should node allocation be standardized}{Proposal to the ISO \texttt{C++} Standards Committee}
@@ -790,8 +778,12 @@ at compile time?}
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Node allocation support}
+\begin{frame}[fragile]
+{Node allocation support}
+{Two new member functions and one typedef in \texttt{std::allocator\_traits}}
 
+\begin{columns}
+\begin{column}{0.60\textwidth}
 \begin{lstlisting}
 template<class Alloc>
 struct allocator_traits {
@@ -799,21 +791,87 @@ struct allocator_traits {
   // std::false_type otherwise. Array allocation with
   // allocate(n) is ruled out if it is std::true_type.
   using node_allocation_only = std::false_type
+
   // Calls a.allocate_node() if present otherwise calls
-  // Alloc::allocate(1). Memory allocate with this function
-  // must be deallocated with deallocate_node.
+  // Alloc::allocate(1). Memory allocate with this
+  // function must be deallocated with deallocate_node.
   pointer allocate_node(Alloc& a);
-  // Calls a.deallocate_node(pointer) if present otherwise
-  // calls Alloc::deallocate(p, 1). Can only be used with
-  // memory allocated with allocate_node.
+
+  // Calls a.deallocate_node(pointer) if present
+  // otherwise calls Alloc::deallocate(p, 1). Can only
+  // be used with memory allocated with allocate_node.
   void deallocate_node(Alloc& a, pointer p);
 };
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.40\textwidth}
+\begin{block}{Why}
+\begin{itemize}
+\item No size menagement.
+\item Well defined behaviour.
+\item Names reflects intension.
+\item Can prevent array allocation.
+\item {\color{alertc}No surprises}
+\end{itemize}
+\end{block}
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}
+{Surprises in allocator behaviour}
+{Benchmarking \texttt{std::unordered\_set} with well known allocators}
+\begin{columns}
+
+    \begin{column}{0.47\textwidth}
+        \begin{center}
+            
+            \includegraphics[scale=0.7]{fig/unordered_set_with_frag.pdf} \\
+        \end{center}
+    \end{column}
+
+    \begin{column}{0.47\textwidth}
+         \begin{block}{Why \texttt{std::allocator} performs poorly?}
+           \begin{itemize}
+           \item Difficult to say.
+           \item Bookkeeping fields is making nodes bigger?
+           \item Unoptimaly rounding and size management? 
+           \item It should perform the same had it performed node
+           allocation internally.
+           \item {\color{alertc}This is unacceptable behaviour on many systems.}
+           \end{itemize}
+         \end{block}
+    %    \texttt{std::set}
+    %    \begin{center}
+    %        \includegraphics[scale=0.6]{fig/set_bench.pdf} \\
+    %    \end{center}
+    \end{column}
+
+\end{columns}
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]
+{Containers that perform both {\it node} and {\it array} allocation}
+{Exposing the node type}
+
+\begin{lstlisting}
+rt::node_allocator<int> alloc;
+
+// Performs both.
+rt::unordered_set<int> obj(alloc);
 \end{lstlisting}
 
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Exposing the node type}{Fancy pointers}
+\begin{frame}[fragile]
+{Nodes independent of the containers?}
+{Exposing the node type}
 
 \begin{lstlisting}
 // Cannot always hold for general A1 nd A2.
@@ -856,25 +914,6 @@ l1 = {27, 1, 60};
 ...
 \end{lstlisting}
 
-\end{frame}
-
-%____________________________________________________________
-\begin{frame}{Bechmarks}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \texttt{std::unordered\_set}
-            \begin{center}
-                \includegraphics[scale=0.6]{fig/unordered_set_with_frag.pdf} \\
-            \end{center}
-        \end{column}
-
-        \begin{column}{0.5\textwidth}
-            \texttt{std::set}
-            \begin{center}
-                \includegraphics[scale=0.6]{fig/set_bench.pdf} \\
-            \end{center}
-        \end{column}
-    \end{columns}
 \end{frame}
 
 \subsection{Traversal without pointer chasing}
@@ -1082,16 +1121,26 @@ std::copy(std::begin(alloc), std::end(alloc),
 \subsection{Reducing the pointer overhead in nodes}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Reducing the pointer overhead in nodes}
-\begin{quotation}
-\noindent
-It is absolutely idiotic to have 64-bit pointers when I compile a program that
-uses less than 4 gigabytes of RAM. When such pointer values appear inside a
-struct, they not only waste half the memory, they effectively throw away half
-of the cache.
-\end{quotation}
-(Donald Knuth)
+\begin{frame}[fragile]
+{}
+
+\begin{columns}
+\begin{column}{0.10\textwidth}
+\end{column}
+\begin{column}{0.80\textwidth}
+\begin{block}{A Flame About 64-bit Pointers}
+{ \it \noindent
+It is absolutely idiotic to have 64-bit pointers when I compile a
+program that uses less than 4 gigabytes of RAM. When such pointer
+values appear inside a struct, they not only waste half the memory,
+they effectively throw away half of the cache.}  \hfill (Donald Knuth)
+\end{block}
+\end{column}
+\begin{column}{0.10\textwidth}
+\end{column}
+\end{columns}
 \end{frame}
+
 
 \begin{frame}[fragile]{Nodes and pointers}
 \begin{columns}
