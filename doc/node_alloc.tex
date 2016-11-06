@@ -277,46 +277,46 @@
 \subsection{Dynamic memory allocations in \texttt{C++}}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Dynamic memory allocation in \texttt{C++}}
+\begin{frame}[fragile]{Memory allocation in \texttt{C++}}
 {Note: I will use {\it Heap} to refer to free storage memory.}
 \begin{columns}
 \begin{column}[t]{0.45\textwidth}
-\begin{block}{User level}
+\begin{block}{Memory segments}
 \begin{itemize}
-\item Stack: Restricted lifetime, ``small''.
+\item Data: Global and static variables.
+\item Stack: Restricted lifetime, small.
 \item Heap: No restriction on lifetime and size.
 \end{itemize}
 \end{block}
 %\vspace{0.5cm}
 \begin{lstlisting}
-int i; // Automatic allocation in the stack.
+// Allocation in the data segment.
+static int a; // Deallocation at programm exit
 
-// C style heap allocation. No initialization.
-int* p = malloc(sizeof *p);
-free(p);
+// Allocation in the function stack frame.
+int b; // Deallocation upon funtion return.
 
-// C++ style heap allocation. Initializes.
+// Dynamic allocation on the heap.
 auto* p = new int;
-delete p;
+
+delete p; // Deallocation is not automatic.
 \end{lstlisting}
 \end{column}
 
 \begin{column}[t]{0.45\textwidth}
-\begin{block}{In STL containers}
+\begin{block}{Inside STL containers}
 \begin{itemize}
-\item Stack and heap abstracted away.
+\item Idea of segments abstracted away.
 \item Memory requested from allocators.
+\item Provide a customization point.
 \end{itemize}
 \end{block}
 %\vspace{0.5cm}
 \begin{lstlisting}
-std::allocator<T> alloc; // Can have state.
+std::allocator<int> alloc; // Can have state.
 
-// Requests enough space for one T.
+// Requests enough space for one int.
 auto* p = alloc.allocate(1);
-
-alloc.construct(p, T()); // Calls ctor
-alloc.destroy(p); // Calls dtor
 
 // Returns memory to the allocator.
 alloc.deallocate(p, 1);
@@ -339,7 +339,8 @@ allocations that have always the same size.
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
-// e.g. allocations inside std::list
+// Allocations inside std::list are one
+// element at time (constant size).
 auto* p1 = alloc.allocate(1);
 auto* p2 = alloc.allocate(1);
 auto* p3 = alloc.allocate(1);
@@ -354,7 +355,8 @@ For allocations with varying sizes I will use the term {\bf \color{alertc} array
 \end{block}
 \vspace{0.5cm}
 \begin{lstlisting}
-// e.g. allocations inside std::vector
+// Allocations inside std::vector have
+// increasing sizes (push_back).
 auto* p1 = alloc.allocate(2);
 auto* p2 = alloc.allocate(4);
 auto* p3 = alloc.allocate(8);
@@ -431,7 +433,7 @@ auto* p4 = alloc.allocate(16);
 
 %____________________________________________________________
 \begin{frame}[fragile]
-{Why these information matters}
+{Why the current allocator interface is suboptimal}
 {A closer look at allocators}
 \begin{columns}
 \begin{column}{0.35\textwidth}
@@ -439,8 +441,9 @@ auto* p4 = alloc.allocate(16);
 %\begin{block} {\texttt{allocate(n)}}
 %\end{block}
 \begin{lstlisting}
-// Allocate signature.
 pointer allocate(size_type n, ...);
+
+
 
 void deallocate( pointer p
                , size_type n);
@@ -608,25 +611,32 @@ void deallocate( pointer p
 {Simplicity matters}
 {How node allocation is implemented}
 
-\begin{center}
+\begin{columns}
+\begin{column}{0.47\textwidth}
 \begin{lstlisting}
-                         pointer allocate_node()
-                         {
-                           pointer q = avail; // The next free node
-                           if (avail)
-                             avail = avail->next;
-                         
-                           return q;
-                         }
-                         
-                         void deallocate_node(pointer p)
-                         {
-                           p->next = avail;
-                           avail = p;
-                         }
+pointer allocate_node()
+{
+ pointer q = avail; // The next free node
+ if (avail)
+   avail = avail->next;
 
+ return q;
+}
+
+void deallocate_node(pointer p)
+{
+ p->next = avail;
+ avail = p;
+}
 \end{lstlisting}
-\end{center}
+\end{column}
+\begin{column}{0.47\textwidth}
+\begin{block} {Clear behaviour}
+Once you have nodes linked as a stack, allocation and
+deallocation reduces to these functions.
+\end{block}
+\end{column}
+\end{columns}
 \end{frame}
 
 \subsection{Typical allocation goals and strategies}
@@ -652,6 +662,7 @@ void deallocate( pointer p
 \item Thread local buffers.
 \item Bookkeeping information on blocks.
 \item Rounding allocation sizes to fit pre-allocated buffers.
+\item Surprizing (upsetting) behaviour.
 \end{itemize}
 \end{block}
 \end{column}
@@ -663,7 +674,7 @@ void deallocate( pointer p
 \item Bookkeeping information, rounding, size management
 are unnecessary on node allocation
 \item Unclear behaviour for long running programms.
-\item Compile time information should is thrown away.
+\item Compile time information should not be thrown away.
 \item<alert@1> Node allocation is a building block.
 \end{itemize}
 \end{block}
@@ -671,6 +682,40 @@ are unnecessary on node allocation
 \end{column}
 \end{columns}
 \end{frame}
+
+%____________________________________________________________
+\begin{frame}
+{Surprises in allocator behaviour}
+{Benchmarking \texttt{std::unordered\_set} with well known allocators}
+\begin{columns}
+
+    \begin{column}{0.47\textwidth}
+        \begin{center}
+            
+            \includegraphics[scale=0.7]{fig/unordered_set_with_frag.pdf} \\
+        \end{center}
+    \end{column}
+
+    \begin{column}{0.47\textwidth}
+         \begin{block}{Why \texttt{std::allocator} performs poorly?}
+           \begin{itemize}
+           \item Difficult to say.
+           \item Bookkeeping fields is making nodes bigger?
+           \item Unoptimaly rounding and size management? 
+           \item Should perform the same node
+           allocation is used internally.
+           \item {\color{alertc}This is unacceptable behaviour on many systems.}
+           \end{itemize}
+         \end{block}
+    %    \texttt{std::set}
+    %    \begin{center}
+    %        \includegraphics[scale=0.6]{fig/set_bench.pdf} \\
+    %    \end{center}
+    \end{column}
+
+\end{columns}
+\end{frame}
+
 
 %\subsection{Node allocation as a building block}
 
@@ -751,8 +796,8 @@ at compile time?}
 \begin{column}{0.80\textwidth}
 \begin{block}{Node allocation is a building block}
   I've been arguing that node allocation is an important concept and deserves
-  support in the STL. Now lets us see how to do it and what further benefits
-  it will bring.
+  proper support in the STL. Now lets us see how to do it and what further
+  benefits it brings.
 \end{block}
 \end{column}
 \begin{column}{0.10\textwidth}
@@ -819,39 +864,6 @@ struct allocator_traits {
 
 \end{columns}
 
-\end{frame}
-
-%____________________________________________________________
-\begin{frame}
-{Surprises in allocator behaviour}
-{Benchmarking \texttt{std::unordered\_set} with well known allocators}
-\begin{columns}
-
-    \begin{column}{0.47\textwidth}
-        \begin{center}
-            
-            \includegraphics[scale=0.7]{fig/unordered_set_with_frag.pdf} \\
-        \end{center}
-    \end{column}
-
-    \begin{column}{0.47\textwidth}
-         \begin{block}{Why \texttt{std::allocator} performs poorly?}
-           \begin{itemize}
-           \item Difficult to say.
-           \item Bookkeeping fields is making nodes bigger?
-           \item Unoptimaly rounding and size management? 
-           \item It should perform the same had it performed node
-           allocation internally.
-           \item {\color{alertc}This is unacceptable behaviour on many systems.}
-           \end{itemize}
-         \end{block}
-    %    \texttt{std::set}
-    %    \begin{center}
-    %        \includegraphics[scale=0.6]{fig/set_bench.pdf} \\
-    %    \end{center}
-    \end{column}
-
-\end{columns}
 \end{frame}
 
 %____________________________________________________________
