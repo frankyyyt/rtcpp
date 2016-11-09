@@ -871,19 +871,14 @@ struct allocator_traits {
 {Containers that perform both {\it node} and {\it array} allocation}
 {Exposing the node type}
 
-\begin{lstlisting}
-rt::node_allocator<int> alloc;
+Some containers have to rebind their allocators twice.
+But the rebind type are not exposed to the user.
+Possible solution: Look the implentation and find
+out one type is pointer and one is node. Or expose
+the node type.
 
-// Performs both.
-rt::unordered_set<int> obj(alloc);
-\end{lstlisting}
-
-\end{frame}
-
-%____________________________________________________________
-\begin{frame}[fragile]
-{Nodes independent of the containers?}
-{Exposing the node type}
+Implementations can now specialize their allocator
+to the node type. But ...
 
 \begin{lstlisting}
 // Cannot always hold for general A1 nd A2.
@@ -894,16 +889,22 @@ static_assert( std::is_same< std::list<T, A1>::node_type
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Exposing the node type}{Node type interface}
+\begin{frame}[fragile]
+{Node type interface}
+{Offering a rebind function}
 
 \begin{lstlisting}
 template <class T, class Ptr>
 struct node_type {
   using value_type = T;
-  using pointer = // Usually taken from std::pointer_traits<Ptr>
+
+  using link_type = typename std::pointer_traits<Ptr>::template
+    rebind<node<T, Ptr>>;
+
   template<class U, class K>
   struct rebind { using other = node_type<U , K>; };
-  // ... implementation details
+  ...
+};
 \end{lstlisting}
 
 \end{frame}
@@ -1238,7 +1239,7 @@ they effectively throw away half of the cache.}  \hfill (Donald Knuth)
 \begin{column}{0.5\textwidth}
 
 \begin{lstlisting}
-struct node1 {     // sizeof (node2) = 4
+struct node1 {     // sizeof (node2) = 2
   std::uint8_t n;  // 256 elements.
   std::uint8_t v;  // [0, 256]
 };
@@ -1263,6 +1264,30 @@ struct node4 {     // sizeof (node4) = 16
 \end{column}
 \end{columns}
 
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}
+{Speedup due to data locality}
+{}
+\begin{columns}
+
+    \begin{column}{0.47\textwidth}
+        \begin{center}
+            \includegraphics[scale=0.7]{fig/rtset_bench.pdf} \\
+        \end{center}
+    \end{column}
+
+    \begin{column}{0.47\textwidth}
+         \begin{block}{Why so much speed up?}
+           \begin{itemize}
+           \item Same data structure.
+           \item But times more data in the cache.
+           \end{itemize}
+         \end{block}
+    \end{column}
+
+\end{columns}
 \end{frame}
 
 %____________________________________________________________
