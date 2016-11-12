@@ -702,8 +702,8 @@ are unnecessary on node allocation
            \item Difficult to say.
            \item Bookkeeping fields is making nodes bigger?
            \item Unoptimaly rounding and size management? 
-           \item Should perform the same node
-           allocation is used internally.
+           \item Should perform the same had node
+           allocation been used internally.
            \item {\color{alertc}This is unacceptable behaviour on many systems.}
            \end{itemize}
          \end{block}
@@ -871,65 +871,154 @@ struct allocator_traits {
 {Containers that perform both {\it node} and {\it array} allocation}
 {Exposing the node type}
 
-Some containers have to rebind their allocators twice.
-But the rebind type are not exposed to the user.
-Possible solution: Look the implentation and find
-out one type is pointer and one is node. Or expose
-the node type.
-
-Implementations can now specialize their allocator
-to the node type. But ...
-
+\begin{columns}
+\begin{column}[t]{0.47\textwidth}
+\begin{block}{Problem}
+\end{block}
 \begin{lstlisting}
-// Cannot always hold for general A1 nd A2.
-static_assert( std::is_same< std::list<T, A1>::node_type
-                           , std::list<T, A2>::node_type>, "");
+// Allocator instance does not know which
+// type it will serve.
+my_alloc<int> alloc;
+
+// Rebinds to two further allocator types
+// and construct them from alloc.
+std::unordered_set< int, ...
+                  , my_alloc<int>> obj(alloc);
+
+// Triggers both node and array allocation.
+// Which allocator will have n = 1 is unknown.
+obj.insert(10);
 \end{lstlisting}
+\end{column}
+\begin{column}[t]{0.47\textwidth}
+\begin{block}{Fix}
+\end{block}
+\begin{lstlisting}
+using node_type =
+    std::unordered_set<int>::node_type
+
+// Allocator knows the node type and offers
+// only allocate_node().
+my_alloc<int, node_type> alloc;
+
+std::unordered_set<int> obj(alloc);
+
+// No need of testing n == 1. 
+obj.insert(10);
+\end{lstlisting}
+\end{column}
+\end{columns}
 
 \end{frame}
 
 %____________________________________________________________
 \begin{frame}[fragile]
-{Node type interface}
-{Offering a rebind function}
+{The node type is not independent of the allocator}
+{Fancy pointers}
 
+\begin{columns}
+\begin{column}[t]{0.47\textwidth}
+\begin{block}{Typical node}
+Node customization of the pointer type.
+\end{block}
 \begin{lstlisting}
-template <class T, class Ptr>
-struct node_type {
-  using value_type = T;
-
-  using link_type = typename std::pointer_traits<Ptr>::template
-    rebind<node<T, Ptr>>;
-
-  template<class U, class K>
-  struct rebind { using other = node_type<U , K>; };
-  ...
+template <class T>
+struct node {
+  T info;
+  node* next;
 };
 \end{lstlisting}
-
+\end{column}
+\begin{column}[t]{0.47\textwidth}
+\begin{block}{STL node}
+Allows customization of the pointer type.
+\end{block}
+\begin{lstlisting}
+template < class T
+         , class Ptr // Defined by the allocator
+         >
+struct node {
+  T info;
+  using pointer = typename
+      std::pointer_traits<Ptr>::template
+          rebind<node<T, Ptr>>;
+  pointer next;
+};
+\end{lstlisting}
+\end{column}
+\end{columns}
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Example}
+\begin{frame}[fragile]
+{We need to rebind the node type}
+{Node interface}
+
+\begin{block}{Recursive problem}
+\begin{itemize}
+\item We do not know the node type until we define the container.
+\item We need the allocator type to define the container.
+\item The allocator type need the node type.
+\item {\color{alertc}Solution: Offer a rebind function.}
+\end{itemize}
+\end{block}
+
+\begin{columns}
+\begin{column}[t]{0.47\textwidth}
+\begin{lstlisting}
+template <class T, class Ptr>
+struct node {
+  ...
+  template<class U, class K>
+  struct rebind { using other = node<U , K>; };
+};
+
+\end{lstlisting}
+
+\end{column}
+
+\begin{column}[t]{0.47\textwidth}
+\begin{lstlisting}
+// Gets the node type.
+using node_type = typename
+    std::list<int>::node_type.
+
+// Allocator rebinds the node type internally
+// to whatever pointer type it uses.
+my_alloc<int, node_type> alloc;
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]
+{Simple use case}
 
 \begin{lstlisting}
-using alloc_t = rt::node_allocator<int>;
-using node_type = typename std::list<int, alloc_t>::node_type;
-
-// Buffer for 100 elements.
+// We know node types and can put them in the stack.
+// Uses only as much memory as needed.
 std::array<char, 100 * sizeof (node_type)> buffer = {{}};
-alloc_t alloc(buffer);
 
-std::list<int, alloc_t> l1(alloc);
+// Allocator with very simple implementation.
+alloc_type alloc(buffer);
+
+std::list<int, alloc_type> l1(alloc);
+
 // Inserts elements. Allocation and deallocation implemented
 // with 6 lines of code.
 l1 = {27, 1, 60};
-...
 \end{lstlisting}
-
+\begin{block}{Let us move to more interesting use cases}
+\end{block}
 \end{frame}
 
 \subsection{Traversal without pointer chasing}
+
+\begin{frame}{Outline}
+   \tableofcontents[currentsection,currentsubsection]
+   %\tableofcontents
+\end{frame}
 
 %____________________________________________________________
 \begin{frame}[fragile]{Linked list travesal illustration}
