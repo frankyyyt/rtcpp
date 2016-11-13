@@ -901,7 +901,9 @@ using node_type =
 // only allocate_node().
 my_alloc<int, node_type> alloc;
 
-std::unordered_set<int> obj(alloc);
+std::unordered_set< int
+                  , my_alloc<int, node_type>
+                  > obj(alloc);
 
 // No need of testing n == 1. 
 obj.insert(10);
@@ -919,7 +921,7 @@ obj.insert(10);
 \begin{columns}
 \begin{column}[t]{0.47\textwidth}
 \begin{block}{Typical node}
-Node customization of the pointer type.
+No customization of the pointer type.
 \end{block}
 \begin{lstlisting}
 template <class T>
@@ -958,7 +960,7 @@ struct node {
 \begin{itemize}
 \item We do not know the node type until we define the container.
 \item We need the allocator type to define the container.
-\item The allocator type need the node type.
+\item The allocator type needs the node type.
 \item {\color{alertc}Solution: Offer a rebind function.}
 \end{itemize}
 \end{block}
@@ -966,6 +968,8 @@ struct node {
 \begin{columns}
 \begin{column}[t]{0.47\textwidth}
 \begin{lstlisting}
+// Rebinding enables changing the node
+// pointer type.
 template <class T, class Ptr>
 struct node {
   ...
@@ -979,11 +983,11 @@ struct node {
 
 \begin{column}[t]{0.47\textwidth}
 \begin{lstlisting}
-// Gets the node type.
+// Gets the node type with any allocator.
 using node_type = typename
     std::list<int>::node_type.
 
-// Allocator rebinds the node type internally
+// Allocator rebinds the node type internally.
 // to whatever pointer type it uses.
 my_alloc<int, node_type> alloc;
 \end{lstlisting}
@@ -994,23 +998,39 @@ my_alloc<int, node_type> alloc;
 %____________________________________________________________
 \begin{frame}[fragile]
 {Simple use case}
+{Containers with small number of elements}
 
+\begin{columns}
+\begin{column}[t]{0.47\textwidth}
 \begin{lstlisting}
-// We know node types and can put them in the stack.
-// Uses only as much memory as needed.
-std::array<char, 100 * sizeof (node_type)> buffer = {{}};
+std::array< char
+          , 100 * sizeof (node_type)
+          > buffer = {{}};
 
 // Allocator with very simple implementation.
-alloc_type alloc(buffer);
+alloc_type<int, node_type> alloc(buffer);
 
-std::list<int, alloc_type> l1(alloc);
+std::list< int
+         , alloc_type<int, node_type>
+         > l(alloc);
 
-// Inserts elements. Allocation and deallocation implemented
+// Allocation and deallocation implemented
 // with 6 lines of code.
-l1 = {27, 1, 60};
+l = {27, 1, 60};
 \end{lstlisting}
-\begin{block}{Let us move to more interesting use cases}
+\end{column}
+\begin{column}[t]{0.47\textwidth}
+\begin{block}{Thoughts}
+\begin{itemize}
+\item Node sizes are known at compile time.
+\item Store them in the stack.
+\item Minimum amount of memory needed for $n$ elements.
+\item Never touches the heap.
+\item {\color{alertc}Let us move to more interesting usages.}
+\end{itemize}
 \end{block}
+\end{column}
+\end{columns}
 \end{frame}
 
 \subsection{Traversal without pointer chasing}
@@ -1196,28 +1216,71 @@ l1 = {27, 1, 60};
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile]{Alternative to pointer chasing}
-\begin{block} {Code example}
-\begin{itemize}
-\item User provides a function to mark the \texttt{value\_type}
-as {\it in use}.
-\item \texttt{allocate(1)} and \texttt{deallocate(1)} calls that 
-function.
-\item The node type must obviously be exposed.
-\end{itemize}
-\end{block}
-
+\begin{frame}[fragile]
+{Alternative to pointer chasing}
+\begin{columns}
+\begin{column}{0.47\textwidth}
 \begin{lstlisting}
-using node_type = std::list<int>::node_type;
-// Allocator configured to allocator chuncks of 256
-// elements at once.
-using alloc_type = node_allocator<node_type, 256>;
-std::list<int, node_allocator<>> l = {1, 2, 3, 4, 5};
+// Allocator configured to chuncks of 256
+// elements.
+using alloc_type =
+    node_allocator<node_type, 8>;
+
+std::list<int, alloc_type> l = {1, 2, 3};
+
 auto alloc = l.get_allocator();
-std::copy(std::begin(alloc), std::end(alloc),
- std::ostream_iterator<node_type>(std::cout, " "))
+
+const auto n =
+    std::copy_if( std::begin(alloc)
+                , std::end(alloc),
+                , in_use());
+// n = 3
 \end{lstlisting}
 
+\end{column}
+\begin{column}{0.47\textwidth}
+\begin{block} {Code example}
+\begin{itemize}
+\item User provided function \texttt{in\_use}
+\item Allocator calls it to mark allocated memory.
+\item \texttt{std::count\_if} traverses the underlying buffer
+ignoring unused nodes.
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]
+{Benchmarking traversal}
+\begin{columns}
+\begin{column}{0.47\textwidth}
+
+\begin{tikzpicture}[scale=1.0]
+\node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.00cm  ,minimum width=1.0cm]
+(node0) at (0cm,0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=0.43cm  ,minimum width=1.0cm]
+(node1) at (1cm,0.0cm) {};
+
+\node[] at (0cm,4.5cm) {\color{black} Traversal time};
+\filldraw[nodecontc] (0cm,4.0cm) circle (0.08cm) node[right]
+{\color{black} Pointer chasing};
+\filldraw[bothcontc] (0cm,3.5cm) circle (0.08cm) node[right]
+{\color{black} Sequential};
+
+\end{tikzpicture}
+
+\end{column}
+
+\begin{column}{0.47\textwidth}
+\begin{block} {Code example}
+\begin{itemize}
+\item Full allocated buffer.
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
 \end{frame}
 
 \subsection{Reducing the pointer overhead in nodes}
