@@ -1221,7 +1221,7 @@ l = {27, 1, 60};
 \begin{columns}
 \begin{column}{0.47\textwidth}
 \begin{lstlisting}
-// Allocator configured to chuncks of 256
+// Allocator configured to chunks of 8
 // elements.
 using alloc_type =
     node_allocator<node_type, 8>;
@@ -1231,9 +1231,9 @@ std::list<int, alloc_type> l = {1, 2, 3};
 auto alloc = l.get_allocator();
 
 const auto n =
-    std::copy_if( std::begin(alloc)
-                , std::end(alloc),
-                , in_use());
+    std::count_if( std::begin(alloc)
+                 , std::end(alloc),
+                 , in_use());
 // n = 3
 \end{lstlisting}
 
@@ -1253,20 +1253,20 @@ ignoring unused nodes.
 
 %____________________________________________________________
 \begin{frame}[fragile]
-{Benchmarking traversal}
+{Benchmark: pointer chasing vs. sequential}
 \begin{columns}
 \begin{column}{0.47\textwidth}
 
 \begin{tikzpicture}[scale=1.0]
-\node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.00cm  ,minimum width=1.0cm]
+\node[anchor=south, draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=7.00cm  ,minimum width=1.0cm]
 (node0) at (0cm,0cm) {};
-\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=0.43cm  ,minimum width=1.0cm]
+\node[anchor=south,draw,node distance=0cm, fill=alertc,shape=rectangle,minimum height=0.43cm  ,minimum width=1.0cm]
 (node1) at (1cm,0.0cm) {};
 
-\node[] at (0cm,4.5cm) {\color{black} Traversal time};
-\filldraw[nodecontc] (0cm,4.0cm) circle (0.08cm) node[right]
+\node[] at (2cm,4.5cm) {\color{black} Traversal time};
+\filldraw[memC] (2cm,4.0cm) circle (0.08cm) node[right]
 {\color{black} Pointer chasing};
-\filldraw[bothcontc] (0cm,3.5cm) circle (0.08cm) node[right]
+\filldraw[alertc] (2cm,3.5cm) circle (0.08cm) node[right]
 {\color{black} Sequential};
 
 \end{tikzpicture}
@@ -1274,9 +1274,11 @@ ignoring unused nodes.
 \end{column}
 
 \begin{column}{0.47\textwidth}
-\begin{block} {Code example}
+\begin{block} {Benchmark}
 \begin{itemize}
 \item Full allocated buffer.
+\item Deallocating lots of elements would eventually
+make both perform the same.
 \end{itemize}
 \end{block}
 \end{column}
@@ -1307,67 +1309,11 @@ they effectively throw away half of the cache.}  \hfill (Donald Knuth)
 \end{frame}
 
 
-\begin{frame}[fragile]{Nodes and pointers}
+\begin{frame}[fragile]
+{Pointers are a big overhead for nodes with small sizes}
+{Nodes sizes if indexing were possible}
 \begin{columns}
 \begin{column}{0.5\textwidth}
-
-\begin{lstlisting}
-          struct node {
-            node* next;
-            int info;
-          };
-\end{lstlisting}
-\end{column}
-\begin{column}{0.5\textwidth}
-\begin{block}{Thoughts}
-\begin{itemize}
-\item On a 64 bits system the size of the node on the left is 16 bytes.
-\item 4 bytes by are wasted on padding.
-\item Using 32 bits pointers may not be an option.
-\item Even if it were, for only hundres of elements
-8 or 16 bits are enough to address the elements.
-\end{itemize}
-\end{block}
-
-\end{column}
-\end{columns}
-
-\end{frame}
-
-%____________________________________________________________
-\begin{frame}[fragile]{What if I could address elements with integers}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-%\begin{enumerate}
-%\item<alert@1> $N \le 256$ with $T \in [0, 256]$
-%\item<alert@2> $N \le 2^{16}$ with $T \in [0, 2^{16}]$
-%\item<alert@3> $N \le 2^{32}$ with $T \in [0, 2^{32}]$
-%\item<alert@4> $N \le 2^{64}$ with $T \in [0, 2^{64}]$
-%\end{enumerate}
-
-%Node sizes of a \texttt{std::forwar\_list<T>}.
-
-%\begin{tikzpicture}[scale=1.0, rounded corners=0.8mm]
-%
-%   \uncover<1-> {
-%      \mbu (nextu) at (0.25, 6) {N};
-%      \ebu (valueu) [right=of nextu] {V};
-%   }
-%
-%   \uncover<2-> {
-%      \mbd (nextd) at (0.5,4) {Next};
-%      \ebd (valued) [right=of nextd] {Value};
-%   }
-%
-%   \uncover<3-> {
-%      \mbq (nextq) at (1,2) {Next};
-%      \ebq (valueq) [right=of nextq] {Value};
-%   }
-%   \uncover<4-> {
-%      \mbo (nexto) at (2,0) {Next};
-%      \ebo (valueo) [right=of nexto] {Value};
-%   }
-%\end{tikzpicture}
 
 \begin{tikzpicture}[scale=1.0]
 \node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.0cm  ,minimum width=1.0cm]
@@ -1379,39 +1325,35 @@ they effectively throw away half of the cache.}  \hfill (Donald Knuth)
 \node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
 (node3) at (3cm,0.0cm) {};
 
-\node[] at (2cm,6.0cm) {\color{black} Size in bytes};
-\filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} 16};
-\filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black}8};
-\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black}4};
-\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black}1};
+\node[] at (2cm,6.0cm)
+{\color{black} Node sizes};
+\filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} \texttt{pointer}};
+\filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint32\_t}};
+\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint16\_t}};
+\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
 
 \end{tikzpicture}
 
 \end{column}
 \begin{column}{0.5\textwidth}
-
 \begin{lstlisting}
-struct node1 {     // sizeof (node2) = 2
-  std::uint8_t n;  // 256 elements.
-  std::uint8_t v;  // [0, 256]
+struct node {
+  // Uses an index instead of pointer.
+  std::uintXY_t next;
+  // Small value type accurs pretty often.
+  std::uintXY_t info;
 };
-
-struct node2 {     // sizeof (node2) = 4
-  std::uint16_t n; // 2^16 elements.
-  std::uint16_t v; // [0, 2^16]
-};
-
-struct node3 {     // sizeof (node3) = 8
-  std::uint32_t n; // 2^32 elements.
-  std::uint32_t v; // [0, 2^32]
-};
-
-struct node4 {     // sizeof (node4) = 16
-  node* next;      // Full address space
-  std::size_t v;
-};
-
 \end{lstlisting}
+\begin{block}{Thoughts}
+\begin{itemize}
+\item On a 64 bits system the struct size is 16 bytes.
+\item Pretty offten bytes by are wasted on padding.
+\item Using 32 bits pointers may not be an option.
+\item Even if it were, 8 or 16 bits could be enough.
+\item In the general case however we cannot reduce
+the {value\_type} at will.
+\end{itemize}
+\end{block}
 
 \end{column}
 \end{columns}
@@ -1419,9 +1361,63 @@ struct node4 {     // sizeof (node4) = 16
 \end{frame}
 
 %____________________________________________________________
+%\begin{frame}[fragile]{What if I could address elements with integers}
+%\begin{columns}
+%\begin{column}{0.5\textwidth}
+%
+%\begin{tikzpicture}[scale=1.0]
+%\node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.0cm  ,minimum width=1.0cm]
+%(node0) at (0cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=3.5cm  ,minimum width=1.0cm]
+%(node1) at (1cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=1.75cm  ,minimum width=1.0cm]
+%(node2) at (2cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
+%(node3) at (3cm,0.0cm) {};
+%
+%\node[] at (2cm,6.0cm) {\color{black} Size in bytes};
+%\filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} 16};
+%\filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black}8};
+%\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black}4};
+%\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black}1};
+%
+%\end{tikzpicture}
+%
+%\end{column}
+%\begin{column}{0.5\textwidth}
+%
+%\begin{lstlisting}
+%struct node1 {     // sizeof (node2) = 2
+%  std::uint8_t n;  // 256 elements.
+%  std::uint8_t v;  // [0, 256]
+%};
+%
+%struct node2 {     // sizeof (node2) = 4
+%  std::uint16_t n; // 2^16 elements.
+%  std::uint16_t v; // [0, 2^16]
+%};
+%
+%struct node3 {     // sizeof (node3) = 8
+%  std::uint32_t n; // 2^32 elements.
+%  std::uint32_t v; // [0, 2^32]
+%};
+%
+%struct node4 {     // sizeof (node4) = 16
+%  node* next;      // Full address space
+%  std::size_t v;
+%};
+%
+%\end{lstlisting}
+%
+%\end{column}
+%\end{columns}
+%
+%\end{frame}
+
+%____________________________________________________________
 \begin{frame}
 {Speedup due to data locality}
-{}
+%{}
 \begin{columns}
 
     \begin{column}{0.47\textwidth}
@@ -1434,12 +1430,82 @@ struct node4 {     // sizeof (node4) = 16
          \begin{block}{Why so much speed up?}
            \begin{itemize}
            \item Same data structure.
-           \item But times more data in the cache.
+           \item But 4 times more data in the cache.
+           \item Uses \texttt{std::uint16\_t} as index
+           and \texttt{short} as \texttt{value\_type}
            \end{itemize}
          \end{block}
     \end{column}
 
 \end{columns}
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]
+{How to achieve this without breaking code}
+{Back to fancy pointers}
+
+\begin{columns}
+\begin{column}{0.60\textwidth}
+\begin{lstlisting}
+template<class Alloc>
+struct allocator_traits {
+  // Equal to Alloc::link_type if present,
+  // Alloc::pointer otherwise. Not required to
+  // be a pointer. Nodes store a link and not a
+  // pointer.
+  using link_type = ...
+
+  // Convert a node link to a pointer.
+  pointer convert_link_to_pointer(link_type a);
+};
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.40\textwidth}
+\begin{block}{Why}
+\begin{itemize}
+\item Define a fancy pointer that detect when
+it is inside a node.
+\item Fancy pointer specialization contains
+only an index (e.g. \texttt{std::uint16\_t})
+\item Function to convert between a \texttt{link\_type}
+and \texttt{pointer}.
+\item \texttt{link\_type} equal to \texttt{pointer}
+in current cases.
+\end{itemize}
+\end{block}
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+%____________________________________________________________
+\begin{frame}[fragile]
+{How to achieve this without breaking code}
+{Back to fancy pointers}
+
+\begin{columns}
+\begin{column}{0.47\textwidth}
+\begin{block}{Summary}
+\begin{itemize}
+\item Incorporate node allocation.
+\item Alternative to pointer chasing.
+\item Reduce pointer size overhead in nodes.
+\item Make STL containers more flexible reduce
+the need of new containers to handle corner cases.
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.47\textwidth}
+\begin{block}{Acknoledgements}
+General people in \texttt{std-proposal} and \texttt{WG21-SG14}.
+Special thanks to Ion Gazt\~ naga for important suggestions.
+\end{block}
+\end{column}
+\end{columns}
+
 \end{frame}
 
 %____________________________________________________________
