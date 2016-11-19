@@ -863,7 +863,7 @@ struct allocator_traits {
 \begin{itemize}
 \item No size management.
 \item Well defined behaviour.
-\item Names reflect intension.
+\item Names reflect intention.
 \item {\color{alertc}No surprises}
 \end{itemize}
 \end{block}
@@ -1332,7 +1332,55 @@ nodes, they can store indexes.
 %_____________________________________________________________
 \begin{frame}[fragile]
 {Pointers are a big overhead on nodes with small sizes}
-{Node sizes if indexing were supported}
+{Nodes with \texttt{std::string}}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+
+\begin{tikzpicture}[scale=1.0]
+\node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.0cm  ,minimum width=1.0cm]
+(node0) at (0cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=4.66cm  ,minimum width=1.0cm]
+(node1) at (1cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=2.33cm  ,minimum width=1.0cm]
+%(node2) at (2cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
+%(node3) at (3cm,0.0cm) {};
+
+\node[] at (2cm,6.0cm)
+{\color{black} Node sizes};
+\filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} \texttt{pointer}};
+\filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint32\_t}};
+%\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint16\_t}};
+%\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
+
+\end{tikzpicture}
+
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}
+// Typical node
+struct node {
+  link_type prev;
+  link_type next;
+  std::string info;
+};
+\end{lstlisting}
+\begin{block}{Thoughts}
+Reducing further to \texttt{std::uint16\_t} won't
+make any difference
+since the spared space will be wasted on padding due
+to \texttt{std::string} alignment.
+\end{block}
+
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%_____________________________________________________________
+\begin{frame}[fragile]
+{Pointers are a big overhead on nodes with small sizes}
+{Node with \texttt{int}}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 
@@ -1379,53 +1427,54 @@ struct node {
 
 \end{frame}
 
+
 %_____________________________________________________________
 \begin{frame}[fragile]
 {Pointers are a big overhead on nodes with small sizes}
-{Nodes sizes if indexing were possible}
+{Node with \texttt{short}}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 
 \begin{tikzpicture}[scale=1.0]
 \node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.0cm  ,minimum width=1.0cm]
 (node0) at (0cm,0.0cm) {};
-\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=4.66cm  ,minimum width=1.0cm]
+\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=3.5cm  ,minimum width=1.0cm]
 (node1) at (1cm,0.0cm) {};
-%\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=2.33cm  ,minimum width=1.0cm]
-%(node2) at (2cm,0.0cm) {};
-%\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
-%(node3) at (3cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=1.75cm  ,minimum width=1.0cm]
+(node2) at (2cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=1.167cm  ,minimum width=1.0cm]
+(node3) at (3cm,0.0cm) {};
 
 \node[] at (2cm,6.0cm)
 {\color{black} Node sizes};
 \filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} \texttt{pointer}};
 \filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint32\_t}};
-%\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint16\_t}};
-%\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
+\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint16\_t}};
+\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
 
 \end{tikzpicture}
 
 \end{column}
 \begin{column}{0.5\textwidth}
 \begin{lstlisting}
-// Typical node
+// Typical node. Often 16 bits integers are
+// enough but not used in practice since spared
+// space is wasted anyway due to padding.
 struct node {
   link_type prev;
   link_type next;
-  std::string info;
+  short info;
 };
 \end{lstlisting}
-%\begin{block}{Thoughts}
-%\begin{itemize}
-%\item Even if it were, 8 or 16 bits could be enough.
-%\end{itemize}
-%\end{block}
+\begin{block}{Thoughts}
+Pretty useful if the range of values $[0, 65536]$
+is enough.
+\end{block}
 
 \end{column}
 \end{columns}
 
 \end{frame}
-
 %_____________________________________________________________
 \begin{frame}[fragile]
 {Pointers are a big overhead on nodes with small sizes}
