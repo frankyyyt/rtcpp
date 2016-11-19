@@ -171,17 +171,19 @@
   % or whatever (possibly just delete it)
 }
 
-\title[Node allocation in STL containers] {Node allocation in STL containers}
+\title[Node allocation in the STL]
+{Node allocation in the STL}
 
-\subtitle[Improving the memory menagement] {Improving the memory menagement}
+\subtitle[Improving the memory usage]
+{Improving the memory usage}
 
 \author[Marcelo Zimbres] {Marcelo Zimbres}
 
-\institute[Presentation to WG21-SG14]
+\institute[Physicist]
 {
 }
 
-\date[Magstadt - Germany] {}
+\date[Magstadt] {}
 
 \subject{Node allocation 3}
 
@@ -244,8 +246,8 @@
 \begin{itemize}
     \item Provide building blocks for memory allocation.
     \item Profit from static type information.
-    \item Reduce pointer overhead in nodes.
     \item Alternative to pointer chasing on traversal.
+    \item Reduce pointer overhead in nodes.
     \item Allow fine tunning and reduce complexity.
     \item Reduce centralization.
 \end{itemize}
@@ -258,7 +260,7 @@
 \begin{itemize}
     \item Embedded developers.
     \item Resource constrained systems.
-    \item High performace.
+    \item High performance.
     \item 24/7 availability.
 \end{itemize}
 \end{block}
@@ -291,10 +293,10 @@
 %\vspace{0.5cm}
 \begin{lstlisting}
 // Allocation in the data segment.
-static int a; // Deallocation at programm exit
+static int a; // Deallocation at program exit
 
 // Allocation in the function stack frame.
-int b; // Deallocation upon funtion return.
+int b; // Deallocation upon function return.
 
 // Dynamic allocation on the heap.
 auto* p = new int;
@@ -329,7 +331,8 @@ alloc.deallocate(p, 1);
 
 %____________________________________________________________
 \begin{frame}[fragile]
-{Definitions (in the context of STL containers)}
+{Terminology used along this presentation}
+{Node vs. array allocation}
 \begin{columns}
 \begin{column}{0.45\textwidth}
 
@@ -432,48 +435,11 @@ auto* p4 = alloc.allocate(16);
 \end{frame}
 
 %____________________________________________________________
-\begin{frame}[fragile]
-{Why the current allocator interface is suboptimal}
-{A closer look at allocators}
-\begin{columns}
-\begin{column}{0.35\textwidth}
-
-%\begin{block} {\texttt{allocate(n)}}
-%\end{block}
-\begin{lstlisting}
-pointer allocate(size_type n, ...);
-
-
-
-void deallocate( pointer p
-               , size_type n);
-\end{lstlisting}
-
-\end{column}
-
-\begin{column}{0.55\textwidth}
-\begin{block} {Allocators and size management}
-\begin{itemize}
-\item Allocation size is a runtime variable.
-\item Node allocation is however known at compile time.
-\item Blesses array allocation. Unaware of node allocation.
-\item No simple implementation. Has to handle any sizes.
-\item Leads to overly complex strategies.
-\item Leads to overheads like bookkeeping information.
-\item Encourages centralization.
-\end{itemize}
-
-\end{block}
-
-\end{column}
-\end{columns}
-\end{frame}
-%____________________________________________________________
 \begin{frame}[t]{Node allocation illustration}
 {How it is implemented in practice: pooling}
 \begin{block} {Procedure}
 \begin{enumerate}
-\item<alert@1> Get a continuos block of memory with enough space for $n$ nodes.
+\item<alert@1> Get a continuous block of memory with enough space for $n$ nodes.
 \item<alert@2> Divide in blocks, link them as a stack and repeat if ever run out of memory.
 \item<alert@6> After some allocations and deallocations.
 \end{enumerate}
@@ -530,7 +496,7 @@ void deallocate( pointer p
       \marrow (node5.north) to [bend right=-25] (node6.north);
 
       \node[draw, node distance=0cm, fill=memC, shape=rectangle,minimum height=0.5cm  ,minimum width=14.0cm  ,inner sep=1ex]
-      (block) at (1cm, 2cm) {Run out of memory, get another block. };
+      (block) at (1cm, 2cm) {Run out of memory? Get another block. };
    }
 
    \uncover<5> {
@@ -608,6 +574,43 @@ void deallocate( pointer p
 
 %____________________________________________________________
 \begin{frame}[fragile]
+{Why the current allocator interface is suboptimal}
+{A closer look at allocators}
+\begin{columns}
+\begin{column}{0.35\textwidth}
+
+%\begin{block} {\texttt{allocate(n)}}
+%\end{block}
+\begin{lstlisting}
+pointer allocate(size_type n, ...);
+
+
+
+void deallocate( pointer p
+               , size_type n);
+\end{lstlisting}
+
+\end{column}
+
+\begin{column}{0.55\textwidth}
+\begin{block} {Allocators and size management}
+\begin{itemize}
+\item Allocation size is a runtime variable.
+\item Node allocation is however known at compile time.
+\item Blesses array allocation. Unaware of node allocation.
+\item No simple implementation. Has to handle any sizes.
+\item Leads to overly complex strategies.
+\item Leads to overheads like bookkeeping information.
+\item Encourages centralization.
+\end{itemize}
+
+\end{block}
+
+\end{column}
+\end{columns}
+\end{frame}
+%____________________________________________________________
+\begin{frame}[fragile]
 {Simplicity matters}
 {How node allocation is implemented}
 
@@ -666,11 +669,11 @@ node_allocator< int
 \item Small sizes: Many pre-allocated blocks.
 \item Large sizes: Best fit, rounding on memory pages.
 \item Avoid fragmentation. Improve locality.
-\item Avoid serialization on cuncurrent calls.
+\item Avoid serialization on concurrent calls.
 \item Thread local buffers.
 \item Bookkeeping information on blocks.
 \item Rounding allocation sizes to fit pre-allocated buffers.
-\item Surprizing (upsetting) behaviour.
+\item Surprising (upsetting) behaviour.
 \end{itemize}
 \end{block}
 \end{column}
@@ -681,7 +684,7 @@ node_allocator< int
 \item Which strategy is better for my use case?
 \item Bookkeeping information, rounding, size management
 are unnecessary on node allocation
-\item Unclear behaviour for long running programms.
+\item Unclear behaviour for long running programs.
 \item Compile time information should not be thrown away.
 \item<alert@1> Node allocation is a building block.
 \end{itemize}
@@ -709,7 +712,7 @@ are unnecessary on node allocation
            \begin{itemize}
            \item Difficult to say.
            \item Bookkeeping fields is making nodes bigger?
-           \item Unoptimaly rounding and size management? 
+           \item Suboptimal rounding and size management? 
            \item Should perform the same had node
            allocation been used internally.
            \item Scenario: Messy heap.
@@ -730,7 +733,7 @@ are unnecessary on node allocation
 
 %___________________________________________________________________
 \begin{frame}[t]{Pools of blocks with different sizes}
-\begin{block}{Should not need this if compile time information had been used.}
+\begin{block}{Shouldn't need this if compile time information had been used.}
 \begin{itemize}
 \item Many pre-allocated sizes. Possibly thread local.
 \item Small sizes are rounded to one of these.
@@ -804,7 +807,7 @@ are unnecessary on node allocation
 \begin{column}{0.80\textwidth}
 \begin{block}{Node allocation is a building block}
   I've been arguing that node allocation is an important concept and deserves
-  proper support in the STL. Now lets us see how to do it and what further
+  proper support in the STL. Now lets us see how we can get it in the STL and what further
   benefits it brings.
 \end{block}
 \end{column}
@@ -833,7 +836,7 @@ are unnecessary on node allocation
 %____________________________________________________________
 \begin{frame}[fragile]
 {Node allocation support}
-{Two new member functions and one typedef in \texttt{std::allocator\_traits}}
+{Two new member functions in \texttt{std::allocator\_traits}}
 
 \begin{columns}
 \begin{column}{0.60\textwidth}
@@ -858,9 +861,9 @@ struct allocator_traits {
 \begin{column}{0.40\textwidth}
 \begin{block}{Why}
 \begin{itemize}
-\item No size menagement.
+\item No size management.
 \item Well defined behaviour.
-\item Names reflects intension.
+\item Names reflect intension.
 \item {\color{alertc}No surprises}
 \end{itemize}
 \end{block}
@@ -904,14 +907,15 @@ using node_type =
     std::unordered_set<int>::node_type
 
 // Allocator knows the node type and offers
-// only allocate_node().
+// only allocate_node() for node allocator.
+// (i.e. disables allocate(n)).
 my_alloc<int, node_type> alloc;
 
 std::unordered_set< int
                   , my_alloc<int, node_type>
                   > obj(alloc);
 
-// No need of testing n == 1. 
+// No need for testing n == 1. 
 obj.insert(10);
 \end{lstlisting}
 \end{column}
@@ -962,11 +966,11 @@ struct node {
 {We need to rebind the node type}
 {Node interface}
 
-\begin{block}{Recursive problem}
+\begin{block}{Circular type definition}
 \begin{itemize}
-\item The node type is unknown until the container type is known.
-\item The allocator type is needed to define the container.
-\item The allocator type needs the node type to be defined.
+\item The node is unknown until the container is defined.
+\item The container is unknown until the allocator is defined.
+\item The allocator unknown until the node is be defined.
 \item {\color{alertc}Solution: Offer a rebind function.}
 \end{itemize}
 \end{block}
@@ -996,7 +1000,7 @@ using node_type = typename
 
 // Allocator rebinds the node type internally.
 // to whatever pointer type it uses.
-my_alloc<int, node_type> alloc;
+node_allocator<int, node_type, 256> alloc;
 \end{lstlisting}
 \end{column}
 \end{columns}
@@ -1018,8 +1022,8 @@ std::aligned_storage< sizeof(node_type)
 node_allocator< int, node_type
               , 64> alloc(buffer);
 
-std::list< int , alloc_type<int, node_type>
-         > l(alloc);
+std::list<int , node_allocator<...>
+    > l(alloc);
 
 // Allocation and deallocation implemented
 // with 6 lines of code.
@@ -1169,7 +1173,7 @@ l = {27, 1, 60};
 
 %____________________________________________________________
 \begin{frame}[fragile]
-{Benchmark: pointer chasing vs. sequential}
+{Benchmark: pointer chasing vs. sequential traversal}
 \begin{columns}
 \begin{column}{0.47\textwidth}
 
@@ -1284,8 +1288,8 @@ const auto n =
 \begin{column}{0.47\textwidth}
 \begin{block} {Code example}
 \begin{itemize}
-\item Contructor marks the memory block in use.
-\item Destructors mark them free.
+\item Constructor marks the memory block in use.
+\item Destructor mark them free.
 \item \texttt{std::count\_if} traverses the underlying buffer
 ignoring unused nodes.
 \end{itemize}
@@ -1325,11 +1329,10 @@ nodes, they can store indexes.
 \end{columns}
 \end{frame}
 
-
 %_____________________________________________________________
 \begin{frame}[fragile]
 {Pointers are a big overhead on nodes with small sizes}
-{Nodes sizes if indexing were possible}
+{Node sizes if indexing were supported}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 
@@ -1365,9 +1368,9 @@ struct node {
 \begin{block}{Thoughts}
 \begin{itemize}
 \item On a 64 bits system the struct size is 24 bytes.
-\item Pretty offten bytes by are wasted on padding.
+\item Four bytes are wasted on padding.
 \item Using 32 bits pointers may not be an option.
-\item Even if it were, 8 or 16 bits could be enough.
+\item Even if it were, 16 bits are usually enough.
 \end{itemize}
 \end{block}
 
@@ -1554,31 +1557,30 @@ struct node {
 {Back to fancy pointers}
 
 \begin{columns}
-\begin{column}{0.60\textwidth}
+\begin{column}{0.47\textwidth}
 \begin{lstlisting}
 template<class Alloc>
 struct allocator_traits {
   // Equal to Alloc::link_type if present,
-  // Alloc::pointer otherwise. Not required to
-  // be a pointer. Nodes store a link and not a
-  // pointer.
+  // Alloc::pointer otherwise.
   using link_type = ...
 
-  // Convert a node link to a pointer.
+  // Converts a node link to a pointer.
   pointer make_ptr(link_type a);
 };
 \end{lstlisting}
 \end{column}
 
-\begin{column}{0.40\textwidth}
-\begin{block}{Why}
+\begin{column}{0.47\textwidth}
+\begin{block}{How it works}
 \begin{itemize}
-\item Define a fancy pointer that detect when
-it is inside a node.
-\item Fancy pointer specialization contains
+\item Define a fancy pointer that detects when
+it is inside a node. (Specialization for \texttt{void}
+rebinds).
+\item Specialization contains
 only an index (e.g. \texttt{std::uint16\_t})
 \item Function to convert between a \texttt{link\_type}
-and \texttt{pointer}.
+and \texttt{pointer} in the allocator.
 \item \texttt{link\_type} equal to \texttt{pointer}
 in current cases.
 \end{itemize}
@@ -1591,25 +1593,25 @@ in current cases.
 
 %____________________________________________________________
 \begin{frame}[fragile]
-{How to achieve this without breaking code}
-{Back to fancy pointers}
+{}
+{}
 
 \begin{columns}
 \begin{column}{0.47\textwidth}
 \begin{block}{Summary}
 \begin{itemize}
-\item Incorporate node allocation.
+\item Incorporate node allocation in the STL.
 \item Alternative to pointer chasing.
-\item Reduce pointer size overhead in nodes.
-\item Make STL containers more flexible reduce
-the need of new containers to handle corner cases.
+\item Reduce pointers overhead in nodes.
+\item Make STL containers more flexible.
+\item Reduce the need of new containers to handle corner cases.
 \end{itemize}
 \end{block}
 \end{column}
 \begin{column}{0.47\textwidth}
-\begin{block}{Acknoledgements}
+\begin{block}{Acknowledgements}
 \begin{itemize}
-\item \texttt{std-proposal}
+\item \texttt{std-proposals}
 \item \texttt{WG21-SG14}
 \item \texttt{ccppbrasil}
 \end{itemize}
