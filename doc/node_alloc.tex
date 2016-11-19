@@ -356,7 +356,7 @@ For allocations with varying sizes I will use the term {\bf \color{alertc} array
 \vspace{0.5cm}
 \begin{lstlisting}
 // Allocations inside std::vector have
-// increasing sizes (push_back).
+// increasing sizes (e.g. push_back).
 auto* p1 = alloc.allocate(2);
 auto* p2 = alloc.allocate(4);
 auto* p3 = alloc.allocate(8);
@@ -635,6 +635,14 @@ void deallocate_node(pointer p)
 Once you have nodes linked as a stack, allocation and
 deallocation reduces to these functions.
 \end{block}
+\begin{lstlisting}
+// Boost interface. Allows choosing the number
+// of nodes per blocks. You know its best value
+// better than malloc.
+node_allocator< int
+              , 256 // Nodes per block
+              > alloc;
+\end{lstlisting}
 \end{column}
 \end{columns}
 \end{frame}
@@ -704,6 +712,7 @@ are unnecessary on node allocation
            \item Unoptimaly rounding and size management? 
            \item Should perform the same had node
            allocation been used internally.
+           \item Scenario: Messy heap.
            \item {\color{alertc}This is unacceptable behaviour on many systems.}
            \end{itemize}
          \end{block}
@@ -721,8 +730,7 @@ are unnecessary on node allocation
 
 %___________________________________________________________________
 \begin{frame}[t]{Pools of blocks with different sizes}
-\begin{block}{Why all this if the exact sizes are available
-at compile time?}
+\begin{block}{Should not need this if compile time information had been used.}
 \begin{itemize}
 \item Many pre-allocated sizes. Possibly thread local.
 \item Small sizes are rounded to one of these.
@@ -830,15 +838,12 @@ at compile time?}
 \begin{columns}
 \begin{column}{0.60\textwidth}
 \begin{lstlisting}
+// Boost interface (thanks to Ion Gaztanaga for
+// suggesting it).
 template<class Alloc>
 struct allocator_traits {
-  // Equal to Alloc::node_allocation_only if present,
-  // std::false_type otherwise. Array allocation with
-  // allocate(n) is ruled out if it is std::true_type.
-  using node_allocation_only = std::false_type
-
   // Calls a.allocate_node() if present otherwise calls
-  // Alloc::allocate(1). Memory allocate with this
+  // Alloc::allocate(1). Memory allocated with this
   // function must be deallocated with deallocate_node.
   pointer allocate_node(Alloc& a);
 
@@ -856,7 +861,6 @@ struct allocator_traits {
 \item No size menagement.
 \item Well defined behaviour.
 \item Names reflects intension.
-\item Can prevent array allocation.
 \item {\color{alertc}No surprises}
 \end{itemize}
 \end{block}
@@ -874,6 +878,7 @@ struct allocator_traits {
 \begin{columns}
 \begin{column}[t]{0.47\textwidth}
 \begin{block}{Problem}
+Which allocator is the node allocator?
 \end{block}
 \begin{lstlisting}
 // Allocator instance does not know which
@@ -892,6 +897,7 @@ obj.insert(10);
 \end{column}
 \begin{column}[t]{0.47\textwidth}
 \begin{block}{Fix}
+Let the allocator know the node type.
 \end{block}
 \begin{lstlisting}
 using node_type =
@@ -958,9 +964,9 @@ struct node {
 
 \begin{block}{Recursive problem}
 \begin{itemize}
-\item We do not know the node type until we define the container.
-\item We need the allocator type to define the container.
-\item The allocator type needs the node type.
+\item The node type is unknown until the container type is known.
+\item The allocator type is needed to define the container.
+\item The allocator type needs the node type to be defined.
 \item {\color{alertc}Solution: Offer a rebind function.}
 \end{itemize}
 \end{block}
@@ -968,8 +974,9 @@ struct node {
 \begin{columns}
 \begin{column}[t]{0.47\textwidth}
 \begin{lstlisting}
-// Rebinding enables changing the node
-// pointer type.
+// Rebinding allows changing the node pointer
+// type. Allocator uses it to define the node
+// with its own pointer type.
 template <class T, class Ptr>
 struct node {
   ...
@@ -1003,15 +1010,15 @@ my_alloc<int, node_type> alloc;
 \begin{columns}
 \begin{column}[t]{0.47\textwidth}
 \begin{lstlisting}
-std::array< char
-          , 100 * sizeof (node_type)
-          > buffer = {{}};
+std::aligned_storage< sizeof(node_type)
+                    , alignof(node_type)
+                    >::type buffer[64];
 
 // Allocator with very simple implementation.
-alloc_type<int, node_type> alloc(buffer);
+node_allocator< int, node_type
+              , 64> alloc(buffer);
 
-std::list< int
-         , alloc_type<int, node_type>
+std::list< int , alloc_type<int, node_type>
          > l(alloc);
 
 // Allocation and deallocation implemented
@@ -1023,7 +1030,7 @@ l = {27, 1, 60};
 \begin{block}{Thoughts}
 \begin{itemize}
 \item Node sizes are known at compile time.
-\item Store them in the stack.
+\item Stores them in the stack.
 \item Minimum amount of memory needed for $n$ elements.
 \item Never touches the heap.
 \item {\color{alertc}Let us move to more interesting usages.}
@@ -1161,6 +1168,40 @@ l = {27, 1, 60};
 \end{frame}
 
 %____________________________________________________________
+\begin{frame}[fragile]
+{Benchmark: pointer chasing vs. sequential}
+\begin{columns}
+\begin{column}{0.47\textwidth}
+
+\begin{tikzpicture}[scale=1.0]
+\node[anchor=south, draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=7.00cm  ,minimum width=1.0cm]
+(node0) at (0cm,0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=alertc,shape=rectangle,minimum height=0.43cm  ,minimum width=1.0cm]
+(node1) at (1cm,0.0cm) {};
+
+\node[] at (2cm,4.5cm) {\color{black} Traversal time};
+\filldraw[memC] (2cm,4.0cm) circle (0.08cm) node[right]
+{\color{black} Pointer chasing};
+\filldraw[alertc] (2cm,3.5cm) circle (0.08cm) node[right]
+{\color{black} Sequential};
+
+\end{tikzpicture}
+
+\end{column}
+
+\begin{column}{0.47\textwidth}
+\begin{block} {Benchmark}
+\begin{itemize}
+\item Full allocated buffer.
+\item Deallocating lots of elements would eventually
+make both perform the same.
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+%____________________________________________________________
 \begin{frame}{Why it is so important to avoid jumping around}{Cache Hierarchy - Speed}
     \begin{columns}
         \begin{column}{0.33\textwidth}
@@ -1200,7 +1241,7 @@ l = {27, 1, 60};
         \end{column}
 
         \begin{column}{0.3\textwidth}
-            Intel Haswell Mobile 
+          \begin{block} {Intel Haswell Mobile}
             \begin{itemize}
                 \item Register: Fastest
                 \item L0: 6 KiB
@@ -1210,6 +1251,7 @@ l = {27, 1, 60};
                 \item L4: 128 MiB - 40 GB/s
                 \item Main memory – GiB - 10 GB/s
             \end{itemize}
+          \end{block}
         \end{column}
 
     \end{columns}
@@ -1218,13 +1260,14 @@ l = {27, 1, 60};
 %____________________________________________________________
 \begin{frame}[fragile]
 {Alternative to pointer chasing}
+{Typical example}
 \begin{columns}
 \begin{column}{0.47\textwidth}
 \begin{lstlisting}
 // Allocator configured to chunks of 8
-// elements.
+// nodes.
 using alloc_type =
-    node_allocator<node_type, 8>;
+    node_allocator<int, node_type, 8>;
 
 std::list<int, alloc_type> l = {1, 2, 3};
 
@@ -1241,44 +1284,10 @@ const auto n =
 \begin{column}{0.47\textwidth}
 \begin{block} {Code example}
 \begin{itemize}
-\item User provided function \texttt{in\_use}
-\item Allocator calls it to mark allocated memory.
+\item Contructor marks the memory block in use.
+\item Destructors mark them free.
 \item \texttt{std::count\_if} traverses the underlying buffer
 ignoring unused nodes.
-\end{itemize}
-\end{block}
-\end{column}
-\end{columns}
-\end{frame}
-
-%____________________________________________________________
-\begin{frame}[fragile]
-{Benchmark: pointer chasing vs. sequential}
-\begin{columns}
-\begin{column}{0.47\textwidth}
-
-\begin{tikzpicture}[scale=1.0]
-\node[anchor=south, draw,node distance=0cm, fill=memC,shape=rectangle,minimum height=7.00cm  ,minimum width=1.0cm]
-(node0) at (0cm,0cm) {};
-\node[anchor=south,draw,node distance=0cm, fill=alertc,shape=rectangle,minimum height=0.43cm  ,minimum width=1.0cm]
-(node1) at (1cm,0.0cm) {};
-
-\node[] at (2cm,4.5cm) {\color{black} Traversal time};
-\filldraw[memC] (2cm,4.0cm) circle (0.08cm) node[right]
-{\color{black} Pointer chasing};
-\filldraw[alertc] (2cm,3.5cm) circle (0.08cm) node[right]
-{\color{black} Sequential};
-
-\end{tikzpicture}
-
-\end{column}
-
-\begin{column}{0.47\textwidth}
-\begin{block} {Benchmark}
-\begin{itemize}
-\item Full allocated buffer.
-\item Deallocating lots of elements would eventually
-make both perform the same.
 \end{itemize}
 \end{block}
 \end{column}
@@ -1302,6 +1311,14 @@ program that uses less than 4 gigabytes of RAM. When such pointer
 values appear inside a struct, they not only waste half the memory,
 they effectively throw away half of the cache.}  \hfill (Donald Knuth)
 \end{block}
+\uncover<2> {
+\begin{block}{Let us further explore this idea}
+\noindent
+A node allocator uses a deque-like data structure whose elements
+have indexed access. Nodes do not need to store pointers to other
+nodes, they can store indexes.
+\end{block}
+}
 \end{column}
 \begin{column}{0.10\textwidth}
 \end{column}
@@ -1309,8 +1326,9 @@ they effectively throw away half of the cache.}  \hfill (Donald Knuth)
 \end{frame}
 
 
+%_____________________________________________________________
 \begin{frame}[fragile]
-{Pointers are a big overhead for nodes with small sizes}
+{Pointers are a big overhead on nodes with small sizes}
 {Nodes sizes if indexing were possible}
 \begin{columns}
 \begin{column}{0.5\textwidth}
@@ -1320,40 +1338,128 @@ they effectively throw away half of the cache.}  \hfill (Donald Knuth)
 (node0) at (0cm,0.0cm) {};
 \node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=3.5cm  ,minimum width=1.0cm]
 (node1) at (1cm,0.0cm) {};
-\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=1.75cm  ,minimum width=1.0cm]
+\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=2.33cm  ,minimum width=1.0cm]
 (node2) at (2cm,0.0cm) {};
-\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
-(node3) at (3cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
+%(node3) at (3cm,0.0cm) {};
 
 \node[] at (2cm,6.0cm)
 {\color{black} Node sizes};
 \filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} \texttt{pointer}};
 \filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint32\_t}};
 \filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint16\_t}};
-\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
+%\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
 
 \end{tikzpicture}
 
 \end{column}
 \begin{column}{0.5\textwidth}
 \begin{lstlisting}
+// Typical node
 struct node {
-  // Uses an index instead of pointer.
-  std::uintXY_t next;
-  // Small value type accurs pretty often.
-  std::uintXY_t info;
+  link_type prev;
+  link_type next;
+  int info;
 };
 \end{lstlisting}
 \begin{block}{Thoughts}
 \begin{itemize}
-\item On a 64 bits system the struct size is 16 bytes.
+\item On a 64 bits system the struct size is 24 bytes.
 \item Pretty offten bytes by are wasted on padding.
 \item Using 32 bits pointers may not be an option.
 \item Even if it were, 8 or 16 bits could be enough.
-\item In the general case however we cannot reduce
-the {value\_type} at will.
 \end{itemize}
 \end{block}
+
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%_____________________________________________________________
+\begin{frame}[fragile]
+{Pointers are a big overhead on nodes with small sizes}
+{Nodes sizes if indexing were possible}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+
+\begin{tikzpicture}[scale=1.0]
+\node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.0cm  ,minimum width=1.0cm]
+(node0) at (0cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=4.66cm  ,minimum width=1.0cm]
+(node1) at (1cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=2.33cm  ,minimum width=1.0cm]
+%(node2) at (2cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
+%(node3) at (3cm,0.0cm) {};
+
+\node[] at (2cm,6.0cm)
+{\color{black} Node sizes};
+\filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} \texttt{pointer}};
+\filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint32\_t}};
+%\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint16\_t}};
+%\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
+
+\end{tikzpicture}
+
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}
+// Typical node
+struct node {
+  link_type prev;
+  link_type next;
+  std::string info;
+};
+\end{lstlisting}
+%\begin{block}{Thoughts}
+%\begin{itemize}
+%\item Even if it were, 8 or 16 bits could be enough.
+%\end{itemize}
+%\end{block}
+
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%_____________________________________________________________
+\begin{frame}[fragile]
+{Pointers are a big overhead on nodes with small sizes}
+{Nodes sizes if indexing were possible: The extreme case}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+
+\begin{tikzpicture}[scale=1.0]
+\node[anchor=south, draw,node distance=0cm, fill=nodecontc,shape=rectangle,minimum height=7.0cm  ,minimum width=1.0cm]
+(node0) at (0cm,0.0cm) {};
+\node[anchor=south,draw,node distance=0cm, fill=bothcontc,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
+(node1) at (1cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=arraycontc,shape=rectangle,minimum height=2.33cm  ,minimum width=1.0cm]
+%(node2) at (2cm,0.0cm) {};
+%\node[anchor=south,draw,node distance=0cm, fill=purple,shape=rectangle,minimum height=0.875cm  ,minimum width=1.0cm]
+%(node3) at (3cm,0.0cm) {};
+
+\node[] at (2cm,6.0cm)
+{\color{black} Node sizes};
+\filldraw[nodecontc] (2cm,5.5cm) circle (0.08cm) node[right] {\color{black} \texttt{pointer}};
+\filldraw[bothcontc] (2cm,5.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
+%\filldraw[arraycontc] (2cm,4.5cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint16\_t}};
+%\filldraw[purple] (2cm,4.0cm) circle (0.08cm) node[right] {\color{black} \texttt{std::uint8\_t}};
+
+\end{tikzpicture}
+
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}
+// Extreme case. Small value type.
+// Small number of elements.
+struct node {
+  link_type prev;
+  link_type next;
+  unsigned char ages;
+};
+\end{lstlisting}
 
 \end{column}
 \end{columns}
@@ -1433,6 +1539,8 @@ the {value\_type} at will.
            \item But 4 times more data in the cache.
            \item Uses \texttt{std::uint16\_t} as index
            and \texttt{short} as \texttt{value\_type}
+           \item {\color{alertc} Do not forget that 16 bits is
+           enough for $65,536$ elements.}
            \end{itemize}
          \end{block}
     \end{column}
@@ -1457,7 +1565,7 @@ struct allocator_traits {
   using link_type = ...
 
   // Convert a node link to a pointer.
-  pointer convert_link_to_pointer(link_type a);
+  pointer make_ptr(link_type a);
 };
 \end{lstlisting}
 \end{column}
@@ -1500,8 +1608,11 @@ the need of new containers to handle corner cases.
 \end{column}
 \begin{column}{0.47\textwidth}
 \begin{block}{Acknoledgements}
-General people in \texttt{std-proposal} and \texttt{WG21-SG14}.
-Special thanks to Ion Gazt\~ naga for important suggestions.
+\begin{itemize}
+\item \texttt{std-proposal}
+\item \texttt{WG21-SG14}
+\item \texttt{ccppbrasil}
+\end{itemize}
 \end{block}
 \end{column}
 \end{columns}
