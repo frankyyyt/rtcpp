@@ -4,7 +4,10 @@ I began this project to experiment on realtime data structures and
 algorithms in C++. Many interesting things arose from this research.
 My intentions is to end-up with a realtime version of the Standard
 Template Library (STL), suitable for hard-realtime, low-latency and
-high-availability.
+high-availability. 
+
+Please, refer to the slides in doc/node-alloc.pdf for detailed
+introduction.
 
 #### Splitting node and array allocation in allocators
 
