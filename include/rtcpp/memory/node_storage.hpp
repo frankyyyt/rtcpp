@@ -21,43 +21,43 @@ class node_ptr {
   public:
   using storage_type = node_storage<T, L, N>;
   private:
-  static constexpr std::size_t R = sizeof (T) / sizeof (L);
   storage_type* storage {nullptr};
   L idx {};
-
   public:
-  template <class, class, std::size_t>
-  friend class node_link;
-
-  L get_idx() const {return idx;}
   using link_type = L;
   using element_type = T;
   template <class U>
   using rebind = node_ptr<U, L, N>;
+
+  L get_idx() const {return idx;}
   T& operator*()
   {
-    auto b = storage->get_base_ptr(idx);
-    return *reinterpret_cast<T*>(&b[(idx % N) * R]);
+    const auto b = storage->get_base_ptr(idx);
+    const auto raw_idx = storage->get_raw_idx(idx);
+    return *reinterpret_cast<T*>(&b[raw_idx]);
   }
   const T& operator*() const
   {
-    auto b = storage->get_base_ptr(idx);
-    return *reinterpret_cast<const T*>(&b[(idx % N) * R]);
+    const auto b = storage->get_base_ptr(idx);
+    const auto raw_idx = storage->get_raw_idx(idx);
+    return *reinterpret_cast<const T*>(&b[raw_idx]);
   }
   T* operator->()
   {
-    auto b = storage->get_base_ptr(idx);
-    return reinterpret_cast<T*>(&b[(idx % N) * R]);
+    const auto b = storage->get_base_ptr(idx);
+    const auto raw_idx = storage->get_raw_idx(idx);
+    return reinterpret_cast<T*>(&b[raw_idx]);
   }
   const T* operator->() const
   {
-    auto b = storage->get_base_ptr(idx);
-    return reinterpret_cast<const T*>(&b[(idx % N) * R]);
+    const auto b = storage->get_base_ptr(idx);
+    const auto raw_idx = storage->get_raw_idx(idx);
+    return reinterpret_cast<const T*>(&b[raw_idx]);
   }
   node_ptr() = default;
   node_ptr& operator=(const node_link<T, L, N>& rhs)
   {
-    idx = rhs.idx;
+    idx = rhs.get_idx();
     return *this;
   }
   node_ptr& operator=(const node_ptr<T, L, N>& rhs)
@@ -83,9 +83,6 @@ bool operator!=( const node_ptr<T, L, N>& p1
 template <class T, class L, std::size_t N>
 class node_link {
   private:
-  template <class, class, std::size_t>
-  friend class node_ptr;
-  private:
   L idx;
   public:
   L get_idx() const {return idx;}
@@ -95,7 +92,7 @@ class node_link {
   using rebind = node_ptr<U, L, N>;
   node_link& operator=(const node_ptr<T, L, N>& rhs)
   {
-    idx = rhs.idx;
+    idx = rhs.get_idx();
     return *this;
   }
 };
@@ -147,8 +144,8 @@ class node_storage {
   private:
   static constexpr auto SL = sizeof (L);
   static constexpr auto ST = sizeof (T);
+  // Block size in units of link type size.
   static constexpr auto R = (SL < ST) ? ST / SL : 1;
-  static constexpr auto S = N * R; // Size of allocated array.
   L free {0}; // Index of the next free node.
   std::vector<std::unique_ptr<L[]>> bufs;
   L add_bloc(); // returns the index of the next free node.
@@ -159,6 +156,8 @@ class node_storage {
   node_storage() {}
   std::size_t get_n_blocs() const {return bufs.size();}
   L* get_base_ptr(L idx) { return bufs[idx / N].get(); }
+  const L* get_base_ptr(L idx) const { return bufs[idx / N].get(); }
+  std::size_t get_raw_idx(L idx) const {return (idx % N) * R;}
   pointer pop();
   void push(pointer idx) noexcept;
   bool operator==(const node_storage& rhs) const noexcept
@@ -170,7 +169,7 @@ void node_storage<T, L, N>::push(pointer idx) noexcept
 {
   const auto i = idx.get_idx();
   auto b = get_base_ptr(i);
-  b[(i % N) * R] = free;
+  b[get_raw_idx(i)] = free;
   free = i;
 }
 
@@ -185,17 +184,17 @@ node_storage<T, L, N>::pop()
     i = free;
   }
 
-  auto b = get_base_ptr(i);
-  free = b[(i % N) * R];
+  const auto b = get_base_ptr(i);
+  free = b[get_raw_idx(i)];
   return pointer(this, i);
 }
 
 template <class T, class L, std::size_t N>
 L node_storage<T, L, N>::add_bloc()
 {
-    const auto s = bufs.size();
-    bufs.push_back(std::make_unique<L[]>(S));
-    const auto offset = s * N;
+    const auto size = bufs.size();
+    bufs.push_back(std::make_unique<L[]>(N * R));
+    const auto offset = size * N;
     for (std::size_t i = 1; i < N; ++i)
       bufs.back()[i * R] = offset + i - 1;
 
