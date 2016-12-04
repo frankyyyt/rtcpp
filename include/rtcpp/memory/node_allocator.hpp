@@ -17,13 +17,18 @@
 namespace rt {
 
 template < class T
+         , class Node
          , class L = std::size_t
          , std::size_t S = 1024 // Block size.
          , class A = std::allocator<T>
          , bool B = is_node_type<T>::value>
 class node_allocator {
   static_assert((is_power_of_two<S>::value),
-  "node_allcator: S must be a power of 2.");
+  "node_allocator: S must be a power of 2.");
+  static_assert((std::is_unsigned<L>::value),
+  "node_allocator: Link type must be unsigned.");
+  static_assert((S - 1 <= std::numeric_limits<L>::max()),
+  "node_allocator: Incompatible block size.");
   public:
   using node_allocation_only = std::true_type;
   using size_type = typename A::size_type;
@@ -37,12 +42,12 @@ class node_allocator {
   using link_type = node_link<T, L, S>;
 
   template<class U>
-  struct rebind { using other = node_allocator<U, L, S, A, is_node_type<U>::value>; };
+  struct rebind { using other = node_allocator<U, Node, L, S, A, is_node_type<U>::value>; };
   A alloc;
   node_allocator(const A& a = A()): alloc(a) {}
 
-  template<class U>
-  node_allocator(const node_allocator<U, L, S, A, false>& a)
+  template<class U, class V>
+  node_allocator(const node_allocator<U, V, L, S, A, false>& a)
   : alloc(a.alloc) {}
 
   pointer allocate(size_type n, const_pointer hint = 0)
@@ -62,8 +67,12 @@ class node_allocator {
   { return std::addressof(x); }
 };
 
-template <class T, class L, std::size_t S, class A>
-class node_allocator<T, L, S, A, true> {
+template < class T
+         , class Node
+         , class L
+         , std::size_t S
+         , class A>
+class node_allocator<T, Node, L, S, A, true> {
   static_assert((is_power_of_two<S>::value),
   "node_allcator: S must be a power of 2.");
   public:
@@ -80,7 +89,7 @@ class node_allocator<T, L, S, A, true> {
   using link_type = node_link<T, L, S>;
 
   template<class U>
-  struct rebind { using other = node_allocator<U , L, S, A, is_node_type<U>::value>; };
+  struct rebind { using other = node_allocator<U, Node, L, S, A, is_node_type<U>::value>; };
 
   std::shared_ptr<node_storage_type> header;
   A alloc;
@@ -89,12 +98,12 @@ class node_allocator<T, L, S, A, true> {
   : header(std::make_shared<node_storage_type>())
   , alloc(a) {}
 
-  template<class U>
-  node_allocator(const node_allocator<U, L, S, A, true>& a)
+  template<class U, class V>
+  node_allocator(const node_allocator<U, V, L, S, A, true>& a)
   : header(a.header), alloc(a.alloc) {}
 
-  template<class U>
-  node_allocator(const node_allocator<U, L, S, A, false>& a)
+  template<class U, class V>
+  node_allocator(const node_allocator<U, V, L, S, A, false>& a)
   : header(std::make_shared<node_storage_type>())
   , alloc(a.alloc) {}
 
@@ -123,19 +132,19 @@ class node_allocator<T, L, S, A, true> {
   { return std::addressof(x); }
 };
 
-template <class T, class L, std::size_t S, class A, bool B>
-bool operator==( const node_allocator<T, L, S, A, B>& alloc1
-               , const node_allocator<T, L, S, A, B>& alloc2)
+template <class T, class V, class L, std::size_t S, class A, bool B>
+bool operator==( const node_allocator<T, V, L, S, A, B>& alloc1
+               , const node_allocator<T, V, L, S, A, B>& alloc2)
 {return alloc1.header == alloc2.header;}
 
-template <class T, class L, std::size_t S, class A, bool B>
-bool operator!=( const node_allocator<T, L, S, A, B>& alloc1
-               , const node_allocator<T, L, S, A, B>& alloc2)
+template <class T, class V, class L, std::size_t S, class A, bool B>
+bool operator!=( const node_allocator<T, V, L, S, A, B>& alloc1
+               , const node_allocator<T, V, L, S, A, B>& alloc2)
 {return !(alloc1 == alloc2);}
 
-template <class T, class L, std::size_t S, class A, bool B>
-void swap(rt::node_allocator<T, L, S, A, B>& s1,
-          rt::node_allocator<T, L, S, A, B>& s2)
+template <class T, class V, class L, std::size_t S, class A, bool B>
+void swap(rt::node_allocator<T, V, L, S, A, B>& s1,
+          rt::node_allocator<T, V, L, S, A, B>& s2)
 {
   s1.swap(s2); // Put some static assertions here.
 }

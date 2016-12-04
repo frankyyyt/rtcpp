@@ -62,11 +62,12 @@ int main()
 
   using T = unsigned char;
   using link_type = unsigned char;
+  using Node = typename rt::set<T>::node_type;
 
   using node_type1 = tbst::node<T, void*>;
   std::cout << sizeof (node_type1) << std::endl;
 
-  using alloc_type = node_allocator<T, link_type, 256>;
+  using alloc_type = node_allocator<T, Node, link_type, 256>;
   using alloc_traits_type = rt::allocator_traits<alloc_type>;
   using void_pointer = typename alloc_traits_type::void_pointer;
   using node_type = tbst::node<T, void_pointer>;

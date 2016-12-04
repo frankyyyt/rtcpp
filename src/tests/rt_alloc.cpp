@@ -10,12 +10,17 @@
 using T = unsigned char;
 using L = unsigned char;
 
+using node_type = typename rt::set<T>::node_type;
+
 bool test()
 {
   std::initializer_list<T> data =
   {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
 
-  rt::set<T, std::less<T>, rt::node_allocator<T, L, 2>> t1(data);
+  rt::set< T
+         , std::less<T>
+         , rt::node_allocator<T, node_type, L, 2>
+         > t1(data);
 
   if (!std::equal(std::begin(data), std::end(data), std::begin(t1)))
     return false;

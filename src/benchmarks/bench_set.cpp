@@ -26,8 +26,10 @@ using L = unsigned short;
 template <class Allocator>
 using set_type = rt::set<T, std::less<T>, Allocator>;
 
+using node_type = typename rt::set<T>::node_type;
+
 using type1 = set_type<std::allocator<T>>;
-using type2 = set_type<rt::node_allocator<T, L>>;
+using type2 = set_type<rt::node_allocator<T, node_type, L>>;
 #ifdef GNU_FOUND
 using type3 = set_type<__gnu_cxx::__pool_alloc<T>>;
 using type4 = set_type<__gnu_cxx::bitmap_allocator<T>>;

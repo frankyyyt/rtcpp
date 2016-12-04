@@ -217,10 +217,12 @@ int main()
   // Random unique integers in the range [a, b].
   const std::vector<int> tmp = rt::make_rand_data<int>(size, a, b);
 
+  using Node = rt::set<int>::node_type;
+
   using A1 = std::allocator<int>;
-  using A2 = rt::node_allocator<int, unsigned, 2>;
-  using A3 = rt::node_allocator<int, unsigned, 4>;
-  using A4 = rt::node_allocator<int, unsigned, 128>;
+  using A2 = rt::node_allocator<int, Node, unsigned, 2>;
+  using A3 = rt::node_allocator<int, Node, unsigned, 4>;
+  using A4 = rt::node_allocator<int, Node, unsigned, 128>;
 
   const bool b1 = run_tests<A1>(tmp);
   const bool b2 = run_tests<A2>(tmp);
