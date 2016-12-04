@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 #include <limits>
+#include <memory>
 
 #include "align.hpp"
 
@@ -150,7 +151,7 @@ class node_storage {
   static constexpr auto S = N * R; // Size of allocated array.
 
   L free {0};
-  std::vector<L*> bufs;
+  std::vector<std::unique_ptr<L[]>> bufs;
 
   // Non copyable
   node_storage& operator=(const node_storage&) = delete;
@@ -161,21 +162,12 @@ class node_storage {
   static_assert((S >= 2), "node_storage: Invalid N.");
 
   std::size_t get_n_blocs() const {return bufs.size();}
-  L* get_base_ptr(L idx)
-  {
-    return bufs[idx / N];
-  }
-
-  ~node_storage()
-  {
-    for_each(std::begin(bufs), std::end(bufs), [](auto p) {
-      delete [] p; });
-  }
+  L* get_base_ptr(L idx) { return bufs[idx / N].get(); }
 
   L add_bloc() // returns the index of the next free node.
   {
       const auto s = bufs.size();
-      bufs.push_back(new L[S]);
+      bufs.push_back(std::make_unique<L[]>(S));
       const auto offset = s * N;
       for (std::size_t i = 1; i < N; ++i)
         bufs.back()[i * R] = offset + i - 1;
