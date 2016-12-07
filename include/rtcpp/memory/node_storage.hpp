@@ -54,7 +54,7 @@ class node_ptr {
     const auto raw_idx = storage->get_raw_idx(idx);
     return reinterpret_cast<const T*>(&b[raw_idx]);
   }
-  node_ptr() = default;
+  node_ptr(std::nullptr_t p = nullptr) {}
   node_ptr& operator=(const node_link<T, L, N>& rhs)
   {
     idx = rhs.get_idx();
@@ -192,14 +192,16 @@ node_storage<T, L, N>::pop()
 template <class T, class L, std::size_t N>
 L node_storage<T, L, N>::add_bloc()
 {
+    // Add a check to test if the link type is big
+    // enough to grow the node pool.
     const auto size = bufs.size();
     bufs.push_back(std::make_unique<L[]>(N * R));
     const auto offset = size * N;
     for (std::size_t i = 1; i < N; ++i)
-      bufs.back()[i * R] = offset + i - 1;
+      bufs.back()[i * R] = static_cast<L>(offset + i - 1);
 
     bufs.back()[0] = 0;
-    return bufs.size() * N - 1;
+    return static_cast<L>(bufs.size() * N - 1);
 }
 
 } // rt

@@ -17,7 +17,6 @@ void print_set_bench(const std::vector<typename C::value_type>& data)
   // and deletions are made together to maximize cache misses.
   const auto n = data.size();
   const std::size_t s = n / 2;
-  int sum = 0; // Dummy variable.
   int repeat = 10;
   // Inserts the first half of the random data in the set. do not
   // participate in the benchmark.
@@ -30,14 +29,14 @@ void print_set_bench(const std::vector<typename C::value_type>& data)
       c.insert(data[n - i - 1]); // Inserts the second half of random data.
       // Traverses the container every *repeat* times
       if (i % repeat == 0)
-        sum = std::accumulate(std::begin(c), std::end(c), 0);
+        (void)std::accumulate(std::begin(c), std::end(c), 0);
     }
     // Same purpose as the loop above.
     for (std::size_t i = 0; i <= s; ++i) {
       c.erase(data[n - i - 1]); // Removes the second half.
       c.insert(data[i]); // Inserts the first half again.
       if (i % repeat == 0)
-        sum = std::accumulate(std::begin(c), std::end(c), 0);
+        (void)std::accumulate(std::begin(c), std::end(c), 0);
     }
   }
 }

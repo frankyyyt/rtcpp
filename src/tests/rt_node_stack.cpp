@@ -10,13 +10,10 @@ int main()
   using namespace rt;
 
   using T = std::size_t;
-  const std::size_t N = sizeof (T);
   constexpr T n = 4;
 
   using Index = std::size_t;
   node_storage<std::size_t, Index, n> header;
-  using pointer = 
-    typename node_storage<std::size_t, Index, n>::pointer;
 
   for (auto i = 1; i != n; ++i) {
     auto idx = header.pop();

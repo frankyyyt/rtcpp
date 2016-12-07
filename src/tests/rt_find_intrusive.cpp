@@ -14,7 +14,7 @@ int main()
     std::cout << i << " ";
   std::cout << std::endl;
 
-  for (int i = 0; i < data.size() - 1; ++i) {
+  for (std::size_t i = 0; i < data.size() - 1; ++i) {
     data.back() = data[i];
     auto iter = rt::find_intrusive(std::begin(data), std::end(data),
                                    data[i]);

@@ -39,7 +39,7 @@ lower_bound(RandomAccessIter begin, RandomAccessIter end, const T& K)
 template<class RandomAccessIter, class T>
 bool binary_search(RandomAccessIter begin, RandomAccessIter end, const T& K)
 {
-  auto iter = lower_bound(begin, end, K);
+  auto iter = rt::lower_bound(begin, end, K);
   return iter != end && !(K < *iter);
 }
 
