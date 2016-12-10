@@ -154,7 +154,7 @@ class node_storage {
   public:
   using pointer = node_ptr<T, L, N>;
   node_storage() {}
-  std::size_t get_n_blocs() const {return bufs.size();}
+  std::size_t get_n_blocks() const {return bufs.size();}
   L* get_base_ptr(L idx) { return bufs[idx / N].get(); }
   const L* get_base_ptr(L idx) const { return bufs[idx / N].get(); }
   std::size_t get_raw_idx(L idx) const {return (idx % N) * R;}
