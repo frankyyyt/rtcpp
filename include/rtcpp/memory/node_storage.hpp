@@ -4,6 +4,7 @@
 #include <vector>
 #include <limits>
 #include <memory>
+#include <cassert>
 #include <type_traits>
 
 #include "align.hpp"
@@ -30,6 +31,7 @@ class node_ptr {
   using rebind = node_ptr<U, L, N>;
 
   L get_idx() const {return idx;}
+  const storage_type* get_storage() const {return storage;}
   T& operator*()
   {
     const auto b = storage->get_base_ptr(idx);
@@ -151,6 +153,7 @@ class node_storage {
   L add_bloc(); // returns the index of the next free node.
   node_storage& operator=(const node_storage&) = delete;
   node_storage(const node_storage&) = delete;
+  void swap(node_storage& other);
   public:
   using pointer = node_ptr<T, L, N>;
   node_storage() {}
@@ -167,6 +170,8 @@ class node_storage {
 template < class T, class L, std::size_t N>
 void node_storage<T, L, N>::push(pointer idx) noexcept
 {
+  assert(idx.get_storage() == this);
+
   const auto i = idx.get_idx();
   auto b = get_base_ptr(i);
   b[get_raw_idx(i)] = free;

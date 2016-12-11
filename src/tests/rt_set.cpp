@@ -70,9 +70,9 @@ bool test_swap()
 
   using set_type = rt::set<int, std::less<int>, A>;
   set_type t1(data1);
-  set_type t1_copy = t1;
+  const set_type t1_copy = t1;
   set_type t2(data2);
-  set_type t2_copy = t2;
+  const set_type t2_copy = t2;
 
   std::cout << "_______" << std::endl;
   rt::print(t1);

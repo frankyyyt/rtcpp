@@ -74,6 +74,9 @@ class node_allocator {
 
   void deallocate(pointer p, size_type n) { alloc.deallocate(p, n); }
 
+  std::size_t get_n_blocks() const
+  { return header->get_n_blocks();}
+
   template<class U>
   void destroy(U* p) {p->~U();}
   template<class U, typename... Args>
@@ -154,7 +157,8 @@ class node_allocator<T, Node, L, S, A, true> {
   {
     return pointer(header.get(), link.get_idx());
   }
-
+  std::size_t get_n_blocks() const
+  { return header->get_n_blocks();}
   template<class U>
   void destroy(U* p) {p->~U();}
   template<class U, typename... Args>
@@ -180,12 +184,14 @@ bool operator!=( const node_allocator<T, V, L, S, A, B>& alloc1
                , const node_allocator<T, V, L, S, A, B>& alloc2)
 {return !(alloc1 == alloc2);}
 
-template <class T, class V, class L, std::size_t S, class A, bool B>
-void swap(rt::node_allocator<T, V, L, S, A, B>& s1,
-          rt::node_allocator<T, V, L, S, A, B>& s2)
-{
-  s1.swap(s2); // Put some static assertions here.
 }
+
+namespace std {
+
+template <class T, class V, class L, std::size_t S, class A, bool B>
+void swap( const rt::node_allocator<T, V, L, S, A, B>& alloc1
+         , const rt::node_allocator<T, V, L, S, A, B>& alloc2)
+{ alloc1.swap(alloc2); }
 
 }
 

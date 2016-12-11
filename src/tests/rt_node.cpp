@@ -55,7 +55,7 @@ void print_node_sizes()
   std::cout << "tbst::node<char*    , node_ptr<char*>>     : " << U5 << std::endl;
 }
 
-int main()
+void test_node()
 {
   print_data_type_size();
   print_node_sizes();
@@ -84,7 +84,62 @@ int main()
 
   auto k = inner_alloc.allocate_node();
   inner_alloc.deallocate_node(k);
+}
 
-  return 0;
+void test_swap()
+{
+  test_node();
+
+  using Node = typename rt::set<unsigned>::node_type;
+
+  using alloc_type_tmp = node_allocator<unsigned, Node, unsigned, 2>;
+  using node_type = typename alloc_type_tmp::node_type;
+  using alloc_type = node_allocator<node_type, Node, unsigned, 2>;
+
+  alloc_type alloc1;
+  alloc_type alloc1_copy(alloc1);
+  alloc_type alloc2;
+  alloc_type alloc2_copy(alloc2);
+
+  if (alloc1.get_n_blocks() != 0)
+    throw std::runtime_error("test_swap");
+
+  if (alloc2.get_n_blocks() != 0)
+    throw std::runtime_error("test_swap");
+
+  auto p1 = alloc1.allocate_node();
+
+  if (alloc1.get_n_blocks() != 1)
+    throw std::runtime_error("test_swap");
+
+  if (alloc1_copy.get_n_blocks() != 1)
+    throw std::runtime_error("test_swap");
+
+  alloc1.swap(alloc2);
+
+  if (alloc2.get_n_blocks() != 1)
+    throw std::runtime_error("test_swap");
+
+  if (alloc1.get_n_blocks() != 0)
+    throw std::runtime_error("test_swap");
+
+  alloc2.deallocate_node(p1);
+
+  if (alloc1 != alloc2_copy)
+    throw std::runtime_error("test_swap");
+
+  if (alloc2 != alloc1_copy)
+    throw std::runtime_error("test_swap");
+}
+
+int main()
+{
+  try {
+    test_node();
+    test_swap();
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return 1;
+  }
 }
 

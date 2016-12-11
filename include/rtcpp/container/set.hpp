@@ -191,6 +191,7 @@ set<T, Compare, Allocator>::erase(const K& key)
 template <typename T, typename Compare, typename Allocator>
 void set<T, Compare, Allocator>::swap(set<T, Compare, Allocator>& other) noexcept
 {
+  // Verify this.
   std::swap(m_inner_alloc, other.m_inner_alloc);
   std::swap(m_head, other.m_head);
   std::swap(m_comp, other.m_comp);
