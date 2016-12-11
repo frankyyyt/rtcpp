@@ -68,6 +68,29 @@ void test_node_storage()
     throw std::runtime_error("pop: 2");
 }
 
+void test_node_ptr()
+{
+  rt::node_storage<unsigned, unsigned, 4> a;
+  rt::node_storage<unsigned, unsigned, 4> b;
+
+  rt::node_ptr<unsigned, unsigned, 4> p1(&a, 1);
+  rt::node_ptr<unsigned, unsigned, 4> p2(&b, 2);
+
+  std::swap(p1, p2);
+
+  if (p1.get_storage() != &b)
+    throw std::runtime_error("test_node_ptr_swap");
+
+  if (p1.get_idx() != 2)
+    throw std::runtime_error("test_node_ptr_swap");
+
+  if (p2.get_storage() != &a)
+    throw std::runtime_error("test_node_ptr_swap");
+
+  if (p2.get_idx() != 1)
+    throw std::runtime_error("test_node_ptr_swap");
+}
+
 int main()
 {
   try {
@@ -79,6 +102,8 @@ int main()
 
     test_node_storage<unsigned char         , unsigned long long int>();
     test_node_storage<unsigned long long int, unsigned char>();
+
+    test_node_ptr();
 
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;

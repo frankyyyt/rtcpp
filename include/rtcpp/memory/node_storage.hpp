@@ -171,6 +171,9 @@ template < class T, class L, std::size_t N>
 void node_storage<T, L, N>::push(pointer idx) noexcept
 {
   assert(idx.get_storage() == this);
+  //if (idx.get_storage() != this) {
+  //  std::cout << std::endl;
+  //}
 
   const auto i = idx.get_idx();
   auto b = get_base_ptr(i);

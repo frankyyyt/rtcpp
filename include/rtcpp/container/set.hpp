@@ -119,7 +119,7 @@ class set {
   explicit set(const Allocator& alloc = Allocator())
   : set(Compare(), alloc) {}
   set(const set& rhs) noexcept;
-  set& operator=(const set& rhs) noexcept;
+  set& operator=(set rhs) noexcept;
   set& operator=(std::initializer_list<T> init) noexcept;
   template <typename InputIt>
   set(InputIt begin, InputIt end, const Compare& comp, const Allocator& alloc = Allocator());
@@ -152,22 +152,23 @@ class set {
   size_type max_size() const noexcept { return std::numeric_limits<size_type>::max(); }
   template<typename InputIt>
   void insert(InputIt begin, InputIt end) noexcept;
-  void swap(set& other) noexcept;
   template <typename K>
   size_type erase(const K& key);
+
+  friend void swap(set& lhs, set& rhs) noexcept
+  {
+    using std::swap;
+    swap(lhs.m_inner_alloc, rhs.m_inner_alloc);
+    swap(lhs.m_head       , rhs.m_head);
+    swap(lhs.m_comp       , rhs.m_comp);
+  }
 };
 
 template <typename T, typename Compare, typename Allocator>
 set<T, Compare, Allocator>::set(set<T, Compare, Allocator>&& rhs)
-: m_inner_alloc(rhs.m_inner_alloc)
-, m_head(get_node())
-, m_comp(std::move(rhs.m_comp))
+: set<T, Compare, Allocator>()
 {
-  m_head->link[0] = m_head;
-  m_head->link[1] = m_head;
-  m_head->template set_link_null<0>();
-  std::swap(m_inner_alloc, rhs.m_inner_alloc);
-  std::swap(m_head, rhs.m_head);
+  swap(*this, rhs);
 }
 
 template <typename T, typename Compare, typename Allocator>
@@ -189,27 +190,9 @@ set<T, Compare, Allocator>::erase(const K& key)
 }
 
 template <typename T, typename Compare, typename Allocator>
-void set<T, Compare, Allocator>::swap(set<T, Compare, Allocator>& other) noexcept
+set<T, Compare, Allocator>& set<T, Compare, Allocator>::operator=(set<T, Compare, Allocator> rhs) noexcept
 {
-  // Verify this.
-  std::swap(m_inner_alloc, other.m_inner_alloc);
-  std::swap(m_head, other.m_head);
-  std::swap(m_comp, other.m_comp);
-}
-
-template <typename T, typename Compare, typename Allocator>
-set<T, Compare, Allocator>& set<T, Compare, Allocator>::operator=(const set<T, Compare, Allocator>& rhs) noexcept
-{
-  // This ctor can fail if the allocator runs out of memory.
-  if (this == &rhs)
-    return *this;
-
-  clear();
-  if (alloc_traits_type::propagate_on_container_copy_assignment::value)
-    m_inner_alloc = rhs.m_inner_alloc;
-
-  rhs.copy(*this);
-
+  swap(*this, rhs);
   return *this;
 }
 
@@ -284,7 +267,7 @@ template <typename T, typename Compare, typename Allocator>
 set<T, Compare, Allocator>::~set() noexcept
 {
   clear();
-  release_node(m_head);
+  //release_node(m_head);
 }
 
 template <typename T, typename Compare, typename Allocator>
@@ -450,11 +433,11 @@ bool operator!=( const set<Key, Compare, Alloc>& lhs
 
 }
 
-namespace std {
-
-template <typename T>
-void swap(rt::set<T>& s1, rt::set<T>& s2)
-{ s1.swap(s2); }
-
-}
+//namespace std {
+//
+//template <typename T>
+//void swap(rt::set<T>& s1, rt::set<T>& s2)
+//{ s1.swap(s2); }
+//
+//}
 
