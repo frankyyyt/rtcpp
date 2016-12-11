@@ -267,7 +267,7 @@ template <typename T, typename Compare, typename Allocator>
 set<T, Compare, Allocator>::~set() noexcept
 {
   clear();
-  //release_node(m_head);
+  release_node(m_head);
 }
 
 template <typename T, typename Compare, typename Allocator>
