@@ -175,15 +175,14 @@ template <typename K>
 typename set<T, Compare, Allocator>::size_type
 set<T, Compare, Allocator>::erase(const K& key)
 {
-  auto pair = find_with_parent(m_head, key, m_comp, m_inner_alloc);
+  auto pair = find_with_parent(m_head, key, m_comp);
   if (pair.first == m_head)
     return 0;
 
   //node_pointer r = tbst::erase_node<1>(
   //  const_cast<node_pointer>(pair.second),
   //  const_cast<node_pointer>(pair.first), m_inner_alloc);
-  auto r = tbst::erase_node<1>(pair.second, pair.first,
-    m_inner_alloc);
+  auto r = tbst::erase_node<1>(pair.second, pair.first);
   release_node(r);
   return 1;
 }
@@ -278,18 +277,18 @@ void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noe
   for (;;) {
     if (!p->template get_null_link<0>()) {
       node_pointer tmp = get_node();
-      tbst::attach_node<0>(q, tmp, m_inner_alloc);
+      tbst::attach_node<0>(q, tmp);
     }
 
-    p = tbst::preorder_successor(p, m_inner_alloc);
-    q = tbst::preorder_successor(q, m_inner_alloc);
+    p = tbst::preorder_successor(p);
+    q = tbst::preorder_successor(q);
 
     if (p == m_head)
       break;
 
     if (!p->template get_null_link<1>()) {
       node_pointer tmp = get_node();
-      tbst::attach_node<1>(q, tmp, m_inner_alloc);
+      tbst::attach_node<1>(q, tmp);
     }
 
     q->key = p->key;
@@ -334,7 +333,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
   if (m_head->template get_null_link<0>()) { // The tree is empty
     node_pointer q = get_node();
     safe_construct(q, key);
-    tbst::attach_node<0>(m_head, q, m_inner_alloc);
+    tbst::attach_node<0>(m_head, q);
     return std::make_pair(const_iterator(q), true);
   }
 
@@ -346,7 +345,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
       } else {
         node_pointer q = get_node();
         safe_construct(q, key);
-        tbst::attach_node<0>(p, q, m_inner_alloc);
+        tbst::attach_node<0>(p, q);
         return std::make_pair(iterator(q), true);
       }
     } else if (m_comp(p->key, key)) {
@@ -355,7 +354,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
       } else {
         node_pointer q = get_node();
         safe_construct(q, key);
-        tbst::attach_node<1>(p, q, m_inner_alloc);
+        tbst::attach_node<1>(p, q);
         return std::make_pair(iterator(q), true);
       }
     } else {
@@ -401,7 +400,7 @@ set<T, Compare, Allocator>::find(const K& key) const
   // The function below is not the most efficient because it
   // has an additional pointer to chase the parent pointer.
   // However maintaining two functions is not desirable
-  const auto p = find_with_parent(m_head, key, m_comp, m_inner_alloc).first;
+  const auto p = find_with_parent(m_head, key, m_comp).first;
   return iterator(p);
 }
 
