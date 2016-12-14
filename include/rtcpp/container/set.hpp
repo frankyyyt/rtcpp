@@ -23,18 +23,17 @@
 
 namespace rt {
 
-template <class T, class Ptr, class A>
+template <class T, class Ptr>
 class bst_iterator :
   public std::iterator<std::bidirectional_iterator_tag, const T> {
   public:
   Ptr m_p;
-  A* m_a;
-  bst_iterator() noexcept : m_p(0), m_a(0) {}
-  bst_iterator(Ptr root, A* a) noexcept : m_p(root), m_a(a) {}
+  bst_iterator() noexcept : m_p(0) {}
+  bst_iterator(Ptr root) noexcept : m_p(root) {}
 
   bst_iterator& operator++() noexcept
   {
-    m_p = tbst::inorder<1>(m_p, *m_a);
+    m_p = tbst::inorder<1>(m_p);
     return *this;
   }
 
@@ -47,7 +46,7 @@ class bst_iterator :
 
   bst_iterator& operator--() noexcept
   {
-    m_p = tbst::inorder<0>(m_p, *m_a);
+    m_p = tbst::inorder<0>(m_p);
     return *this;
   }
 
@@ -61,14 +60,14 @@ class bst_iterator :
   T operator*() const noexcept {return m_p->key;}
 };
 
-template <class T, class Ptr, class A>
-bool operator==( const bst_iterator<T, Ptr, A>& rhs
-               , const bst_iterator<T, Ptr, A>& lhs) noexcept
+template <class T, class Ptr>
+bool operator==( const bst_iterator<T, Ptr>& rhs
+               , const bst_iterator<T, Ptr>& lhs) noexcept
 { return lhs.m_p == rhs.m_p; }
 
-template <class T, class Ptr, class A>
-bool operator!=( const bst_iterator<T, Ptr, A>& rhs
-               , const bst_iterator<T, Ptr, A>& lhs) noexcept
+template <class T, class Ptr>
+bool operator!=( const bst_iterator<T, Ptr>& rhs
+               , const bst_iterator<T, Ptr>& lhs) noexcept
 { return !(lhs == rhs); }
 
 template < typename T
@@ -102,7 +101,7 @@ class set {
   using const_node_pointer =
     typename inner_alloc_traits_type::const_pointer;
   public:
-  using iterator = bst_iterator<T, node_pointer, inner_alloc_type>;
+  using iterator = bst_iterator<T, node_pointer>;
   using const_iterator = iterator;
   using const_reverse_iterator =
     std::reverse_iterator<const_iterator>;
@@ -135,8 +134,8 @@ class set {
   void clear() noexcept;
   std::pair<iterator, bool> insert(const value_type& key) noexcept;
   const_iterator begin() const noexcept
-  {return const_iterator(tbst::inorder<1>(m_head, m_inner_alloc), &m_inner_alloc);}
-  const_iterator end() const noexcept {return const_iterator(m_head, &m_inner_alloc);}
+  {return const_iterator(tbst::inorder<1>(m_head));}
+  const_iterator end() const noexcept {return const_iterator(m_head);}
   const_reverse_iterator rbegin() const noexcept {return const_reverse_iterator(end());}
   const_reverse_iterator rend() const noexcept {return const_reverse_iterator(begin());}
   key_compare key_comp() const noexcept {return m_comp;}
@@ -247,7 +246,7 @@ void set<T, Compare, Allocator>::clear() noexcept
 {
   node_pointer p = m_head;
   for (;;) {
-    node_pointer q = tbst::inorder<1>(p, m_inner_alloc);
+    node_pointer q = tbst::inorder<1>(p);
     if (p != m_head) {
       inner_alloc_traits_type::destroy(m_inner_alloc, &q->key);
       release_node(p);
@@ -336,7 +335,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
     node_pointer q = get_node();
     safe_construct(q, key);
     tbst::attach_node<0>(m_head, q, m_inner_alloc);
-    return std::make_pair(const_iterator(q, &m_inner_alloc), true);
+    return std::make_pair(const_iterator(q), true);
   }
 
   node_pointer p = inner_alloc_traits_type::make_ptr(m_inner_alloc, m_head->link[0]);
@@ -348,7 +347,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
         node_pointer q = get_node();
         safe_construct(q, key);
         tbst::attach_node<0>(p, q, m_inner_alloc);
-        return std::make_pair(iterator(q, &m_inner_alloc), true);
+        return std::make_pair(iterator(q), true);
       }
     } else if (m_comp(p->key, key)) {
       if (!p->template get_null_link<1>()) {
@@ -357,10 +356,10 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
         node_pointer q = get_node();
         safe_construct(q, key);
         tbst::attach_node<1>(p, q, m_inner_alloc);
-        return std::make_pair(iterator(q, &m_inner_alloc), true);
+        return std::make_pair(iterator(q), true);
       }
     } else {
-      return std::make_pair(iterator(p, &m_inner_alloc), false);
+      return std::make_pair(iterator(p), false);
     }
   }
 }
@@ -403,7 +402,7 @@ set<T, Compare, Allocator>::find(const K& key) const
   // has an additional pointer to chase the parent pointer.
   // However maintaining two functions is not desirable
   const auto p = find_with_parent(m_head, key, m_comp, m_inner_alloc).first;
-  return iterator(p, &m_inner_alloc);
+  return iterator(p);
 }
 
 template <typename T, typename Compare, typename Allocator>

@@ -67,17 +67,18 @@ operator<<(std::ostream& os, const node<T, Ptr>& o)
   return os;
 }
 
-template <std::size_t I, class Ptr, class A> 
-Ptr inorder(Ptr p, A& a) noexcept
+template <std::size_t I, class Ptr> 
+Ptr inorder(Ptr p) noexcept
 {
   // I = 0: predecessor. I = 1: sucessor.
 
-  using alloc_traits = rt::allocator_traits<A>;
+  if (p->template get_null_link<I>()) {
+    p = p->link[I];
+    return p;
+  }
 
-  if (p->template get_null_link<I>())
-    return alloc_traits::make_ptr(a, p->link[I]);
-
-  Ptr q = alloc_traits::make_ptr(a, p->link[I]);
+  Ptr q = p;
+  q = p->link[I];
   while (!q->template get_null_link<dir[I]>())
     q = q->link[dir[I]];
 
@@ -137,7 +138,7 @@ void attach_node(Ptr p, Ptr q, A& a) noexcept
   q->template set_link_null<dir[I]>();
 
   if (!q->template get_null_link<I>()) {
-    Ptr qs = inorder<I>(q, a);
+    Ptr qs = inorder<I>(q);
     qs->link[dir[I]] = q;
   }
 }
@@ -153,7 +154,7 @@ Ptr2 erase_node_lr_non_null(Ptr* linker, Ptr2 q, A& a) noexcept
   auto s = alloc_traits::make_ptr(a, q->link[I]);
   if (u != q)
     s = u->link[dir[I]];
-  auto p = inorder<dir[I]>(q, a);
+  auto p = inorder<dir[I]>(q);
   s->link[dir[I]] = q->link[dir[I]];;
   s->template unset_link_null<dir[I]>();
   p->link[I] = s;
