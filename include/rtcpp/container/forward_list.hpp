@@ -137,7 +137,7 @@ template <typename T, typename Allocator>
 typename forward_list<T, Allocator>::node_pointer
 forward_list<T, Allocator>::create_node(const T& data)
 {
-  node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
+  auto q = inner_alloct_type::allocate_node(m_inner_alloc);
   safe_construct(q, data);
   return q;
 }
@@ -146,7 +146,7 @@ template <typename T, typename Allocator>
 typename forward_list<T, Allocator>::node_pointer
 forward_list<T, Allocator>::create_node(T&& data)
 {
-  node_pointer q = inner_alloct_type::allocate_node(m_inner_alloc);
+  auto q = inner_alloct_type::allocate_node(m_inner_alloc);
   safe_construct(q, std::forward<T>(data));
   return q;
 }
@@ -204,8 +204,8 @@ typename forward_list<T, Allocator>::node_pointer p, T&& key)
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::remove_if(T value)
 {
-  node_pointer* p1 = &head.next;
-  node_pointer p2 = head.next;
+  auto* p1 = &head.next;
+  auto p2 = head.next;
   while (p2 != &head) {
     if (p2->info == value) {
       node_pointer tmp = p2->next;
@@ -223,9 +223,9 @@ void forward_list<T, Allocator>::remove_if(T value)
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::reverse()
 {
-  node_pointer prev = &head;
+  auto prev = &head;
   while (head.next != &head) {
-    node_pointer middle = head.next;
+    auto middle = head.next;
     head.next = middle->next;
     middle->next = prev;
     prev = middle;
@@ -236,8 +236,8 @@ void forward_list<T, Allocator>::reverse()
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::sorted_insertion(const T& K)
 {
-  node_pointer p = head.next;
-  node_pointer q = &head;
+  auto p = head.next;
+  auto q = &head;
   while (p != &head) {
     if (K < p->info) {
       insert_after(const_iterator(q), K);
@@ -294,11 +294,11 @@ template <typename T, typename Allocator>
 template <class Compare>
 void forward_list<T, Allocator>::insertion_sort(Compare comp)
 {
-  node_pointer a = head.next;
-  node_pointer b = a->next;
+  auto a = head.next;
+  auto b = a->next;
   while (b != &head) {
-    node_pointer p = head.next;
-    node_pointer q = &head;
+    auto p = head.next;
+    auto* q = &head;
     while (p != b) {
       if (comp(b->info, p->info)) {
         q->next = b;
