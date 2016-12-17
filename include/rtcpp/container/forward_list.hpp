@@ -14,10 +14,14 @@ namespace rt {
 
 template <class T, class Ptr>
 struct forward_list_node {
+  using value_type = T;
   using link_type = typename std::pointer_traits<Ptr>::template
     rebind<forward_list_node<T, Ptr>>;
   T info;
   link_type next;
+
+  template<class U, class K>
+  struct rebind { using other = forward_list_node<U , K>; };
 };
 
 template <class T, class Ptr>
@@ -27,7 +31,7 @@ class flist_iter :
   Ptr head;
   public:
   // Make this private.
-  Ptr get_internal_ptr() const {return head;}
+  Ptr get_internal_ptr() {return head;}
   flist_iter(Ptr h) : head(h) {}
   flist_iter& operator++()
   {
@@ -40,7 +44,7 @@ class flist_iter :
     operator++();
     return tmp;
   }
-  T& operator*() const { return head->info; }
+  T& operator*() { return head->info; }
   bool operator==(const flist_iter<T, Ptr>& rhs)
   {return head == rhs.head;}
   bool operator!=(const flist_iter<T, Ptr>& rhs)
@@ -54,7 +58,7 @@ class flist_const_iter :
   Ptr head;
   public:
   // Make this private.
-  Ptr get_internal_ptr() const {return head;}
+  Ptr get_internal_ptr() {return head;}
   flist_const_iter(Ptr h) : head(h) {}
   template <class P>
   flist_const_iter(flist_iter<T, P> h) : head(h.get_internal_ptr()) {}
@@ -97,21 +101,35 @@ class forward_list {
   using node_pointer = typename inner_alloct_type::pointer;
   using const_node_pointer = typename inner_alloct_type::const_pointer;
   using iterator = flist_iter<T, node_pointer>;
-  using const_iterator = flist_const_iter<T, const_node_pointer>;
+  //using const_iterator = flist_const_iter<T, const_node_pointer>;
+  using const_iterator = iterator;
   private:
   inner_alloc_type m_inner_alloc;
   node_pointer head; // Not requested from the allocator.
   node_pointer create_node(const T& data);
   public:
   forward_list(const Allocator& alloc = Allocator()) noexcept;
-  iterator begin() noexcept {return iterator(head->next);}
+  iterator begin() noexcept
+  {
+    auto p = head;
+    p = head->next;
+    return iterator(p);
+  }
   iterator end() noexcept {return iterator(head);}
   size_type max_size() const noexcept { m_inner_alloc.max_size();}
   const_iterator begin() const noexcept
-  {return const_iterator(head->next);}
+  {
+    auto p = head;
+    p = head->next;
+    return const_iterator(p);
+  }
   const_iterator end() const noexcept {return const_iterator(head);}
   const_iterator cbegin() const noexcept
-  {return const_iterator(head->next);}
+  {
+    auto p = head;
+    p = head->next;
+    return const_iterator(p);
+  }
   const_iterator cend() const noexcept {return const_iterator(head);}
   ~forward_list()
   {
@@ -210,11 +228,12 @@ template <typename T, typename Allocator>
 void forward_list<T, Allocator>::remove_if(T value)
 {
   auto* p1 = &head->next;
-  auto p2 = head->next;
+  auto p2 = head;
+  p2 = head->next;
   while (p2 != head) {
     if (p2->info == value) {
-      node_pointer tmp = p2->next;
-      inner_alloct_type::destroy(m_inner_alloc, p2);
+      auto tmp = p2->next;
+      inner_alloct_type::destroy(m_inner_alloc, &p2->info);
       inner_alloct_type::deallocate_node(m_inner_alloc, p2);
       p2 = tmp;
       *p1 = p2;
@@ -229,8 +248,9 @@ template <typename T, typename Allocator>
 void forward_list<T, Allocator>::reverse()
 {
   auto prev = head;
+  auto middle = head;
   while (head->next != head) {
-    auto middle = head->next;
+    middle = head->next;
     head->next = middle->next;
     middle->next = prev;
     prev = middle;
@@ -241,7 +261,8 @@ void forward_list<T, Allocator>::reverse()
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::sorted_insertion(const T& K)
 {
-  auto p = head->next;
+  auto p = head;
+  p = head->next;
   auto q = head;
   while (p != head) {
     if (K < p->info) {
@@ -261,7 +282,8 @@ typename forward_list<T, Allocator>::iterator
 forward_list<T, Allocator>::insert_after(
   typename forward_list<T, Allocator>::const_iterator pos, const T& K)
 {
-  auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  //auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  auto q = pos.get_internal_ptr();
   auto p = q->next;
   auto u = create_node(K);
   q->next = u;
@@ -274,7 +296,8 @@ typename forward_list<T, Allocator>::iterator
 forward_list<T, Allocator>::insert_after(
  typename forward_list<T, Allocator>::const_iterator pos, T&& K)
 {
-  auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  //auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  auto q = pos.get_internal_ptr();
   auto p = q->next;
   auto u = create_node(std::forward<T>(K));
   q->next = u;
@@ -282,13 +305,14 @@ forward_list<T, Allocator>::insert_after(
   return iterator(u);
 }
 
-template <typename T, typename Allocator>
+template <class T, class Allocator>
 typename forward_list<T, Allocator>::iterator
 forward_list<T, Allocator>::insert_after(
 typename forward_list<T, Allocator>::const_iterator pos,
  size_type n, const T& K)
 {
-  auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  //auto q = const_cast<node_pointer>(pos.get_internal_ptr());
+  auto q = pos.get_internal_ptr();
   iterator iter(q);
   while (n--)
     iter = insert_after(iter, K);
@@ -299,10 +323,13 @@ template <typename T, typename Allocator>
 template <class Compare>
 void forward_list<T, Allocator>::insertion_sort(Compare comp)
 {
-  auto a = head->next;
-  auto b = a->next;
+  auto a = head;
+  a = head->next;
+  auto b = a;
+  b = a->next;
   while (b != head) {
-    auto p = head->next;
+    auto p = head;
+    p = head->next;
     auto q = head;
     while (p != b) {
       if (comp(b->info, p->info)) {
@@ -324,9 +351,10 @@ template <typename T, typename Allocator>
 void forward_list<T, Allocator>::clear()
 {
   while (head->next != head) {
-    auto p = head->next;
+    auto p = head;
+    p = head->next;
     head->next = p->next;
-    inner_alloct_type::destroy(m_inner_alloc, p);
+    inner_alloct_type::destroy(m_inner_alloc, &p->info);
     inner_alloct_type::deallocate_node(m_inner_alloc, p);
   }
 }

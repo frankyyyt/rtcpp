@@ -210,14 +210,26 @@ int main()
     using Node = rt::set<int>::node_type;
 
     using A1 = std::allocator<int>;
-    using A2 = rt::node_allocator<int, Node, unsigned, 2>;
-    using A3 = rt::node_allocator<int, Node, unsigned, 4>;
-    using A4 = rt::node_allocator<int, Node, unsigned, 128>;
+    using A2A = rt::node_allocator<int, Node, unsigned char     , 2>;
+    using A2B = rt::node_allocator<int, Node, unsigned short    , 2>;
+    using A2C = rt::node_allocator<int, Node, unsigned int      , 2>;
+    using A2D = rt::node_allocator<int, Node, unsigned long long, 2>;
+    using A3A = rt::node_allocator<int, Node, unsigned char     , 4>;
+    using A3B = rt::node_allocator<int, Node, unsigned short    , 4>;
+    using A3C = rt::node_allocator<int, Node, unsigned int      , 4>;
+    using A3D = rt::node_allocator<int, Node, unsigned long long, 4>;
+    using A4A = rt::node_allocator<int, Node, unsigned          , 128>;
 
     run_tests<A1>(tmp);
-    run_tests<A2>(tmp);
-    run_tests<A3>(tmp);
-    run_tests<A4>(tmp);
+    run_tests<A2A>(tmp);
+    run_tests<A2B>(tmp);
+    run_tests<A2C>(tmp);
+    run_tests<A2D>(tmp);
+    run_tests<A3A>(tmp);
+    run_tests<A3B>(tmp);
+    run_tests<A3C>(tmp);
+    run_tests<A3D>(tmp);
+    run_tests<A4A>(tmp);
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
     return 1;
