@@ -100,21 +100,25 @@ class forward_list {
   using const_iterator = flist_const_iter<T, const_node_pointer>;
   private:
   inner_alloc_type m_inner_alloc;
-  node_type head; // Not requested from the allocator.
+  node_pointer head; // Not requested from the allocator.
   node_pointer create_node(const T& data);
   public:
   forward_list(const Allocator& alloc = Allocator()) noexcept;
-  iterator begin() noexcept {return iterator(head.next);}
-  iterator end() noexcept {return iterator(&head);}
+  iterator begin() noexcept {return iterator(head->next);}
+  iterator end() noexcept {return iterator(head);}
   size_type max_size() const noexcept { m_inner_alloc.max_size();}
   const_iterator begin() const noexcept
-  {return const_iterator(head.next);}
-  const_iterator end() const noexcept {return const_iterator(&head);}
+  {return const_iterator(head->next);}
+  const_iterator end() const noexcept {return const_iterator(head);}
   const_iterator cbegin() const noexcept
-  {return const_iterator(head.next);}
-  const_iterator cend() const noexcept {return const_iterator(&head);}
-  ~forward_list() { clear(); }
-  bool empty() const {return head.next == &head;}
+  {return const_iterator(head->next);}
+  const_iterator cend() const noexcept {return const_iterator(head);}
+  ~forward_list()
+  {
+    clear();
+    inner_alloct_type::deallocate_node(m_inner_alloc, head);
+  }
+  bool empty() const {return head->next == head;}
   node_pointer create_node(T&& data);
   void push_front(T&& data);
   void push_front(const T& data);
@@ -155,24 +159,25 @@ template <typename T, typename Allocator>
 forward_list<T, Allocator>::
 forward_list(const Allocator& alloc) noexcept
 : m_inner_alloc(alloc)
+, head(create_node(T()))
 {
-  head.next = &head;
+  head->next = head;
 }
 
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::push_front(T&& data)
 {
   auto q = create_node(std::forward<T>(data));
-  q->next = head.next;
-  head.next = q;
+  q->next = head->next;
+  head->next = q;
 }
 
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::push_front(const T& data)
 {
   auto q = create_node(data);
-  q->next = head.next;
-  head.next = q;
+  q->next = head->next;
+  head->next = q;
 }
 
 template <typename T, typename Allocator>
@@ -204,9 +209,9 @@ typename forward_list<T, Allocator>::node_pointer p, T&& key)
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::remove_if(T value)
 {
-  auto* p1 = &head.next;
-  auto p2 = head.next;
-  while (p2 != &head) {
+  auto* p1 = &head->next;
+  auto p2 = head->next;
+  while (p2 != head) {
     if (p2->info == value) {
       node_pointer tmp = p2->next;
       inner_alloct_type::destroy(m_inner_alloc, p2);
@@ -223,22 +228,22 @@ void forward_list<T, Allocator>::remove_if(T value)
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::reverse()
 {
-  auto prev = &head;
-  while (head.next != &head) {
-    auto middle = head.next;
-    head.next = middle->next;
+  auto prev = head;
+  while (head->next != head) {
+    auto middle = head->next;
+    head->next = middle->next;
     middle->next = prev;
     prev = middle;
   }
-  head.next = prev;
+  head->next = prev;
 }
 
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::sorted_insertion(const T& K)
 {
-  auto p = head.next;
-  auto q = &head;
-  while (p != &head) {
+  auto p = head->next;
+  auto q = head;
+  while (p != head) {
     if (K < p->info) {
       insert_after(const_iterator(q), K);
       break;
@@ -247,7 +252,7 @@ void forward_list<T, Allocator>::sorted_insertion(const T& K)
     p = q->next;
   }
 
-  if (p == &head)
+  if (p == head)
     insert_after(const_iterator(q), K);
 }
 
@@ -294,11 +299,11 @@ template <typename T, typename Allocator>
 template <class Compare>
 void forward_list<T, Allocator>::insertion_sort(Compare comp)
 {
-  auto a = head.next;
+  auto a = head->next;
   auto b = a->next;
-  while (b != &head) {
-    auto p = head.next;
-    auto* q = &head;
+  while (b != head) {
+    auto p = head->next;
+    auto q = head;
     while (p != b) {
       if (comp(b->info, p->info)) {
         q->next = b;
@@ -318,9 +323,9 @@ void forward_list<T, Allocator>::insertion_sort(Compare comp)
 template <typename T, typename Allocator>
 void forward_list<T, Allocator>::clear()
 {
-  while (head.next != &head) {
-    auto p = head.next;
-    head.next = p->next;
+  while (head->next != head) {
+    auto p = head->next;
+    head->next = p->next;
     inner_alloct_type::destroy(m_inner_alloc, p);
     inner_alloct_type::deallocate_node(m_inner_alloc, p);
   }

@@ -76,6 +76,8 @@ bool test_push_front_copy()
 {
   std::cout << "test_push_front_copy" << std::endl;
   foo::reset();
+  // This container will allocate the head node and therefore
+  // has to be taken into account.
   forward_list<foo> l;
   foo bar;
   l.push_front(bar);
@@ -86,7 +88,7 @@ bool test_push_front_copy()
     return false;
   if (foo::n_copy_ctor != 2)
     return false;
-  if (foo::n_mv_ctor != 0)
+  if (foo::n_mv_ctor != 1)
     return false;
   if (foo::n_copy_assignment != 0)
     return false;
@@ -113,7 +115,7 @@ bool test_push_front_move()
     return false;
   if (foo::n_copy_ctor != 2)
     return false;
-  if (foo::n_mv_ctor != 2)
+  if (foo::n_mv_ctor != 3)
     return false;
   if (foo::n_copy_assignment != 0)
     return false;
