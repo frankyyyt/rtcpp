@@ -131,9 +131,7 @@ void test_basic()
     const value_type b = size;
 
     const auto data = make_rand_data<value_type>(size, a, b, 1);
-    forward_list<value_type, A> l;
-
-    std::copy(std::begin(data), std::end(data), std::front_inserter(l));
+    forward_list<value_type, A> l(std::begin(data), std::end(data));
 
     const auto b1 = std::equal(std::rbegin(data), std::rend(data),
                                std::begin(l));

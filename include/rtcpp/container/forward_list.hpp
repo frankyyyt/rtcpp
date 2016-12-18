@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <iterator>
 #include <type_traits>
 #include <memory>
@@ -109,6 +110,10 @@ class forward_list {
   node_pointer create_node(const T& data);
   public:
   forward_list(const Allocator& alloc = Allocator()) noexcept;
+  template<class InputIt>
+  forward_list( InputIt first
+              , InputIt last
+              , const Allocator& alloc = Allocator());
   iterator begin() noexcept
   {
     auto p = head;
@@ -180,6 +185,18 @@ forward_list(const Allocator& alloc) noexcept
 , head(create_node(T()))
 {
   head->next = head;
+}
+
+template <class T, class Allocator>
+template<class InputIt>
+forward_list<T, Allocator>::forward_list( InputIt begin
+                                        , InputIt end
+                                        , const Allocator& alloc)
+: m_inner_alloc(alloc)
+, head(create_node(T()))
+{
+  head->next = head;
+  std::copy(begin, end, std::front_inserter(*this));
 }
 
 template <typename T, typename Allocator>

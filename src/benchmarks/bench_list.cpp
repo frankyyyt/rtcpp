@@ -2,17 +2,28 @@
 #include <vector>
 #include <iostream>
 #include <iterator>
-#include <type_traits>
 #include <algorithm>
 #include <functional>
+#include <type_traits>
 
+#include <rtcpp/utility/timer.hpp>
 #include <rtcpp/utility/to_number.hpp>
-#include <rtcpp/utility/make_rand_data.hpp>
-#include <rtcpp/container/forward_list.hpp>
 #include <rtcpp/memory/node_allocator.hpp>
+#include <rtcpp/container/forward_list.hpp>
+#include <rtcpp/utility/make_rand_data.hpp>
 
-#include "heap_frag.hpp"
-#include "print_list_bench.hpp"
+namespace rt {
+
+template <class C>
+void
+print_list_bench(const std::vector<typename C::value_type>& data)
+{
+  C l(std::begin(data), std::end(data));
+  rt::timer t;
+  l.sort();
+}
+
+}
 
 int main(int argc, char* argv[])
 {
