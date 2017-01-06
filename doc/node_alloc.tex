@@ -268,6 +268,38 @@
 \end{columns}
 \end{frame}
 
+%___________________________________________________________
+\begin{frame}{Who I am}
+
+\begin{columns}
+\begin{column}[c]{0.45\textwidth}
+\begin{tikzpicture}[scale=1.0]
+\fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:57:3.3cm) -- (57:2.5cm) arc (57:0:2.5cm);
+\fill[bothcontc]  (57:2.5cm) -- (57:3.3cm) arc (57:253:3.3cm) -- (253:2.5cm) arc (253:57:2.5cm);
+\fill[nodecontc]  (253:2.5cm) -- (253:3.3cm) arc (253:343:3.3cm) -- (343:2.5cm) arc (343:253:2.5cm);
+\fill[memC]       (343:2.5cm) -- (343:3.3cm) arc (343:360:3.3cm) -- (360:2.5cm) arc (360:343:2.5cm);
+
+\filldraw[arraycontc] (-1.5cm, 0.50cm) circle (0.08cm) node[right] {\color{black} Edorado Institute};
+\filldraw[bothcontc]  (-1.5cm, 0.00cm) circle (0.08cm) node[right] {\color{black} Numerical Offshore Tank};
+\filldraw[nodecontc]  (-1.5cm,-0.50cm) circle (0.08cm) node[right] {\color{black} Robert Bosch GmbH};
+\filldraw[memC]       (-1.5cm,-1.00cm) circle (0.08cm) node[right] {\color{black} Hess Cash Systems};
+\end{tikzpicture}
+\end{column}
+
+\begin{column}[c]{0.45\textwidth}
+\begin{tikzpicture}[scale=1.0]
+\fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:125:3.3cm) -- (125:2.5cm) arc (125:0:2.5cm);
+\fill[bothcontc]  (125:2.5cm) -- (125:3.3cm) arc (125:187:3.3cm) -- (187:2.5cm) arc (187:125:2.5cm);
+\fill[nodecontc]  (187:2.5cm) -- (187:3.3cm) arc (187:360:3.3cm) -- (360:2.5cm) arc (360:187:2.5cm);
+
+\filldraw[arraycontc] (-2cm,0.50cm) circle (0.08cm) node[right] {\color{black} Bsc Physics};
+\filldraw[bothcontc] (-2cm,-0.00cm) circle (0.08cm) node[right] {\color{black} Msc Physics - gravitation};
+\filldraw[nodecontc] (-2cm,-0.50cm) circle (0.08cm) node[right] {\color{black} PhD Astrophisics};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
 %____________________________________________________________
 \begin{frame}{Outline}
    %\tableofcontents[currentsection,currentsubsection]
@@ -405,32 +437,6 @@ auto* p4 = alloc.allocate(16);
 \end{block}
 \end{column}
 
-\end{columns}
-\end{frame}
-
-%___________________________________________________________
-\begin{frame}{Node allocation in the STL matters}
-
-\begin{columns}
-\begin{column}[c]{0.45\textwidth}
-\begin{tikzpicture}[scale=1.0]
-\fill[bothcontc]  (30:2.5cm) -- (30:3.3cm) arc (30:360:3.3cm) -- (360:2.5cm) arc (360:30:2.5cm);
-\fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:30:3.3cm) -- (30:2.5cm) arc (30:0:2.5cm);
-
-\filldraw[arraycontc] (-2cm,0.25cm) circle (0.08cm) node[right] {\color{black} Only array allocation (1)};
-\filldraw[bothcontc] (-2cm,-0.25cm) circle (0.08cm) node[right] {\color{black} Perform node allocation (11)};
-\end{tikzpicture}
-\end{column}
-
-\begin{column}[c]{0.45\textwidth}
-\begin{tikzpicture}[scale=1.0]
-\fill[bothcontc]  (180:2.5cm) -- (180:3.3cm) arc (180:360:3.3cm) -- (360:2.5cm) arc (360:180:2.5cm);
-\fill[arraycontc] (0:2.5cm) -- (0:3.3cm) arc (0:180:3.3cm) -- (180:2.5cm) arc (180:0:2.5cm);
-
-\filldraw[arraycontc] (-2cm,0.25cm) circle (0.08cm) node[right] {\color{black} Only node allocation (6)};
-\filldraw[bothcontc] (-2cm,-0.25cm) circle (0.08cm) node[right] {\color{black} Perform array allocation (6)};
-\end{tikzpicture}
-\end{column}
 \end{columns}
 \end{frame}
 
