@@ -90,6 +90,7 @@ class set {
   private:
   using alloc_traits_type = rt::allocator_traits<Allocator>;
   using void_pointer = typename alloc_traits_type::void_pointer;
+  using link_type = typename alloc_traits_type::link_type;
   public:
   using node_type = tbst::node<value_type, void_pointer>;
   private:

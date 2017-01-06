@@ -16,7 +16,7 @@ namespace rt { namespace tbst {
 
 constexpr int dir[2] = {1, 0};
 
-template <typename T, typename Ptr>
+template <class T, class Ptr>
 class node {
   public:
   using value_type = T;

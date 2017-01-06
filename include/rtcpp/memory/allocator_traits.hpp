@@ -33,7 +33,8 @@ struct allocator_traits {
   using size_type = std::size_t;
   using value_type = typename Alloc::value_type;
   using difference_type = std::ptrdiff_t;
-  using void_pointer = typename void_pointer_type<Alloc>::void_pointer;
+  using void_pointer = typename void_pointer_type<Alloc>::type;
+  using link_type = typename link_type<Alloc>::type;
   using const_void_pointer =
     typename const_void_pointer_type<Alloc>::const_void_pointer;
   using const_pointer = typename Alloc::const_pointer;
