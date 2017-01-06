@@ -21,6 +21,7 @@ template <class T, class L, std::size_t N>
 class node_ptr {
   public:
   using storage_type = node_storage<T, L, N>;
+  using difference_type = std::ptrdiff_t;
   private:
   storage_type* storage {nullptr};
   L idx {};
@@ -126,6 +127,7 @@ class node_ptr_void {
   public:
   using link_type = L;
   using element_type = void;
+  using difference_type = std::ptrdiff_t;
   template <class U>
   using rebind = node_link<U, L, N>;
 };

@@ -6,6 +6,24 @@
 
 namespace rt {
 
+template <class T>
+struct pointer_traits {
+  using pointer = T;
+  using element_type = typename T::element_type;
+  using difference_type = typename T::difference_type;
+  template <class U>
+  using rebind = typename T::template rebind<U>;
+};
+
+template <class T>
+struct pointer_traits<T*> {
+  using pointer = T*;
+  using element_type = T;
+  using difference_type = std::ptrdiff_t;
+  template <class U>
+  using rebind = U*;
+};
+
 template <typename Alloc>
 struct allocator_traits {
   using allocator_type = Alloc;

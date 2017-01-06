@@ -20,7 +20,7 @@ template <typename T, typename Ptr>
 class node {
   public:
   using value_type = T;
-  using link_type = typename std::pointer_traits<Ptr>::template
+  using link_type = typename rt::pointer_traits<Ptr>::template
     rebind<node<T, Ptr>>;
 
   private:
