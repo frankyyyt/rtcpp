@@ -91,8 +91,9 @@ class node_link {
   L get_idx() const {return idx;}
   using link_type = L;
   using element_type = T;
+  using difference_type = std::ptrdiff_t;
   template <class U>
-  using rebind = node_ptr<U, L, N>;
+  using rebind = node_link<U, L, N>;
   node_link& operator=(const node_ptr<T, L, N>& rhs)
   {
     idx = rhs.get_idx();

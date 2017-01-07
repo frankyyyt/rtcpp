@@ -43,9 +43,10 @@ class node_allocator {
   using const_void_pointer = node_ptr_void<L, S>;
   using node_type =
     typename Node::template rebind< typename Node::value_type
-                                  , void_pointer>::other;
-  using node_storage_type = node_storage<node_type, L, S>;
+                                  , node_link<T, L, S>>::other;
+
   using link_type = node_link<T, L, S>;
+  using node_storage_type = node_storage<node_type, L, S>;
 
   template<class U>
   struct rebind {
@@ -108,10 +109,12 @@ class node_allocator<T, Node, L, S, A, true> {
   using value_type = T;
   using void_pointer = node_ptr_void<L, S>;
   using const_void_pointer = node_ptr_void<L, S>;
-  using link_type = node_link<T, L, S>;
-  using node_type =
-    typename Node::template rebind< typename Node::value_type
-                                  , void_pointer>::other;
+  using node_type = typename
+    Node::template rebind< typename Node::value_type
+                         , node_link< typename value_type::value_type
+                         , L
+                         , S>>::other;
+  using link_type = typename node_type::link_type;
 
   static_assert((std::is_same<T, node_type>::value),
   "node_allocator: Error1.");

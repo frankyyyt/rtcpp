@@ -92,7 +92,7 @@ class set {
   using void_pointer = typename alloc_traits_type::void_pointer;
   using link_type = typename alloc_traits_type::link_type;
   public:
-  using node_type = tbst::node<value_type, void_pointer>;
+  using node_type = tbst::node<value_type, link_type>;
   private:
   using inner_alloc_type =
     typename alloc_traits_type::template rebind_alloc<node_type>;

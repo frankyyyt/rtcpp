@@ -16,7 +16,7 @@ namespace rt {
 template <class T, class Ptr>
 struct forward_list_node {
   using value_type = T;
-  using link_type = typename std::pointer_traits<Ptr>::template
+  using link_type = typename rt::pointer_traits<Ptr>::template
     rebind<forward_list_node<T, Ptr>>;
   T info;
   link_type next;
@@ -94,7 +94,8 @@ class forward_list {
   using pointer = typename alloct_type::pointer;
   using const_pointer = typename alloct_type::const_pointer;
   using void_pointer = typename alloct_type::void_pointer;
-  using node_type = forward_list_node<T, void_pointer>;
+  using link_type = typename alloct_type::link_type;
+  using node_type = forward_list_node<T, link_type>;
   using inner_alloc_type =
     typename alloct_type::template rebind_alloc<node_type>;
   using inner_alloct_type = typename
