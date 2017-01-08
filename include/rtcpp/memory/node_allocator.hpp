@@ -30,7 +30,7 @@ class node_allocator {
   "node_allocator: Link type must be unsigned.");
   static_assert((S - 1 <= std::numeric_limits<L>::max()),
   "node_allocator: Incompatible block size.");
-  public:
+public:
   using node_allocation_only = std::true_type;
   using size_type = typename A::size_type;
   using pointer = typename A::pointer;
@@ -39,28 +39,22 @@ class node_allocator {
   using const_reference = typename A::const_reference;
   using value_type = typename A::value_type;
 
-  using void_pointer = node_ptr_void<L, S>;
-  using const_void_pointer = node_ptr_void<L, S>;
+  using link_type = node_link<T, L, S>;
   using node_type =
     typename Node::template rebind< typename Node::value_type
-                                  , node_link<T, L, S>>::other;
+                                  , link_type>::other;
 
-  using link_type = node_link<T, L, S>;
-  using node_storage_type = node_storage<node_type, L, S>;
+  using storage_type = node_storage<node_type, L, S>;
 
   template<class U>
   struct rebind {
-    using other = node_allocator< U
-                                , Node
-                                , L
-                                , S
-                                , A
+    using other = node_allocator< U, Node, L, S, A
                                 , is_node_type<U>::value>;
   };
-  std::shared_ptr<node_storage_type> header;
+  std::shared_ptr<storage_type> header;
   A alloc;
   node_allocator(const A& a = A())
-  : header(std::make_shared<node_storage_type>())
+  : header(std::make_shared<storage_type>())
   , alloc(a)
   {}
 
@@ -99,22 +93,18 @@ class node_allocator<T, Node, L, S, A, true> {
   static_assert((is_power_of_two<S>::value),
   "node_allcator: S must be a power of 2.");
   public:
-  using node_storage_type = node_storage<T, L, S>;
   using node_allocation_only = std::true_type;
   using size_type = typename A::size_type;
-  using pointer = typename node_storage_type::pointer;
-  using const_pointer = pointer;
+  using storage_type = node_storage<T, L, S>;
+  using pointer = typename storage_type::pointer;
+  using const_pointer = typename storage_type::const_pointer;
   using reference = T&;
   using const_reference = const T&;
   using value_type = T;
-  using void_pointer = node_ptr_void<L, S>;
-  using const_void_pointer = node_ptr_void<L, S>;
-  using node_type = typename
-    Node::template rebind< typename Node::value_type
-                         , node_link< typename value_type::value_type
-                         , L
-                         , S>>::other;
-  using link_type = typename node_type::link_type;
+  using void_pointer = typename storage_type::void_pointer;
+  using const_void_pointer = typename storage_type::const_void_pointer;
+  using link_type = typename storage_type::link_type;
+  using node_type = typename storage_type::value_type;
 
   static_assert((std::is_same<T, node_type>::value),
   "node_allocator: Error1.");
@@ -127,19 +117,15 @@ class node_allocator<T, Node, L, S, A, true> {
 
   template<class U>
   struct rebind {
-    using other = node_allocator< U
-                                , Node
-                                , L
-                                , S
-                                , A
+    using other = node_allocator< U, Node, L, S, A
                                 , is_node_type<U>::value>;
   };
 
-  std::shared_ptr<node_storage_type> header;
+  std::shared_ptr<storage_type> header;
   A alloc;
 
   node_allocator(const A& a = A())
-  : header(std::make_shared<node_storage_type>())
+  : header(std::make_shared<storage_type>())
   , alloc(a) {}
 
   template<class U, class V>

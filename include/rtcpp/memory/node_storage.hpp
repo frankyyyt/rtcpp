@@ -146,7 +146,7 @@ class node_storage {
   "node_storage: N must be a power of 2.");
   static_assert((N >= 2),
   "node_storage: Number of blocks must be at least 2.");
-  private:
+private:
   static constexpr auto SL = sizeof (L);
   static constexpr auto ST = sizeof (T);
   // Block size in units of link type size.
@@ -157,8 +157,14 @@ class node_storage {
   node_storage& operator=(const node_storage&) = delete;
   node_storage(const node_storage&) = delete;
   void swap(node_storage& other);
-  public:
+public:
   using pointer = node_ptr<T, L, N>;
+  using const_pointer = pointer;
+  using void_pointer = node_ptr_void<L, N>;
+  using const_void_pointer = void_pointer;
+  using link_type = node_link<T, L, N>;
+  using value_type = T;
+
   node_storage() {}
   std::size_t get_n_blocks() const {return bufs.size();}
   L* get_base_ptr(L idx) { return bufs[idx / N].get(); }
