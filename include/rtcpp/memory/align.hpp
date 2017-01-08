@@ -15,21 +15,24 @@ struct is_power_of_two {
 template <std::size_t N>
 constexpr bool is_aligned(std::size_t a) noexcept
 { 
-  static_assert(is_power_of_two<N>::value, "is_aligned: N must be a power of two.");
+  static_assert(is_power_of_two<N>::value,
+  "is_aligned: N must be a power of two.");
   return (a & (N - 1)) == 0;
 }
 
 template <std::size_t N>
 constexpr std::size_t align_previous(std::size_t a) noexcept
 {
-  static_assert(is_power_of_two<N>::value, "align_previous: N must be a power of two.");
+  static_assert(is_power_of_two<N>::value,
+  "align_previous: N must be a power of two.");
   return (a & ~(N - 1));
 }
 
 template <std::size_t N>
 constexpr std::size_t align_next(std::size_t a) noexcept
 {
-  static_assert(is_power_of_two<N>::value, "align_next: N must be a power of two.");
+  static_assert(is_power_of_two<N>::value,
+  "align_next: N must be a power of two.");
   return align_previous<N>(a) + N;
 }
 
@@ -38,7 +41,8 @@ void align_if_needed(char*& p, std::size_t& s) noexcept
 {
   // If p is not aligned on an N boundary, this unction will align it and
   // update s if alignment took place.
-  static_assert(is_power_of_two<N>::value, "align_next: N must be a power of two.");
+  static_assert(is_power_of_two<N>::value,
+  "align_next: N must be a power of two.");
   // aligns the pointer on a word boundary.
   const std::uintptr_t a = reinterpret_cast<std::uintptr_t>(p);
   const std::uintptr_t c = is_aligned<N>(a) ? a : align_next<N>(a);
@@ -46,5 +50,5 @@ void align_if_needed(char*& p, std::size_t& s) noexcept
   s -= c - a;
 }
 
-}
+} // rt
 
