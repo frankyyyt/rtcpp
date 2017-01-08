@@ -18,7 +18,7 @@ namespace rt {
 
 template < class T
          , class Node
-         , class L = std::size_t
+         , class Index = std::size_t
          , std::size_t S = 256 // Block size.
          , class A = std::allocator<T>
          , bool B = is_node_type<T>::value
@@ -26,9 +26,9 @@ template < class T
 class node_allocator {
   static_assert((is_power_of_two<S>::value),
   "node_allocator: S must be a power of 2.");
-  static_assert((std::is_unsigned<L>::value),
+  static_assert((std::is_unsigned<Index>::value),
   "node_allocator: Link type must be unsigned.");
-  static_assert((S - 1 <= std::numeric_limits<L>::max()),
+  static_assert((S - 1 <= std::numeric_limits<Index>::max()),
   "node_allocator: Incompatible block size.");
 public:
   using node_allocation_only = std::true_type;
@@ -39,16 +39,16 @@ public:
   using const_reference = typename A::const_reference;
   using value_type = typename A::value_type;
 
-  using link_type = node_link<T, L, S>;
+  using link_type = node_link<T, Index, S>;
   using node_type =
     typename Node::template rebind< typename Node::value_type
                                   , link_type>::other;
 
-  using storage_type = node_storage<node_type, L, S>;
+  using storage_type = node_storage<node_type, Index, S>;
 
   template<class U>
   struct rebind {
-    using other = node_allocator< U, Node, L, S, A
+    using other = node_allocator< U, Node, Index, S, A
                                 , is_node_type<U>::value>;
   };
   std::shared_ptr<storage_type> header;
@@ -59,7 +59,7 @@ public:
   {}
 
   template<class U, class V>
-  node_allocator(const node_allocator<U, V, L, S, A, false>& a)
+  node_allocator(const node_allocator<U, V, Index, S, A, false>& a)
   : header(a.header)
   , alloc(a.alloc)
   {}
@@ -86,16 +86,16 @@ public:
 
 template < class T
          , class Node
-         , class L
+         , class Index
          , std::size_t S
          , class A>
-class node_allocator<T, Node, L, S, A, true> {
+class node_allocator<T, Node, Index, S, A, true> {
   static_assert((is_power_of_two<S>::value),
   "node_allcator: S must be a power of 2.");
   public:
   using node_allocation_only = std::true_type;
   using size_type = typename A::size_type;
-  using storage_type = node_storage<T, L, S>;
+  using storage_type = node_storage<T, Index, S>;
   using pointer = typename storage_type::pointer;
   using const_pointer = typename storage_type::const_pointer;
   using reference = T&;
@@ -117,7 +117,7 @@ class node_allocator<T, Node, L, S, A, true> {
 
   template<class U>
   struct rebind {
-    using other = node_allocator< U, Node, L, S, A
+    using other = node_allocator< U, Node, Index, S, A
                                 , is_node_type<U>::value>;
   };
 
@@ -129,11 +129,11 @@ class node_allocator<T, Node, L, S, A, true> {
   , alloc(a) {}
 
   template<class U, class V>
-  node_allocator(const node_allocator<U, V, L, S, A, true>& a)
+  node_allocator(const node_allocator<U, V, Index, S, A, true>& a)
   : header(a.header), alloc(a.alloc) {}
 
   template<class U, class V>
-  node_allocator(const node_allocator<U, V, L, S, A, false>& a)
+  node_allocator(const node_allocator<U, V, Index, S, A, false>& a)
   : header(a.header)
   , alloc(a.alloc) {}
 
@@ -163,23 +163,23 @@ class node_allocator<T, Node, L, S, A, true> {
   { return std::addressof(x); }
 };
 
-template <class T, class V, class L, std::size_t S, class A, bool B>
-bool operator==( const node_allocator<T, V, L, S, A, B>& alloc1
-               , const node_allocator<T, V, L, S, A, B>& alloc2)
+template <class T, class V, class Index, std::size_t S, class A, bool B>
+bool operator==( const node_allocator<T, V, Index, S, A, B>& alloc1
+               , const node_allocator<T, V, Index, S, A, B>& alloc2)
 {return alloc1.header == alloc2.header;}
 
-template <class T, class V, class L, std::size_t S, class A, bool B>
-bool operator!=( const node_allocator<T, V, L, S, A, B>& alloc1
-               , const node_allocator<T, V, L, S, A, B>& alloc2)
+template <class T, class V, class Index, std::size_t S, class A, bool B>
+bool operator!=( const node_allocator<T, V, Index, S, A, B>& alloc1
+               , const node_allocator<T, V, Index, S, A, B>& alloc2)
 {return !(alloc1 == alloc2);}
 
 }
 
 namespace std {
 
-template <class T, class V, class L, std::size_t S, class A, bool B>
-void swap( const rt::node_allocator<T, V, L, S, A, B>& alloc1
-         , const rt::node_allocator<T, V, L, S, A, B>& alloc2)
+template <class T, class V, class Index, std::size_t S, class A, bool B>
+void swap( const rt::node_allocator<T, V, Index, S, A, B>& alloc1
+         , const rt::node_allocator<T, V, Index, S, A, B>& alloc2)
 { alloc1.swap(alloc2); }
 
 }
