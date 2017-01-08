@@ -19,13 +19,13 @@ class node_storage;
 
 template <class T, class Index, std::size_t N>
 class node_ptr {
-  public:
+public:
   using storage_type = node_storage<T, Index, N>;
   using difference_type = std::ptrdiff_t;
-  private:
+private:
   storage_type* storage {nullptr};
   Index idx {};
-  public:
+public:
   using index_type = Index;
   using element_type = T;
   template <class U>
@@ -85,20 +85,17 @@ bool operator!=( const node_ptr<T, Index, N>& p1
 
 template <class T, class Index, std::size_t N>
 class node_link {
-  private:
+private:
   Index idx;
-  public:
-  Index get_idx() const {return idx;}
+public:
   using index_type = Index;
   using element_type = T;
   using difference_type = std::ptrdiff_t;
-  template <class U>
-  using rebind = node_link<U, Index, N>;
+
+  Index get_idx() const {return idx;}
+  template <class U> using rebind = node_link<U, Index, N>;
   node_link& operator=(const node_ptr<T, Index, N>& rhs)
-  {
-    idx = rhs.get_idx();
-    return *this;
-  }
+  { idx = rhs.get_idx(); return *this; }
 };
 
 //____________________________________________________
@@ -134,7 +131,7 @@ class node_ptr_void {
 };
 
 template < class T // Node type.
-         , class Index // link type.
+         , class Index // Index type.
          , std::size_t N // Number of blocks.
          >
 class node_storage {
@@ -166,10 +163,14 @@ public:
   using value_type = T;
 
   node_storage() {}
-  std::size_t get_n_blocks() const {return bufs.size();}
-  Index* get_base_ptr(Index idx) { return bufs[idx / N].get(); }
-  const Index* get_base_ptr(Index idx) const { return bufs[idx / N].get(); }
-  std::size_t get_raw_idx(Index idx) const {return (idx % N) * R;}
+  std::size_t get_n_blocks() const
+  {return bufs.size();}
+  Index* get_base_ptr(Index idx)
+  { return bufs[idx / N].get(); }
+  const Index* get_base_ptr(Index idx) const
+  { return bufs[idx / N].get(); }
+  std::size_t get_raw_idx(Index idx) const
+  {return (idx % N) * R;}
   pointer pop();
   void push(pointer idx) noexcept;
   bool operator==(const node_storage& rhs) const noexcept
