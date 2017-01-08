@@ -270,14 +270,15 @@ set<T, Compare, Allocator>::~set() noexcept
 }
 
 template <typename T, typename Compare, typename Allocator>
-void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noexcept
+void set<T, Compare, Allocator>::
+copy(set<T, Compare, Allocator>& rhs) const noexcept
 {
-  const_node_pointer p = m_head;
-  node_pointer q = rhs.m_head;
+  auto p = m_head;
+  auto q = rhs.m_head;
 
   for (;;) {
     if (!p->template get_null_link<0>()) {
-      node_pointer tmp = get_node();
+      auto tmp = get_node();
       tbst::attach_node<0>(q, tmp);
     }
 
@@ -288,7 +289,7 @@ void set<T, Compare, Allocator>::copy(set<T, Compare, Allocator>& rhs) const noe
       break;
 
     if (!p->template get_null_link<1>()) {
-      node_pointer tmp = get_node();
+      auto tmp = get_node();
       tbst::attach_node<1>(q, tmp);
     }
 
