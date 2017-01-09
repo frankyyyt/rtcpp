@@ -27,12 +27,12 @@ RTCPP_HAS_NESTED_TYPE(const_void_pointer)
 
 //__________________________________________________________________
 template <class A, bool B = has_void_pointer<A>::value>
-struct void_pointer_type {
+struct void_pointer {
   using type = typename A::void_pointer;
 };
 
 template <class A>
-struct void_pointer_type<A, false> {
+struct void_pointer<A, false> {
   using pointer = typename A::pointer;
   using type =
     typename std::pointer_traits<pointer>::template rebind<void>;
@@ -46,19 +46,19 @@ struct link_type {
 
 template <class A>
 struct link_type<A, false> {
-  using type = typename A::pointer;
+  using type = typename void_pointer<A>::type;
 };
 
 //__________________________________________________________________
 template <class A, bool B = has_const_void_pointer<A>::value>
-struct const_void_pointer_type {
-  using const_void_pointer = typename A::const_void_pointer;
+struct const_void_pointer {
+  using type = typename A::const_void_pointer;
 };
 
 template <class A>
-struct const_void_pointer_type<A, false> {
+struct const_void_pointer<A, false> {
   using pointer = typename A::pointer;
-  using const_void_pointer =
+  using type =
     typename std::pointer_traits<pointer>::template rebind<const void>;
 };
 
