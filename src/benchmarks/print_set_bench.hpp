@@ -1,5 +1,6 @@
 #pragma once
 
+#include <numeric>
 #include <algorithm>
 
 #include <rtcpp/utility/timer.hpp>
