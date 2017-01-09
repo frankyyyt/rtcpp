@@ -19,6 +19,12 @@ int main()
     std::cout << a << " ";
   std::cout << std::endl;;
 
+  auto alloc = t1.get_allocator();
+
+  for (auto a: alloc)
+    std::cout << a.key << " ";
+  std::cout << std::endl;;
+
   return 0;
 }
 

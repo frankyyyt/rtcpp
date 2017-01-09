@@ -45,12 +45,15 @@ public:
                                   , link_type>::other;
 
   using storage_type = node_storage<node_type, Index, S>;
+  using iterator = typename storage_type::iterator;
+  using const_iterator = typename storage_type::const_iterator;
 
   template<class U>
   struct rebind {
     using other = node_allocator< U, Node, Index, S, A
                                 , is_node_type<U>::value>;
   };
+
   std::shared_ptr<storage_type> header;
   A alloc;
   node_allocator(const A& a = A())
@@ -58,8 +61,11 @@ public:
   , alloc(a)
   {}
 
-  template<class U, class V>
-  node_allocator(const node_allocator<U, V, Index, S, A, false>& a)
+  auto begin() { return header->begin(); }
+  auto end() { return header->end(); }
+
+  template<class U, class V, bool BB>
+  node_allocator(const node_allocator<U, V, Index, S, A, BB>& a)
   : header(a.header)
   , alloc(a.alloc)
   {}
@@ -105,6 +111,8 @@ class node_allocator<T, Node, Index, S, A, true> {
   using const_void_pointer = typename storage_type::const_void_pointer;
   using link_type = typename storage_type::link_type;
   using node_type = typename storage_type::value_type;
+  using iterator = typename storage_type::iterator;
+  using const_iterator = typename storage_type::const_iterator;
 
   static_assert((std::is_same<T, node_type>::value),
   "node_allocator: Error1.");
@@ -121,6 +129,9 @@ class node_allocator<T, Node, Index, S, A, true> {
                                 , is_node_type<U>::value>;
   };
 
+  auto begin() { return header->begin(); }
+  auto end() { return header->end(); }
+
   std::shared_ptr<storage_type> header;
   A alloc;
 
@@ -128,14 +139,9 @@ class node_allocator<T, Node, Index, S, A, true> {
   : header(std::make_shared<storage_type>())
   , alloc(a) {}
 
-  template<class U, class V>
-  node_allocator(const node_allocator<U, V, Index, S, A, true>& a)
+  template<class U, class V, bool BB>
+  node_allocator(const node_allocator<U, V, Index, S, A, BB>& a)
   : header(a.header), alloc(a.alloc) {}
-
-  template<class U, class V>
-  node_allocator(const node_allocator<U, V, Index, S, A, false>& a)
-  : header(a.header)
-  , alloc(a.alloc) {}
 
   pointer allocate_node() { return header->pop(); }
 
@@ -143,9 +149,7 @@ class node_allocator<T, Node, Index, S, A, true> {
   { header->push(p); }
 
   pointer make_ptr(link_type link)
-  {
-    return pointer(header.get(), link.get_idx());
-  }
+  { return pointer(header.get(), link.get_idx()); }
   std::size_t get_n_blocks() const
   { return header->get_n_blocks();}
   template<class U>

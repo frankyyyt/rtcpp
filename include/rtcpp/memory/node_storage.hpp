@@ -20,6 +20,7 @@ class node_storage;
 template <class T, class Index, std::size_t N>
 class node_ptr {
 public:
+  using self_type = node_ptr<T, Index, N>;
   using storage_type = node_storage<T, Index, N>;
   using difference_type = std::ptrdiff_t;
 private:
@@ -33,6 +34,10 @@ public:
 
   Index get_idx() const {return idx;}
   const storage_type* get_storage() const {return storage;}
+  self_type operator++() { ++idx; return *this; }
+  self_type operator++(int)
+  { auto tmp = *this; operator++; return tmp; }
+
   T& operator*()
   {
     const auto b = storage->get_base_ptr(idx);
@@ -87,6 +92,7 @@ bool operator!=( const node_ptr<T, Index, N>& p1
 template <class T, class Index, std::size_t N>
 class const_node_ptr {
 public:
+  using self_type = const_node_ptr<T, Index, N>;
   using storage_type = node_storage<T, Index, N>;
   using difference_type = std::ptrdiff_t;
 private:
@@ -100,6 +106,11 @@ public:
 
   Index get_idx() const {return idx;}
   const storage_type* get_storage() const {return storage;}
+
+  self_type operator++() { ++idx; return *this; }
+  self_type operator++(int)
+  { auto tmp = *this; operator++; return tmp; }
+
   const T& operator*() const
   {
     const auto b = storage->get_base_ptr(idx);
@@ -258,6 +269,22 @@ public:
   using const_void_pointer = const_node_ptr_void<Index, N>;
   using link_type = node_link<T, Index, N>;
   using value_type = T;
+  using const_iterator = const_pointer;
+  using iterator = pointer;
+
+  auto begin() const { return const_pointer(this, 0); }
+  auto end() const
+  {
+    const auto size = get_n_blocks();
+    return const_pointer(this, static_cast<Index>(size * N));
+  }
+
+  auto begin() { return pointer(this, 0); }
+  auto end()
+  {
+    const auto size = get_n_blocks();
+    return pointer(this, static_cast<Index>(size * N));
+  }
 
   node_storage() {}
   std::size_t get_n_blocks() const
