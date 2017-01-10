@@ -275,15 +275,15 @@ public:
   auto begin() const { return const_pointer(this, 0); }
   auto end() const
   {
-    const auto size = get_n_blocks();
-    return const_pointer(this, static_cast<Index>(size * N));
+    return
+      const_pointer( this
+                   , static_cast<Index>(get_n_blocks() * N));
   }
 
   auto begin() { return pointer(this, 0); }
   auto end()
   {
-    const auto size = get_n_blocks();
-    return pointer(this, static_cast<Index>(size * N));
+    return pointer(this, static_cast<Index>(get_n_blocks() * N));
   }
 
   node_storage() {}
