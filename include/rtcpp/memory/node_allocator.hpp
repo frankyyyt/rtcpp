@@ -39,7 +39,7 @@ public:
   using const_reference = typename A::const_reference;
   using value_type = typename A::value_type;
 
-  using link_type = node_link<T, Index, S>;
+  using link_type = node_link<Index>;
   using node_type =
     typename Node::template rebind< typename Node::value_type
                                   , link_type>::other;

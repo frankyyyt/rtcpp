@@ -23,7 +23,19 @@ RTCPP_HAS_NESTED_TYPE(pointer)
 RTCPP_HAS_NESTED_TYPE(link_type)
 RTCPP_HAS_NESTED_TYPE(value_type)
 RTCPP_HAS_NESTED_TYPE(void_pointer)
+RTCPP_HAS_NESTED_TYPE(element_type)
 RTCPP_HAS_NESTED_TYPE(const_void_pointer)
+
+//__________________________________________________________________
+template <class A, bool B = has_element_type<A>::value>
+struct element_type {
+  using type = typename A::element_type;
+};
+
+template <class A>
+struct element_type<A, false> {
+  using type = void;
+};
 
 //__________________________________________________________________
 template <class A, bool B = has_void_pointer<A>::value>

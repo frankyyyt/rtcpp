@@ -9,7 +9,7 @@ namespace rt {
 template <class T>
 struct pointer_traits {
   using pointer = T;
-  using element_type = typename T::element_type;
+  using element_type = typename element_type<T>::type;
   using difference_type = typename T::difference_type;
   template <class U>
   using rebind = typename T::template rebind<U>;

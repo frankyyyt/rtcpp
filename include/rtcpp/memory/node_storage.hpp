@@ -11,7 +11,7 @@
 
 namespace rt {
 
-template <class, class, std::size_t>
+template <class>
 class node_link;
 
 template <class T, class Index, std::size_t N>
@@ -63,7 +63,7 @@ public:
     return reinterpret_cast<const T*>(&b[raw_idx]);
   }
   node_ptr(std::nullptr_t p = nullptr) {}
-  node_ptr& operator=(const node_link<T, Index, N>& rhs)
+  node_ptr& operator=(const node_link<Index>& rhs)
   {
     idx = rhs.get_idx();
     return *this;
@@ -124,7 +124,7 @@ public:
     return reinterpret_cast<const T*>(&b[raw_idx]);
   }
   const_node_ptr(std::nullptr_t p = nullptr) {}
-  const_node_ptr& operator=(const node_link<T, Index, N>& rhs)
+  const_node_ptr& operator=(const node_link<Index>& rhs)
   {
     idx = rhs.get_idx();
     return *this;
@@ -153,19 +153,21 @@ bool operator!=( const const_node_ptr<T, Index, N>& p1
 {return !(p1 == p2);}
 
 //____________________________________________________
-template <class T, class Index, std::size_t N>
+template <class Index>
 class node_link {
 private:
   Index idx;
 public:
   using index_type = Index;
-  using element_type = T;
   using difference_type = std::ptrdiff_t;
 
   Index get_idx() const {return idx;}
-  template <class U> using rebind = node_link<U, Index, N>;
+  // Dummy rebind
+  template <class U> using rebind = node_link<Index>;
+  template <class T, std::size_t N>
   node_link& operator=(const node_ptr<T, Index, N>& rhs)
   { idx = rhs.get_idx(); return *this; }
+  template <class T, std::size_t N>
   node_link& operator=(const const_node_ptr<T, Index, N>& rhs)
   { idx = rhs.get_idx(); return *this; }
 };
@@ -173,59 +175,60 @@ public:
 //____________________________________________________
 template <class T, class Index, std::size_t N>
 bool operator==( const node_ptr<T, Index, N>& p1
-               , const node_link<T, Index, N>& p2)
+               , const node_link<Index>& p2)
 {return p1.get_idx() == p2.get_idx();}
 
 template <class T, class Index, std::size_t N>
 bool operator!=( const node_ptr<T, Index, N>& p1
-               , const node_link<T, Index, N>& p2)
+               , const node_link<Index>& p2)
 {return !(p1 == p2);}
 
 template <class T, class Index, std::size_t N>
-bool operator==( const node_link<T, Index, N>& p1
+bool operator==( const node_link<Index>& p1
                , const node_ptr<T, Index, N>& p2)
 {return p1.get_idx() == p2.get_idx();}
 
 template <class T, class Index, std::size_t N>
-bool operator!=( const node_link<T, Index, N>& p1
+bool operator!=( const node_link<Index>& p1
                , const node_ptr<T, Index, N>& p2)
 {return !(p1 == p2);}
 
 //____________________________________________________
 template <class T, class Index, std::size_t N>
 bool operator==( const const_node_ptr<T, Index, N>& p1
-               , const node_link<T, Index, N>& p2)
+               , const node_link<Index>& p2)
 {return p1.get_idx() == p2.get_idx();}
 
 template <class T, class Index, std::size_t N>
 bool operator!=( const const_node_ptr<T, Index, N>& p1
-               , const node_link<T, Index, N>& p2)
+               , const node_link<Index>& p2)
 {return !(p1 == p2);}
 
 template <class T, class Index, std::size_t N>
-bool operator==( const node_link<T, Index, N>& p1
+bool operator==( const node_link<Index>& p1
                , const const_node_ptr<T, Index, N>& p2)
 {return p1.get_idx() == p2.get_idx();}
 
 template <class T, class Index, std::size_t N>
-bool operator!=( const node_link<T, Index, N>& p1
+bool operator!=( const node_link<Index>& p1
                , const const_node_ptr<T, Index, N>& p2)
 {return !(p1 == p2);}
 
 //____________________________________________________
-template <class Index, std::size_t N>
+template <class Index>
 class node_ptr_void {
 private:
   void* storage {nullptr};
+  Index m_idx {};
 public:
   using index_type = Index;
   using element_type = void;
   using difference_type = std::ptrdiff_t;
   template <class U>
-  using rebind = node_ptr_void<Index, N>;
+  using rebind = node_ptr_void<Index>;
 };
 
-template <class Index, std::size_t N>
+template <class Index>
 class const_node_ptr_void {
 private:
   const void* storage {nullptr};
@@ -235,7 +238,7 @@ public:
   using element_type = void;
   using difference_type = std::ptrdiff_t;
   template <class U>
-  using rebind = const_node_ptr_void<Index, N>;
+  using rebind = const_node_ptr_void<Index>;
 };
 
 template < class T // Node type.
@@ -265,9 +268,9 @@ private:
 public:
   using pointer = node_ptr<T, Index, N>;
   using const_pointer = const_node_ptr<T, Index, N>;
-  using void_pointer = node_ptr_void<Index, N>;
-  using const_void_pointer = const_node_ptr_void<Index, N>;
-  using link_type = node_link<T, Index, N>;
+  using void_pointer = node_ptr_void<Index>;
+  using const_void_pointer = const_node_ptr_void<Index>;
+  using link_type = node_link<Index>;
   using value_type = T;
   using const_iterator = const_pointer;
   using iterator = pointer;
