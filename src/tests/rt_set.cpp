@@ -186,8 +186,16 @@ void test_basic(const std::vector<int>& tmp)
 }
 
 template <class A>
-void run_tests(const std::vector<int>& tmp)
+void run_tests()
 {
+  const int s = 10;
+  const int a = 1;
+  const int b = std::numeric_limits<int>::max();
+
+  // Random unique integers in the range [a, b].
+  const std::vector<int> tmp =
+    rt::make_rand_data<int>(s, a, b);
+
   test_basic<A>(tmp);
   test_count<A>(tmp);
   test_erase<A>(tmp);
@@ -200,36 +208,20 @@ void run_tests(const std::vector<int>& tmp)
 int main()
 {
   try {
-    const int size = 10;
-    const int a = 1;
-    const int b = std::numeric_limits<int>::max();
-
-    // Random unique integers in the range [a, b].
-    const std::vector<int> tmp = rt::make_rand_data<int>(size, a, b);
-
     using Node = rt::set<int>::node_type;
-
     using A1 = std::allocator<int>;
     using A2A = rt::node_allocator<int, Node, unsigned char     , 2>;
     using A2B = rt::node_allocator<int, Node, unsigned short    , 2>;
-    using A2C = rt::node_allocator<int, Node, unsigned int      , 2>;
-    using A2D = rt::node_allocator<int, Node, unsigned long long, 2>;
     using A3A = rt::node_allocator<int, Node, unsigned char     , 4>;
     using A3B = rt::node_allocator<int, Node, unsigned short    , 4>;
-    using A3C = rt::node_allocator<int, Node, unsigned int      , 4>;
-    using A3D = rt::node_allocator<int, Node, unsigned long long, 4>;
     using A4A = rt::node_allocator<int, Node, unsigned          , 128>;
 
-    run_tests<A1>(tmp);
-    run_tests<A2A>(tmp);
-    run_tests<A2B>(tmp);
-    run_tests<A2C>(tmp);
-    run_tests<A2D>(tmp);
-    run_tests<A3A>(tmp);
-    run_tests<A3B>(tmp);
-    run_tests<A3C>(tmp);
-    run_tests<A3D>(tmp);
-    run_tests<A4A>(tmp);
+    run_tests<A1>();
+    run_tests<A2A>();
+    run_tests<A2B>();
+    run_tests<A3A>();
+    run_tests<A3B>();
+    run_tests<A4A>();
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
     return 1;
