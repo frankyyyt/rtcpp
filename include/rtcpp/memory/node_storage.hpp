@@ -78,8 +78,8 @@ public:
 template < class T, class I, std::size_t N>
 void node_storage<T, I, N>::push(pointer idx) noexcept
 {
-  assert(idx.get_storage() == this);
-  //if (idx.get_storage() != this) {
+  assert(idx.get_strg() == this);
+  //if (idx.get_strg() != this) {
   //  std::cout << std::endl;
   //}
 

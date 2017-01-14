@@ -78,13 +78,13 @@ void test_node_ptr()
 
   std::swap(p1, p2);
 
-  if (p1.get_storage() != &b)
+  if (p1.get_strg() != &b)
     throw std::runtime_error("test_node_ptr_swap");
 
   if (p1.get_idx() != 2)
     throw std::runtime_error("test_node_ptr_swap");
 
-  if (p2.get_storage() != &a)
+  if (p2.get_strg() != &a)
     throw std::runtime_error("test_node_ptr_swap");
 
   if (p2.get_idx() != 1)
