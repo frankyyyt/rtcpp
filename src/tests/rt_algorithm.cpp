@@ -1,10 +1,12 @@
 #include <array>
 #include <vector>
 #include <limits>
+#include <iterator>
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
 
+#include <rtcpp/algorithm/reverse.hpp>
 #include <rtcpp/algorithm/algorithm.hpp>
 #include <rtcpp/utility/make_rand_data.hpp>
 #include <rtcpp/algorithm/insertion_sort.hpp>
@@ -52,9 +54,29 @@ void test_find_intrusive()
   std::cout << "Second part ok." << std::endl;
 }
 
+void test_reverse()
+{
+  using namespace rt;
+
+  std::array<int, 10> arr1 = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
+  std::array<int, 10> tmp1 = {{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}};
+  std::array<int, 11> arr2 = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+  std::array<int, 11> tmp2 = {{11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}};
+
+  rt::reverse(std::begin(arr1), std::end(arr1));
+  rt::reverse(std::begin(arr2), std::end(arr2));
+
+  if (!std::equal(std::begin(arr1), std::end(arr1), std::begin(tmp1)))
+    throw std::runtime_error("");
+
+  if (!std::equal(std::begin(arr2), std::end(arr2), std::begin(tmp2)))
+    throw std::runtime_error("");
+}
+
 int main()
 {
-  test_find_intrusive();
+  test_reverse();
   test_binary_search();
+  test_find_intrusive();
 }
 
