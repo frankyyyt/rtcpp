@@ -8,269 +8,40 @@
 #include <type_traits>
 
 #include "align.hpp"
+#include "node_ptr.hpp"
 
 namespace rt {
 
-template <class>
-class node_link;
-
-template <class T, class Index, std::size_t N>
-class node_storage;
-
-template <class T, class Index, std::size_t N>
-class node_ptr {
-public:
-  using self_type = node_ptr<T, Index, N>;
-  using storage_type = node_storage<T, Index, N>;
-  using difference_type = std::ptrdiff_t;
-private:
-  storage_type* storage {nullptr};
-  Index idx {};
-public:
-  using index_type = Index;
-  using element_type = T;
-  template <class U>
-  using rebind = node_ptr<U, Index, N>;
-
-  Index get_idx() const {return idx;}
-  const storage_type* get_storage() const {return storage;}
-  self_type operator++() { ++idx; return *this; }
-  self_type operator++(int)
-  { auto tmp = *this; operator++; return tmp; }
-
-  T& operator*()
-  {
-    const auto b = storage->get_base_ptr(idx);
-    const auto raw_idx = storage->get_raw_idx(idx);
-    return *reinterpret_cast<T*>(&b[raw_idx]);
-  }
-  const T& operator*() const
-  {
-    const auto b = storage->get_base_ptr(idx);
-    const auto raw_idx = storage->get_raw_idx(idx);
-    return *reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  T* operator->()
-  {
-    const auto b = storage->get_base_ptr(idx);
-    const auto raw_idx = storage->get_raw_idx(idx);
-    return reinterpret_cast<T*>(&b[raw_idx]);
-  }
-  const T* operator->() const
-  {
-    const auto b = storage->get_base_ptr(idx);
-    const auto raw_idx = storage->get_raw_idx(idx);
-    return reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  node_ptr(std::nullptr_t p = nullptr) {}
-  node_ptr& operator=(const node_link<Index>& rhs)
-  {
-    idx = rhs.get_idx();
-    return *this;
-  }
-  node_ptr& operator=(const node_ptr<T, Index, N>& rhs)
-  {
-    idx = rhs.idx;
-    storage = rhs.storage;
-    return *this;
-  }
-  node_ptr(storage_type* pp, Index i) : storage(pp), idx(i) {}
-};
-
-//____________________________________________________
-template <class T, class Index, std::size_t N>
-bool operator==( const node_ptr<T, Index, N>& p1
-               , const node_ptr<T, Index, N>& p2)
-{return p1.get_idx() == p2.get_idx();}
-
-template <class T, class Index, std::size_t N>
-bool operator!=( const node_ptr<T, Index, N>& p1
-               , const node_ptr<T, Index, N>& p2)
-{return !(p1 == p2);}
-
-//____________________________________________________
-template <class T, class Index, std::size_t N>
-class const_node_ptr {
-public:
-  using self_type = const_node_ptr<T, Index, N>;
-  using storage_type = node_storage<T, Index, N>;
-  using difference_type = std::ptrdiff_t;
-private:
-  const storage_type* storage {nullptr};
-  Index idx {};
-public:
-  using index_type = Index;
-  using element_type = T;
-  template <class U>
-  using rebind = const_node_ptr<U, Index, N>;
-
-  Index get_idx() const {return idx;}
-  const storage_type* get_storage() const {return storage;}
-
-  self_type operator++() { ++idx; return *this; }
-  self_type operator++(int)
-  { auto tmp = *this; operator++; return tmp; }
-
-  const T& operator*() const
-  {
-    const auto b = storage->get_base_ptr(idx);
-    const auto raw_idx = storage->get_raw_idx(idx);
-    return *reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  const T* operator->() const
-  {
-    const auto b = storage->get_base_ptr(idx);
-    const auto raw_idx = storage->get_raw_idx(idx);
-    return reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  const_node_ptr(std::nullptr_t p = nullptr) {}
-  const_node_ptr& operator=(const node_link<Index>& rhs)
-  {
-    idx = rhs.get_idx();
-    return *this;
-  }
-  const_node_ptr& operator=(const const_node_ptr<T, Index, N>& rhs)
-  {
-    idx = rhs.idx;
-    storage = rhs.storage;
-    return *this;
-  }
-  const_node_ptr(const storage_type* pp, Index i)
-  : storage(pp), idx(i) {}
-  const_node_ptr(const node_ptr<T, Index, N>& pp)
-  : storage(pp.get_storage()), idx(pp.get_idx()) {}
-};
-
-//____________________________________________________
-template <class T, class Index, std::size_t N>
-bool operator==( const const_node_ptr<T, Index, N>& p1
-               , const const_node_ptr<T, Index, N>& p2)
-{return p1.get_idx() == p2.get_idx();}
-
-template <class T, class Index, std::size_t N>
-bool operator!=( const const_node_ptr<T, Index, N>& p1
-               , const const_node_ptr<T, Index, N>& p2)
-{return !(p1 == p2);}
-
-//____________________________________________________
-template <class Index>
-class node_link {
-private:
-  Index idx;
-public:
-  using index_type = Index;
-  using difference_type = std::ptrdiff_t;
-
-  Index get_idx() const {return idx;}
-  // Dummy rebind
-  template <class U> using rebind = node_link<Index>;
-  template <class T, std::size_t N>
-  node_link& operator=(const node_ptr<T, Index, N>& rhs)
-  { idx = rhs.get_idx(); return *this; }
-  template <class T, std::size_t N>
-  node_link& operator=(const const_node_ptr<T, Index, N>& rhs)
-  { idx = rhs.get_idx(); return *this; }
-};
-
-//____________________________________________________
-template <class T, class Index, std::size_t N>
-bool operator==( const node_ptr<T, Index, N>& p1
-               , const node_link<Index>& p2)
-{return p1.get_idx() == p2.get_idx();}
-
-template <class T, class Index, std::size_t N>
-bool operator!=( const node_ptr<T, Index, N>& p1
-               , const node_link<Index>& p2)
-{return !(p1 == p2);}
-
-template <class T, class Index, std::size_t N>
-bool operator==( const node_link<Index>& p1
-               , const node_ptr<T, Index, N>& p2)
-{return p1.get_idx() == p2.get_idx();}
-
-template <class T, class Index, std::size_t N>
-bool operator!=( const node_link<Index>& p1
-               , const node_ptr<T, Index, N>& p2)
-{return !(p1 == p2);}
-
-//____________________________________________________
-template <class T, class Index, std::size_t N>
-bool operator==( const const_node_ptr<T, Index, N>& p1
-               , const node_link<Index>& p2)
-{return p1.get_idx() == p2.get_idx();}
-
-template <class T, class Index, std::size_t N>
-bool operator!=( const const_node_ptr<T, Index, N>& p1
-               , const node_link<Index>& p2)
-{return !(p1 == p2);}
-
-template <class T, class Index, std::size_t N>
-bool operator==( const node_link<Index>& p1
-               , const const_node_ptr<T, Index, N>& p2)
-{return p1.get_idx() == p2.get_idx();}
-
-template <class T, class Index, std::size_t N>
-bool operator!=( const node_link<Index>& p1
-               , const const_node_ptr<T, Index, N>& p2)
-{return !(p1 == p2);}
-
-//____________________________________________________
-template <class Index>
-class node_ptr_void {
-private:
-  void* storage {nullptr};
-  Index m_idx {};
-public:
-  using index_type = Index;
-  using element_type = void;
-  using difference_type = std::ptrdiff_t;
-  template <class U>
-  using rebind = node_ptr_void<Index>;
-};
-
-template <class Index>
-class const_node_ptr_void {
-private:
-  const void* storage {nullptr};
-  Index idx {};
-public:
-  using index_type = Index;
-  using element_type = void;
-  using difference_type = std::ptrdiff_t;
-  template <class U>
-  using rebind = const_node_ptr_void<Index>;
-};
-
 template < class T // Node type.
-         , class Index // Index type.
+         , class I // Index type.
          , std::size_t N // Number of blocks.
          >
 class node_storage {
-  static_assert((!std::is_signed<Index>::value),
+  static_assert((!std::is_signed<I>::value),
   "node_storage: Incompatible type.");
-  static_assert((N - 1 <= std::numeric_limits<Index>::max()),
+  static_assert((N - 1 <= std::numeric_limits<I>::max()),
   "node_storage: Incompatible size.");
   static_assert((is_power_of_two<N>::value),
   "node_storage: N must be a power of 2.");
   static_assert((N >= 2),
   "node_storage: Number of blocks must be at least 2.");
 private:
-  static constexpr auto SL = sizeof (Index);
+  static constexpr auto SL = sizeof (I);
   static constexpr auto ST = sizeof (T);
   // Block size in units of link type size.
   static constexpr auto R = (SL < ST) ? ST / SL : 1;
-  Index free {0}; // Index of the next free node.
-  std::vector<std::unique_ptr<Index[]>> bufs;
-  Index add_bloc(); // returns the index of the next free node.
+  I free {0}; // I of the next free node.
+  std::vector<std::unique_ptr<I[]>> bufs;
+  I add_bloc(); // returns the I of the next free node.
   node_storage& operator=(const node_storage&) = delete;
   node_storage(const node_storage&) = delete;
   void swap(node_storage& other);
 public:
-  using pointer = node_ptr<T, Index, N>;
-  using const_pointer = const_node_ptr<T, Index, N>;
-  using void_pointer = node_ptr_void<Index>;
-  using const_void_pointer = const_node_ptr_void<Index>;
-  using link_type = node_link<Index>;
+  using pointer = node_ptr<T, I, N>;
+  using const_pointer = const_node_ptr<T, I, N>;
+  using void_pointer = node_ptr_void<I>;
+  using const_void_pointer = const_node_ptr_void<I>;
+  using link_type = node_link<I>;
   using value_type = T;
   using const_iterator = const_pointer;
   using iterator = pointer;
@@ -280,23 +51,23 @@ public:
   {
     return
       const_pointer( this
-                   , static_cast<Index>(get_n_blocks() * N));
+                   , static_cast<I>(get_n_blocks() * N));
   }
 
   auto begin() { return pointer(this, 0); }
   auto end()
   {
-    return pointer(this, static_cast<Index>(get_n_blocks() * N));
+    return pointer(this, static_cast<I>(get_n_blocks() * N));
   }
 
   node_storage() {}
   std::size_t get_n_blocks() const
   {return bufs.size();}
-  Index* get_base_ptr(Index idx)
+  I* get_base_ptr(I idx)
   { return bufs[idx / N].get(); }
-  const Index* get_base_ptr(Index idx) const
+  const I* get_base_ptr(I idx) const
   { return bufs[idx / N].get(); }
-  std::size_t get_raw_idx(Index idx) const
+  std::size_t get_raw_idx(I idx) const
   {return (idx % N) * R;}
   pointer pop();
   void push(pointer idx) noexcept;
@@ -304,8 +75,8 @@ public:
   {return bufs == rhs.bufs;}
 };
 
-template < class T, class Index, std::size_t N>
-void node_storage<T, Index, N>::push(pointer idx) noexcept
+template < class T, class I, std::size_t N>
+void node_storage<T, I, N>::push(pointer idx) noexcept
 {
   assert(idx.get_storage() == this);
   //if (idx.get_storage() != this) {
@@ -318,9 +89,9 @@ void node_storage<T, Index, N>::push(pointer idx) noexcept
   free = i;
 }
 
-template <class T, class Index, std::size_t N>
-typename node_storage<T, Index, N>::pointer
-node_storage<T, Index, N>::pop()
+template <class T, class I, std::size_t N>
+typename node_storage<T, I, N>::pointer
+node_storage<T, I, N>::pop()
 {
   auto i = free;
 
@@ -334,19 +105,19 @@ node_storage<T, Index, N>::pop()
   return pointer(this, i);
 }
 
-template <class T, class Index, std::size_t N>
-Index node_storage<T, Index, N>::add_bloc()
+template <class T, class I, std::size_t N>
+I node_storage<T, I, N>::add_bloc()
 {
     // Add a check to test if the link type is big
     // enough to grow the node pool.
     const auto size = bufs.size();
-    bufs.push_back(std::make_unique<Index[]>(N * R));
+    bufs.push_back(std::make_unique<I[]>(N * R));
     const auto offset = size * N;
     for (std::size_t i = 1; i < N; ++i)
-      bufs.back()[i * R] = static_cast<Index>(offset + i - 1);
+      bufs.back()[i * R] = static_cast<I>(offset + i - 1);
 
     bufs.back()[0] = 0;
-    return static_cast<Index>(bufs.size() * N - 1);
+    return static_cast<I>(bufs.size() * N - 1);
 }
 
 } // rt
