@@ -25,7 +25,6 @@ include_directories(${PROJECT_BINARY_DIR})
 install( DIRECTORY ${PROJECT_SOURCE_DIR}/include/rtcpp
          DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
-add_executable(rt_bst src/tests/rt_bst.cpp)
 add_executable(rt_set src/tests/rt_set.cpp)
 add_executable(rt_list src/tests/rt_list.cpp)
 add_executable(rt_forward_list src/tests/rt_forward_list.cpp)
@@ -48,7 +47,6 @@ if (Boost_FOUND)
   target_link_libraries(bench_set ${Boost_LIBRARIES})
 endif()
 
-add_test(NAME rt_bst COMMAND rt_bst)
 add_test(NAME rt_set COMMAND rt_set)
 add_test(NAME rt_list COMMAND rt_list)
 add_test(NAME rt_align COMMAND rt_align)
