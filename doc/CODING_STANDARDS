@@ -79,14 +79,11 @@ Coding Standards
 * Use two spaces for indentation. Tabs are not allowed.
 * Do not end a line with spaces.
 * All files must end with a newline.
-* Limit line length to 71 characters.
+* Limit line length to 70 characters.
 * Make runtime state obvious to the programmer.
-* Avoid dynamic memory allocations for small blocks of memory.
-* Separate class declaration from its definition.
 * Use standard c++ naming convention.
 * Keep names short and do use abbreviations.
 * Avoid global variables.
-* Prefer non-member functions.
 
 Some further cosmetic guidelines
 
@@ -120,18 +117,10 @@ Commenting Wrong:
      * This is the wrong way.
      */
     int d;
-
-    /*
-     * Wastes space.
-     */
-    int v;
   };
 
 Initializer list.
 ======================================================================
-
- - Use the right data member ordering, otherwise compilers raises
-   annoying warnings and you are doing something wrong.
 
  - Indentation is done this way:
    
@@ -214,47 +203,22 @@ infinite loop, use
   while (1) { // wrong
   }
 
-Prefer for loops over while loops when you have a counter, this way
-you do not have to add the counter in function scope:
-
-Right:
-
-  // i scope is restricted to the for loop.
-  for (int i = 0; i < 10; ++i)
-    do_something();
-
-Wrong:
-
-  int i = 0; // i is in the outer scope
-  while (i < 10) {
-    do_something();
-    ++i;
-  }
-
 Pointers
 ======================================================================
 
 You usually do not need this in modern C++, but if you do.
 
-  int* a = 0;
+  int* a = nullptr;
 
-  if (a) // right
+  if (!a) // right
 
-  if (a != 0) // wrong
+  if (a = nullptr) // wrong
 
-  if (a != NULL) // wrong
+  if (a = NULL) // wrong
 
 But if a is not a pointer or a boolean variable prefer
 
   if (a == value) // It makes sense for the reader to know the value.
-
-POD (Plain Old Data)
-======================================================================
-
-POD data types are initialized this way:
-
-  double i = 0; // Right
-  double i(0); // Wrong, uses more characters and not easier to read.
 
 Equations:
 ======================================================================

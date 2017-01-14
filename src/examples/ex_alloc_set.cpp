@@ -7,23 +7,25 @@
 
 int main()
 {
-  using T = unsigned char;
   using L = unsigned char;
+  using T = L;
   using Node = rt::set<T>::node_type;
+  using A = rt::node_allocator<T, Node, L, 4>;
+  using C = rt::set<T, std::less<T>, A>;
 
-  rt::set<T, std::less<T>, rt::node_allocator<T, Node, L, 4>> t1;
-  t1 = {'k', 'd', 'c', 'l', 'e', 'g', 'b', 'h', 'i',
-  'j', 'a', 'h','m'};
+  C t1 {'k', 'd', 'u', 'c', 'l', 'e', 'g', 'b', 'h', 'i'};
 
   for (auto a: t1)
     std::cout << a << " ";
+
   std::cout << std::endl;;
 
-  auto alloc = t1.get_allocator();
+  auto alloc = t1.get_allocator().get_node_storage();
 
-  for (auto a: alloc)
+  for (auto a: *alloc)
     std::cout << a.key << " ";
-  std::cout << std::endl;;
+
+  std::cout << std::endl;
 
   return 0;
 }

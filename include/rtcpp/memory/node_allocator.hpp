@@ -61,6 +61,8 @@ public:
   , alloc(a)
   {}
 
+  auto get_node_storage() const {return header;}
+
   auto begin() { return header->begin(); }
   auto end() { return header->end(); }
 
@@ -165,6 +167,7 @@ class node_allocator<T, Node, Index, S, A, true> {
   pointer address(reference x) const noexcept { return std::addressof(x); }
   const_pointer address(const_reference x) const noexcept
   { return std::addressof(x); }
+  auto get_node_storage() const {return header;}
 };
 
 template <class T, class V, class Index, std::size_t S, class A, bool B>
