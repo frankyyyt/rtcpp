@@ -3,7 +3,6 @@
 #include <limits>
 #include <iterator>
 #include <iostream>
-#include <stdexcept>
 #include <algorithm>
 
 #include <rtcpp/algorithm/reverse.hpp>
@@ -12,21 +11,21 @@
 #include <rtcpp/algorithm/insertion_sort.hpp>
 #include <rtcpp/algorithm/find_intrusive.hpp>
 
-void test_binary_search()
+#include "rt_test.hpp"
+
+RT_TEST(test_binary_search)
 {
   std::array<int, 10> data = {1, 20, 32, 44, 51, 69, 70, 87, 91, 101};
 
   rt::insertion_sort(std::begin(data), std::end(data));
 
   for (std::size_t i = 0; i < data.size(); ++i)
-    if (!rt::binary_search(std::begin(data), std::end(data), data[i]))
-      throw std::runtime_error("");
+    RT_CHECK(rt::binary_search(std::begin(data), std::end(data), data[i]))
 
-  if (rt::binary_search(std::begin(data), std::end(data), 10))
-    throw std::runtime_error("");
+  RT_CHECK(!rt::binary_search(std::begin(data), std::end(data), 10))
 }
 
-void test_find_intrusive()
+RT_TEST(test_find_intrusive)
 {
   const int s = 10;
   std::vector<int> data = rt::make_rand_data<int>(s + 1, 0 , s);
@@ -49,12 +48,11 @@ void test_find_intrusive()
   data.back() = s + 1;
   auto iter = rt::find_intrusive(std::begin(data), std::end(data),
                                  s + 1);
-  if (iter != std::end(data))
-    throw std::runtime_error("");
+  RT_CHECK(iter == std::end(data))
   std::cout << "Second part ok." << std::endl;
 }
 
-void test_reverse()
+RT_TEST(test_reverse)
 {
   using namespace rt;
 
@@ -66,11 +64,8 @@ void test_reverse()
   rt::reverse(std::begin(arr1), std::end(arr1));
   rt::reverse(std::begin(arr2), std::end(arr2));
 
-  if (!std::equal(std::begin(arr1), std::end(arr1), std::begin(tmp1)))
-    throw std::runtime_error("");
-
-  if (!std::equal(std::begin(arr2), std::end(arr2), std::begin(tmp2)))
-    throw std::runtime_error("");
+  RT_CHECK(std::equal(std::begin(arr1), std::end(arr1), std::begin(tmp1)))
+  RT_CHECK(std::equal(std::begin(arr2), std::end(arr2), std::begin(tmp2)))
 }
 
 int main()
