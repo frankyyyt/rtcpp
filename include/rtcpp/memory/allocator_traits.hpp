@@ -9,7 +9,7 @@ namespace rt {
 template <class T>
 struct pointer_traits {
   using pointer = T;
-  using element_type = typename element_type<T>::type;
+  using element_type = typename T::element_type;
   using difference_type = typename T::difference_type;
   template <class U>
   using rebind = typename T::template rebind<U>;
@@ -24,6 +24,24 @@ struct pointer_traits<T*> {
   using rebind = U*;
 };
 
+//__________________________________________________________________
+template < template<class, class> class Node
+         , class T
+         , class Link
+         , bool B = rt::is_pointer<Link>::value>
+struct decide_link_type {
+  using type = Link;
+};
+
+template < template<class, class> class Node
+         , class T
+         , class Link>
+struct decide_link_type<Node, T, Link, true> {
+  using type = typename rt::pointer_traits<Link>::template
+    rebind<Node<T, Link>>;
+};
+
+//__________________________________________________________________
 template <typename Alloc>
 struct allocator_traits {
   using allocator_type = Alloc;

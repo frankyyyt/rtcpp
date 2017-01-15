@@ -7,17 +7,13 @@
 
 #include <rtcpp/memory/allocator_traits.hpp>
 
-/*
-  Work in progress.
-*/
-
 namespace rt {
 
 template <class T, class Ptr>
 struct forward_list_node {
   using value_type = T;
-  using link_type = typename rt::pointer_traits<Ptr>::template
-    rebind<forward_list_node<T, Ptr>>;
+  using link_type = 
+    typename decide_link_type<forward_list_node, T, Ptr>::type;
   T info;
   link_type next;
 

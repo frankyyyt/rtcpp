@@ -23,19 +23,7 @@ RTCPP_HAS_NESTED_TYPE(pointer)
 RTCPP_HAS_NESTED_TYPE(link_type)
 RTCPP_HAS_NESTED_TYPE(value_type)
 RTCPP_HAS_NESTED_TYPE(void_pointer)
-RTCPP_HAS_NESTED_TYPE(element_type)
 RTCPP_HAS_NESTED_TYPE(const_void_pointer)
-
-//__________________________________________________________________
-template <class A, bool B = has_element_type<A>::value>
-struct element_type {
-  using type = typename A::element_type;
-};
-
-template <class A>
-struct element_type<A, false> {
-  using type = void;
-};
 
 //__________________________________________________________________
 template <class A, bool B = has_void_pointer<A>::value>
@@ -75,13 +63,21 @@ struct const_void_pointer<A, false> {
 };
 
 //__________________________________________________________________
-
 template <typename T>
 struct is_node_type {
   static const bool value = has_value_type<T>::value &&
     has_link_type<T>::value;
 };
 
+//__________________________________________________________________
+template <typename Ptr>
+struct is_pointer {
+  static const bool value =
+    std::is_pointer<Ptr>::value ||
+    has_link_type<Ptr>::value;
+};
+
+//__________________________________________________________________
 // Does not require node link_type to be the same.
 template < typename N1
          , typename N2

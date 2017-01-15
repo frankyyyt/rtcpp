@@ -18,17 +18,16 @@ constexpr int dir[2] = {1, 0};
 
 template <class T, class Ptr>
 class node {
-  public:
+public:
   using value_type = T;
-  using link_type = typename rt::pointer_traits<Ptr>::template
-    rebind<node<T, Ptr>>;
+  using link_type = typename decide_link_type<node, T, Ptr>::type;
 
-  private:
+private:
   static constexpr unsigned char null_link_bit = 1;
   static constexpr unsigned char in_use_bit = 4;
   unsigned char tag = 0;
 
-  public:
+public:
   link_type link[2];
   T key;
 

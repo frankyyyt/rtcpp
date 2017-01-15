@@ -42,6 +42,8 @@ public:
   auto operator++(int)
   { auto tmp = *this; operator++; return tmp; }
 
+  explicit operator bool () const
+  {return strg && idx != 0;}
   auto& operator*()
   {
     const auto b = strg->get_base_ptr(idx);
@@ -155,8 +157,6 @@ public:
   using difference_type = std::ptrdiff_t;
 
   auto get_idx() const {return idx;}
-  // Dummy rebind
-  template <class U> using rebind = node_link<I>;
   template <class T, std::size_t N>
   auto& operator=(const node_ptr<T, I, N>& rhs)
   { idx = rhs.get_idx(); return *this; }
