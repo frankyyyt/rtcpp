@@ -42,7 +42,7 @@ public:
   using link_type = node_link<Index>;
   using node_type =
     typename Node::template rebind< typename Node::value_type
-                                  , link_type>::other;
+                                  , link_type>;
 
   using storage_type = node_storage<node_type, Index, S>;
   using iterator = typename storage_type::iterator;

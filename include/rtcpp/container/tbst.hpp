@@ -32,7 +32,7 @@ public:
   T key;
 
   template<class U, class K>
-  struct rebind { using other = node<U , K>; };
+  using rebind = node<U , K>;
 
   template <int I>
   void set_link_null() noexcept

@@ -18,7 +18,7 @@ struct forward_list_node {
   link_type next;
 
   template<class U, class K>
-  struct rebind { using other = forward_list_node<U , K>; };
+  using rebind = forward_list_node<U , K>;
 };
 
 template <class T, class Ptr>
