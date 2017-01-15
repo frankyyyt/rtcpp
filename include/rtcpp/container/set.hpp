@@ -16,9 +16,6 @@
   it does not guarantee logarithmic search time. It is however often
   faster than a balanced implementation as a degenerate tree is very
   rare and there is no balancing overhead.
-
-  NEWS: It supports allocators that can serve only one object at a
-  time: allocator_type::allocate_node();
 */
 
 namespace rt {
@@ -31,42 +28,29 @@ class bst_iterator :
   bst_iterator() noexcept : m_p(0) {}
   bst_iterator(Ptr root) noexcept : m_p(root) {}
 
-  bst_iterator& operator++() noexcept
-  {
-    m_p = tbst::inorder<1>(m_p);
-    return *this;
-  }
+  auto& operator++() noexcept
+  { m_p = tbst::inorder<1>(m_p); return *this; }
 
-  bst_iterator operator++(int) noexcept
-  {
-    bst_iterator tmp(*this);
-    operator++();
-    return tmp;
-  }
+  auto operator++(int) noexcept
+  { auto tmp(*this); operator++(); return tmp; }
 
-  bst_iterator& operator--() noexcept
-  {
-    m_p = tbst::inorder<0>(m_p);
-    return *this;
-  }
+  auto& operator--() noexcept
+  { m_p = tbst::inorder<0>(m_p); return *this; }
 
-  bst_iterator operator--(int) noexcept
-  {
-    bst_iterator tmp(*this);
-    operator--();
-    return tmp;
-  }
+  auto operator--(int) noexcept
+  { auto tmp(*this); operator--(); return tmp; }
 
-  T operator*() const noexcept {return m_p->key;}
+  T& operator*() noexcept {return m_p->key;}
+  const T& operator*() const noexcept {return m_p->key;}
 };
 
 template <class T, class Ptr>
-bool operator==( const bst_iterator<T, Ptr>& rhs
+auto operator==( const bst_iterator<T, Ptr>& rhs
                , const bst_iterator<T, Ptr>& lhs) noexcept
 { return lhs.m_p == rhs.m_p; }
 
 template <class T, class Ptr>
-bool operator!=( const bst_iterator<T, Ptr>& rhs
+auto operator!=( const bst_iterator<T, Ptr>& rhs
                , const bst_iterator<T, Ptr>& lhs) noexcept
 { return !(lhs == rhs); }
 
@@ -111,7 +95,7 @@ class set {
   node_pointer m_head;
   Compare m_comp;
   void copy(set& rhs) const noexcept;
-  node_pointer get_node() const;
+  auto get_node() const;
   void release_node(node_pointer p) const;
   void safe_construct(node_pointer p, const value_type& key) const;
   public:
@@ -119,8 +103,8 @@ class set {
   explicit set(const Allocator& alloc = Allocator())
   : set(Compare(), alloc) {}
   set(const set& rhs) noexcept;
-  set& operator=(set rhs) noexcept;
-  set& operator=(std::initializer_list<T> init) noexcept;
+  auto& operator=(set rhs) noexcept;
+  auto& operator=(std::initializer_list<T> init) noexcept;
   template <typename InputIt>
   set(InputIt begin, InputIt end, const Compare& comp, const Allocator& alloc = Allocator());
   template <typename InputIt>
@@ -133,23 +117,25 @@ class set {
   set(set&& rhs);
   ~set() noexcept;
   void clear() noexcept;
-  std::pair<iterator, bool> insert(const value_type& key) noexcept;
+  auto insert(const value_type& key) noexcept;
   const_iterator begin() const noexcept
   {return const_iterator(tbst::inorder<1>(m_head));}
   const_iterator end() const noexcept {return const_iterator(m_head);}
-  const_reverse_iterator rbegin() const noexcept {return const_reverse_iterator(end());}
-  const_reverse_iterator rend() const noexcept {return const_reverse_iterator(begin());}
-  key_compare key_comp() const noexcept {return m_comp;}
-  value_compare value_comp() const noexcept {return m_comp;}
-  size_type size() const noexcept {return std::distance(begin(), end());}
+  auto rbegin() const noexcept {return const_reverse_iterator(end());}
+  auto rend() const noexcept {return const_reverse_iterator(begin());}
+  auto key_comp() const noexcept {return m_comp;}
+  auto value_comp() const noexcept {return m_comp;}
+  auto size() const noexcept
+  {return static_cast<size_type>(std::distance(begin(), end()));}
   bool empty() const noexcept {return begin() == end();}
-  Allocator get_allocator() const noexcept {return m_inner_alloc;}
+  auto get_allocator() const noexcept {return m_inner_alloc;}
   template<typename K>
   size_type count(const K& x) const noexcept;
   template<typename K>
-  iterator find(const K& x) const;
+  auto find(const K& x) const;
   template<typename K>
-  size_type max_size() const noexcept { return std::numeric_limits<size_type>::max(); }
+  auto max_size() const noexcept
+  { return std::numeric_limits<size_type>::max(); }
   template<typename InputIt>
   void insert(InputIt begin, InputIt end) noexcept;
   template <typename K>
@@ -189,14 +175,15 @@ set<T, Compare, Allocator>::erase(const K& key)
 }
 
 template <typename T, typename Compare, typename Allocator>
-set<T, Compare, Allocator>& set<T, Compare, Allocator>::operator=(set<T, Compare, Allocator> rhs) noexcept
+auto&
+set<T, Compare, Allocator>::operator=(set<T, Compare, Allocator> rhs) noexcept
 {
   swap(*this, rhs);
   return *this;
 }
 
 template <typename T, typename Compare, typename Allocator>
-set<T, Compare, Allocator>& set<T, Compare, Allocator>::operator=(std::initializer_list<T> init) noexcept
+auto& set<T, Compare, Allocator>::operator=(std::initializer_list<T> init) noexcept
 {
   clear();
   insert(std::begin(init), std::end(init));
@@ -298,19 +285,15 @@ copy(set<T, Compare, Allocator>& rhs) const noexcept
 }
 
 template <typename T, typename Compare, typename Allocator>
-typename set<T, Compare, Allocator>::node_pointer
-set<T, Compare, Allocator>::get_node() const
+auto set<T, Compare, Allocator>::get_node() const
 { 
-  auto p = inner_alloc_traits_type::allocate_node(m_inner_alloc);
-  p->mark_in_use();
-  return p;
+  return inner_alloc_traits_type::allocate_node(m_inner_alloc);
 }
 
 template <typename T, typename Compare, typename Allocator>
 void set<T, Compare, Allocator>::release_node(
   typename set<T, Compare, Allocator>::node_pointer p) const
 { 
-  p->mark_free();
   inner_alloc_traits_type::deallocate_node(m_inner_alloc, p);
 }
 
@@ -329,11 +312,11 @@ set<T, Compare, Allocator>::safe_construct(
 }
 
 template <typename T, typename Compare, typename Allocator>
-std::pair<typename set<T, Compare, Allocator>::iterator, bool>
+auto
 set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::value_type& key) noexcept
 {
   if (m_head->template get_null_link<0>()) { // The tree is empty
-    node_pointer q = get_node();
+    auto q = get_node();
     safe_construct(q, key);
     tbst::attach_node<0>(m_head, q);
     return std::make_pair(const_iterator(q), true);
@@ -345,7 +328,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
       if (!p->template get_null_link<0>()) {
         p = p->link[0];
       } else {
-        node_pointer q = get_node();
+        auto q = get_node();
         safe_construct(q, key);
         tbst::attach_node<0>(p, q);
         return std::make_pair(iterator(q), true);
@@ -354,7 +337,7 @@ set<T, Compare, Allocator>::insert(const typename set<T, Compare, Allocator>::va
       if (!p->template get_null_link<1>()) {
         p = inner_alloc_traits_type::make_ptr(m_inner_alloc, p->link[1]);
       } else {
-        node_pointer q = get_node();
+        auto q = get_node();
         safe_construct(q, key);
         tbst::attach_node<1>(p, q);
         return std::make_pair(iterator(q), true);
@@ -396,8 +379,7 @@ set<T, Compare, Allocator>::count(const K& key) const noexcept
 
 template <typename T, typename Compare, typename Allocator>
 template <typename K>
-typename set<T, Compare, Allocator>::iterator
-set<T, Compare, Allocator>::find(const K& key) const
+auto set<T, Compare, Allocator>::find(const K& key) const
 {
   // The function below is not the most efficient because it
   // has an additional pointer to chase the parent pointer.
@@ -432,12 +414,4 @@ bool operator!=( const set<Key, Compare, Alloc>& lhs
 { return !(lhs == rhs); }
 
 }
-
-//namespace std {
-//
-//template <typename T>
-//void swap(rt::set<T>& s1, rt::set<T>& s2)
-//{ s1.swap(s2); }
-//
-//}
 
