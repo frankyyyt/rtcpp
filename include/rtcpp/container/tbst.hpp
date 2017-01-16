@@ -19,8 +19,10 @@ constexpr int dir[2] = {1, 0};
 template <class T, class Ptr>
 class node {
 public:
+  template <class U, class K>
+  using self_type = node<U, K>;
   using value_type = T;
-  using link_type = typename decide_link_type<node, T, Ptr>::type;
+  using link_type = typename decide_link_type<self_type, T, Ptr>::type;
 
 private:
   static constexpr unsigned char null_link_bit = 1;

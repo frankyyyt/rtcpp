@@ -11,9 +11,11 @@ namespace rt {
 
 template <class T, class Ptr>
 struct forward_list_node {
+  template <class U, class K>
+  using self_type = forward_list_node<U, K>;
   using value_type = T;
   using link_type = 
-    typename decide_link_type<forward_list_node, T, Ptr>::type;
+    typename decide_link_type<self_type, T, Ptr>::type;
   T info;
   link_type next;
 
