@@ -12,6 +12,9 @@ int main()
   using Node = rt::set<T>::node_type;
   using A = rt::node_allocator<T, Node, L, 4>;
   using C = rt::set<T, std::less<T>, A>;
+  using node_type = typename C::node_type;
+
+  static_assert(sizeof (node_type) == 4);
 
   C t1 {'k', 'd', 'u', 'c', 'l', 'e', 'g', 'b', 'h', 'i'};
 
