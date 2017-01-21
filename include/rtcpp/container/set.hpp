@@ -90,7 +90,7 @@ class set {
   using const_iterator = iterator;
   using const_reverse_iterator =
     std::reverse_iterator<const_iterator>;
-  private:
+private:
   mutable inner_alloc_type m_inner_alloc;
   node_pointer m_head;
   Compare m_comp;
@@ -100,7 +100,7 @@ class set {
   void release_node(node_pointer p) const
   { inner_alloc_traits_type::deallocate_node(m_inner_alloc, p); }
   void safe_construct(node_pointer p, const value_type& key) const;
-  public:
+public:
   set(const Compare& comp, const Allocator& alloc = Allocator());
   explicit set(const Allocator& alloc = Allocator())
   : set(Compare(), alloc) {}
@@ -141,8 +141,6 @@ class set {
   template<typename K>
   auto max_size() const noexcept
   { return std::numeric_limits<size_type>::max(); }
-  template<typename InputIt>
-  void insert(InputIt begin, InputIt end) noexcept;
   template <typename K>
   size_type erase(const K& key);
   auto insert(const value_type& key) noexcept
@@ -177,6 +175,16 @@ class set {
       } else {
         return std::make_pair(iterator(p), false);
       }
+    }
+  }
+
+  template<class InputIt>
+  void insert(InputIt begin, InputIt end) noexcept
+  {
+    for (InputIt iter = begin; iter != end; ++iter) {
+      auto pair = insert(*iter);
+      if (!pair.second)
+         continue;
     }
   }
 
@@ -333,17 +341,6 @@ set<T, Compare, Allocator>::count(const K& key) const noexcept
     } else {
       return 1;
     }
-  }
-}
-
-template <typename T, typename Compare, typename Allocator>
-template <typename InputIt>
-void set<T, Compare, Allocator>::insert(InputIt begin, InputIt end) noexcept
-{
-  for (InputIt iter = begin; iter != end; ++iter) {
-    auto pair = insert(*iter);
-    if (!pair.second)
-       continue;
   }
 }
 

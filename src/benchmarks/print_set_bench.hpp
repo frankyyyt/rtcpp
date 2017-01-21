@@ -21,8 +21,9 @@ void print_set_bench(const std::vector<typename C::value_type>& data)
   int repeat = 10;
   // Inserts the first half of the random data in the set. do not
   // participate in the benchmark.
-  C c;
-  c.insert(data.begin(), data.begin() + s);
+  //C c;
+  //c.insert(data.begin(), data.begin() + s);
+  C c(data.begin(), data.begin() + s);
   {
     rt::timer t;
     for (std::size_t i = 0; i <= s; ++i) {
