@@ -83,7 +83,7 @@ void node_storage<T, I, N>::push(pointer idx) noexcept
   //  std::cout << std::endl;
   //}
 
-  const auto i = idx.get_idx();
+  const auto i = idx.get_link().get_idx();
   auto b = get_base_ptr(i);
   b[get_raw_idx(i)] = free;
   free = i;

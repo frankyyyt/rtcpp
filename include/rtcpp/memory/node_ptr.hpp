@@ -2,155 +2,12 @@
 
 #include <type_traits>
 
-namespace rt {
-
-template <class>
-class node_link;
-
-template <class, class, std::size_t>
-class node_storage;
-
-template <class T, class I, std::size_t N>
-class node_ptr {
-public:
-  using strg_type = node_storage<T, I, N>;
-  using difference_type = std::ptrdiff_t;
-
-private:
-  strg_type* strg {nullptr};
-  I idx {};
-
-public:
-  using index_type = I;
-  using element_type = T;
-  template <class U>
-  using rebind = node_ptr<U, I, N>;
-
-  node_ptr(std::nullptr_t p = nullptr) {}
-  node_ptr(strg_type* p, I i) : strg(p), idx(i) {}
-  node_ptr(const node_ptr& rhs) = default;
-  ~node_ptr() = default;
-
-  auto& operator=(const node_ptr<T, I, N>& rhs)
-  { idx = rhs.idx; strg = rhs.strg; return *this; }
-  auto& operator=(const node_link<I>& rhs)
-  { idx = rhs.get_idx(); return *this; }
-  auto get_idx() const {return idx;}
-  const auto* get_strg() const {return strg;}
-
-  auto operator++() { ++idx; return *this; }
-  auto operator++(int)
-  { auto tmp = *this; operator++; return tmp; }
-
-  explicit operator bool () const
-  {return strg && idx != 0;}
-  auto& operator*()
-  {
-    const auto b = strg->get_base_ptr(idx);
-    const auto raw_idx = strg->get_raw_idx(idx);
-    return *reinterpret_cast<T*>(&b[raw_idx]);
-  }
-  const auto& operator*() const
-  {
-    const auto b = strg->get_base_ptr(idx);
-    const auto raw_idx = strg->get_raw_idx(idx);
-    return *reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  auto* operator->()
-  {
-    const auto b = strg->get_base_ptr(idx);
-    const auto raw_idx = strg->get_raw_idx(idx);
-    return reinterpret_cast<T*>(&b[raw_idx]);
-  }
-  const auto* operator->() const
-  {
-    const auto b = strg->get_base_ptr(idx);
-    const auto raw_idx = strg->get_raw_idx(idx);
-    return reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-};
-
-//____________________________________________________
-template <class T, class I, std::size_t N>
-auto operator==( const node_ptr<T, I, N>& p1
-               , const node_ptr<T, I, N>& p2)
-{
-  return p1.get_strg() == p2.get_strg() && 
-         p1.get_idx()  == p2.get_idx();
-}
-
-template <class T, class I, std::size_t N>
-auto operator!=( const node_ptr<T, I, N>& p1
-               , const node_ptr<T, I, N>& p2)
-{return !(p1 == p2);}
-
-//____________________________________________________
-template <class T, class I, std::size_t N>
-class const_node_ptr {
-public:
-  using strg_type = node_storage<T, I, N>;
-  using difference_type = std::ptrdiff_t;
-private:
-  const strg_type* strg {nullptr};
-  I idx {};
-public:
-  using index_type = I;
-  using element_type = T;
-  template <class U>
-  using rebind = const_node_ptr<U, I, N>;
-
-  auto get_idx() const {return idx;}
-  const strg_type* get_strg() const {return strg;}
-
-  auto operator++() { ++idx; return *this; }
-  auto operator++(int)
-  { auto tmp = *this; operator++; return tmp; }
-
-  const auto& operator*() const
-  {
-    const auto b = strg->get_base_ptr(idx);
-    const auto raw_idx = strg->get_raw_idx(idx);
-    return *reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  const auto* operator->() const
-  {
-    const auto b = strg->get_base_ptr(idx);
-    const auto raw_idx = strg->get_raw_idx(idx);
-    return reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  const_node_ptr(std::nullptr_t p = nullptr) {}
-  const_node_ptr& operator=(const node_link<I>& rhs)
-  {
-    idx = rhs.get_idx();
-    return *this;
-  }
-  auto& operator=(const const_node_ptr<T, I, N>& rhs)
-  {
-    idx = rhs.idx;
-    strg = rhs.strg;
-    return *this;
-  }
-  const_node_ptr(const strg_type* pp, I i)
-  : strg(pp), idx(i) {}
-  const_node_ptr(const node_ptr<T, I, N>& pp)
-  : strg(pp.get_strg()), idx(pp.get_idx()) {}
-};
-
-//____________________________________________________
-template <class T, class I, std::size_t N>
-auto operator==( const const_node_ptr<T, I, N>& p1
-               , const const_node_ptr<T, I, N>& p2)
-{return p1.get_idx() == p2.get_idx();}
-
-template <class T, class I, std::size_t N>
-auto operator!=( const const_node_ptr<T, I, N>& p1
-               , const const_node_ptr<T, I, N>& p2)
-{return !(p1 == p2);}
-
-//____________________________________________________
 // The following class obeys the requisite of a nullable
 // pointer type.
 
+namespace rt {
+
+//____________________________________________________
 template <class I>
 class node_link {
 private:
@@ -160,15 +17,8 @@ public:
   using index_type = I;
   using difference_type = std::ptrdiff_t;
 
+  node_link(I i) : m_idx(i) {}
   node_link(std::nullptr_t = nullptr) : m_idx(0) {}
-
-  template <class T, std::size_t N>
-  auto& operator=(const node_ptr<T, I, N>& rhs)
-  { m_idx = rhs.get_idx(); return *this; }
-
-  template <class T, std::size_t N>
-  auto& operator=(const const_node_ptr<T, I, N>& rhs)
-  { m_idx = rhs.get_idx(); return *this; }
 
   friend
   auto operator==(const node_link& p1, const node_link& p2)
@@ -178,15 +28,93 @@ public:
   auto operator!=(const node_link& p1, const node_link& p2)
   {return !(p1 == p2);}
 
-  explicit operator bool () const {return m_idx != 0;}
+  auto operator++() { ++m_idx; return *this; }
+  auto operator++(int)
+  { auto tmp = *this; operator++; return tmp; }
+
+  explicit operator bool() const {return m_idx != 0;}
+
   auto get_idx() const {return m_idx;}
 };
 
-//____________________________________________________
+//_______________________________________________________
+template <class, class, std::size_t>
+class node_storage;
+
+template <class T, class I, std::size_t N>
+class node_ptr {
+public:
+  using index_type = I;
+  using element_type = T;
+  using link_type = node_link<I>;
+  using difference_type = std::ptrdiff_t;
+  using strg_type = node_storage<T, I, N>;
+  template <class U> using rebind = node_ptr<U, I, N>;
+
+private:
+  strg_type* m_strg;
+  link_type m_link;
+
+public:
+  node_ptr(std::nullptr_t p = nullptr)
+  : m_strg(nullptr), m_link (nullptr) {}
+
+  node_ptr(strg_type* p, I i) : m_strg(p), m_link(i) {}
+
+  auto& operator=(const node_ptr& rhs)
+  { m_link = rhs.m_link; m_strg = rhs.m_strg; return *this; }
+
+  auto& operator=(const node_link<I>& rhs)
+  { m_link = rhs; return *this; }
+
+  auto get_link() const {return m_link;}
+  const auto* get_strg() {return m_strg;}
+
+  auto operator++() { ++m_link; return *this; }
+  auto operator++(int)
+  { auto tmp = *this; operator++; return tmp; }
+
+  explicit operator bool() const {return m_strg && m_link;}
+  operator link_type () const {return m_link;};
+
+  auto& operator*()
+  {
+    const auto b = m_strg->get_base_ptr(m_link.get_idx());
+    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    return *reinterpret_cast<T*>(&b[raw_idx]);
+  }
+  const auto& operator*() const
+  {
+    const auto b = m_strg->get_base_ptr(m_link.get_idx());
+    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    return *reinterpret_cast<const T*>(&b[raw_idx]);
+  }
+  auto* operator->()
+  {
+    const auto b = m_strg->get_base_ptr(m_link.get_idx());
+    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    return reinterpret_cast<T*>(&b[raw_idx]);
+  }
+  const auto* operator->() const
+  {
+    const auto b = m_strg->get_base_ptr(m_link.get_idx());
+    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    return reinterpret_cast<const T*>(&b[raw_idx]);
+  }
+
+  friend
+  auto operator==( const node_ptr& p1 , const node_ptr& p2)
+  { return p1.m_strg == p2.m_strg && p1.m_link  == p2.m_link; }
+
+  friend
+  auto operator!=( const node_ptr& p1 , const node_ptr& p2)
+  {return !(p1 == p2);}
+};
+
 template <class T, class I, std::size_t N>
 auto operator==( const node_ptr<T, I, N>& p1
                , const node_link<I>& p2)
-{return p1.get_idx() == p2.get_idx();}
+{return p1.get_link() == p2;}
 
 template <class T, class I, std::size_t N>
 auto operator!=( const node_ptr<T, I, N>& p1
@@ -196,7 +124,7 @@ auto operator!=( const node_ptr<T, I, N>& p1
 template <class T, class I, std::size_t N>
 auto operator==( const node_link<I>& p1
                , const node_ptr<T, I, N>& p2)
-{return p1.get_idx() == p2.get_idx();}
+{return p1 == p2.get_link();}
 
 template <class T, class I, std::size_t N>
 auto operator!=( const node_link<I>& p1
@@ -205,9 +133,69 @@ auto operator!=( const node_link<I>& p1
 
 //____________________________________________________
 template <class T, class I, std::size_t N>
+class const_node_ptr {
+public:
+  using index_type = I;
+  using element_type = T;
+  using link_type = node_link<I>;
+  using difference_type = std::ptrdiff_t;
+  using strg_type = node_storage<T, I, N>;
+  template <class U> using rebind = const_node_ptr<U, I, N>;
+
+private:
+  const strg_type* m_strg;
+  link_type m_link;
+
+public:
+  const_node_ptr(std::nullptr_t p = nullptr)
+  : m_strg(nullptr), m_link(nullptr) {}
+
+  const_node_ptr(const strg_type* pp, I i)
+  : m_strg(pp), m_link(i) {}
+
+  const_node_ptr(const node_ptr<T, I, N>& pp)
+  : m_strg(pp.get_strg()), m_link(pp.get_link()) {}
+
+  auto get_link() const {return m_link;}
+  const strg_type* get_strg() const {return m_strg;}
+
+  explicit operator bool() const {return m_strg && m_link;}
+  operator link_type () const {return m_link;};
+  auto operator++() { ++m_link; return *this; }
+  auto operator++(int)
+  { auto tmp = *this; operator++; return tmp; }
+
+  const auto& operator*() const
+  {
+    const auto b = m_strg->get_base_ptr(m_link.get_idx());
+    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    return *reinterpret_cast<const T*>(&b[raw_idx]);
+  }
+  const auto* operator->() const
+  {
+    const auto b = m_strg->get_base_ptr(m_link.get_idx());
+    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    return reinterpret_cast<const T*>(&b[raw_idx]);
+  }
+
+  const_node_ptr& operator=(const node_link<I>& rhs)
+  { m_link = rhs; return *this; }
+
+  friend
+  auto operator==( const const_node_ptr& p1
+                 , const const_node_ptr& p2)
+  {return p1.m_strg == p2.m_strg && p1.m_link == p2.m_link;}
+
+  friend
+  auto operator!=( const const_node_ptr& p1
+                 , const const_node_ptr& p2)
+  {return !(p1 == p2);}
+};
+
+template <class T, class I, std::size_t N>
 auto operator==( const const_node_ptr<T, I, N>& p1
                , const node_link<I>& p2)
-{return p1.get_idx() == p2.get_idx();}
+{return p1.get_link() == p2;}
 
 template <class T, class I, std::size_t N>
 auto operator!=( const const_node_ptr<T, I, N>& p1
@@ -217,7 +205,7 @@ auto operator!=( const const_node_ptr<T, I, N>& p1
 template <class T, class I, std::size_t N>
 auto operator==( const node_link<I>& p1
                , const const_node_ptr<T, I, N>& p2)
-{return p1.get_idx() == p2.get_idx();}
+{return p1 == p2.get_link();}
 
 template <class T, class I, std::size_t N>
 auto operator!=( const node_link<I>& p1
@@ -240,7 +228,7 @@ public:
   : m_strg(nullptr), m_idx(nullptr) {}
 
   auto get_strg() {return m_strg;}
-  auto get_node_link() {return m_idx;}
+  auto get_link() const {return m_idx;}
 
   explicit operator bool() const {return m_strg && m_idx;}
 
@@ -270,7 +258,7 @@ public:
   : m_strg(nullptr), m_idx(nullptr) {}
 
   const_void_node_ptr(void_node_ptr<I> p)
-  : m_strg(p.get_strg()), m_idx(p.get_node_link())
+  : m_strg(p.get_strg()), m_idx(p.get_link())
   {}
 
   explicit operator bool() const {return m_strg && m_idx;}

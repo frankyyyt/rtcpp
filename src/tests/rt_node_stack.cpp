@@ -49,7 +49,7 @@ void test_node_storage()
   auto p1 = strg.pop();
   *p1 = 10;
   // The last element in the stack must be returned.
-  if (p1.get_idx() != 3)
+  if (p1.get_link().get_idx() != 3)
     throw std::runtime_error("pop: 3");
 
   // After allocating one element we must have one block.
@@ -59,12 +59,12 @@ void test_node_storage()
   auto p2 = strg.pop();
   *p2 = 11;
   // The last element in the stack must be returned.
-  if (p2.get_idx() != 2)
+  if (p2.get_link().get_idx() != 2)
     throw std::runtime_error("pop: 2");
 
   auto p3 = strg.pop();
   *p3 = 12;
-  if (p3.get_idx() != 1)
+  if (p3.get_link().get_idx() != 1)
     throw std::runtime_error("pop: 1");
 
   // We still must have only one block.
@@ -74,7 +74,7 @@ void test_node_storage()
   // These should trigger another block.
   auto p4 = strg.pop();
   *p4 = 13;
-  if (p4.get_idx() != 7)
+  if (p4.get_link().get_idx() != 7)
     throw std::runtime_error("pop: 7");
 
   // We must have only two blocks now.
@@ -90,11 +90,11 @@ void test_node_storage()
   strg.push(p4);
 
   const auto p5 = strg.pop();
-  if (p5.get_idx() != 7)
+  if (p5.get_link().get_idx() != 7)
     throw std::runtime_error("pop: 7");
 
   const auto p6 = strg.pop();
-  if (p6.get_idx() != 2)
+  if (p6.get_link().get_idx() != 2)
     throw std::runtime_error("pop: 2");
 }
 
@@ -111,13 +111,13 @@ void test_node_ptr()
   if (p1.get_strg() != &b)
     throw std::runtime_error("test_node_ptr_swap");
 
-  if (p1.get_idx() != 2)
+  if (p1.get_link().get_idx() != 2)
     throw std::runtime_error("test_node_ptr_swap");
 
   if (p2.get_strg() != &a)
     throw std::runtime_error("test_node_ptr_swap");
 
-  if (p2.get_idx() != 1)
+  if (p2.get_link().get_idx() != 1)
     throw std::runtime_error("test_node_ptr_swap");
 }
 
