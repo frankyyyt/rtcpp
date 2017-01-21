@@ -62,9 +62,9 @@ void test_node_storage()
 
   auto p1 = strg.pop();
   *p1 = 10;
-  // The last element in the stack must be returned.
-  if (p1.get_link().get_idx() != 3)
-    throw std::runtime_error("pop: 3");
+  // The second element in the stack must be returned.
+  if (p1.get_link().get_idx() != 1)
+    throw std::runtime_error("pop: 1");
 
   // After allocating one element we must have one block.
   if (strg.get_n_blocks() != 1)
@@ -78,8 +78,8 @@ void test_node_storage()
 
   auto p3 = strg.pop();
   *p3 = 12;
-  if (p3.get_link().get_idx() != 1)
-    throw std::runtime_error("pop: 1");
+  if (p3.get_link().get_idx() != 3)
+    throw std::runtime_error("pop: 3");
 
   // We still must have only one block.
   if (strg.get_n_blocks() != 1)
@@ -88,8 +88,8 @@ void test_node_storage()
   // These should trigger another block.
   auto p4 = strg.pop();
   *p4 = 13;
-  if (p4.get_link().get_idx() != 7)
-    throw std::runtime_error("pop: 7");
+  if (p4.get_link().get_idx() != 4)
+    throw std::runtime_error("pop: 4");
 
   // We must have only two blocks now.
   if (strg.get_n_blocks() != 2)
@@ -104,8 +104,8 @@ void test_node_storage()
   strg.push(p4);
 
   const auto p5 = strg.pop();
-  if (p5.get_link().get_idx() != 7)
-    throw std::runtime_error("pop: 7");
+  if (p5.get_link().get_idx() != 4)
+    throw std::runtime_error("pop: 4");
 
   const auto p6 = strg.pop();
   if (p6.get_link().get_idx() != 2)
@@ -154,11 +154,11 @@ void print_node_sizes()
 
   std::cout << "_____" << std::endl;
 
-  using node1 = tbst::node<unsigned char, void_node_ptr<unsigned char>>;
-  using node2 = tbst::node<short        , void_node_ptr<short>        >;
-  using node3 = tbst::node<int          , void_node_ptr<int>          >;
-  using node4 = tbst::node<long long    , void_node_ptr<long long>    >;
-  using node5 = tbst::node<char*        , void_node_ptr<char*>        >;
+  using node1 = tbst::node<unsigned char, node_link<unsigned char>>;
+  using node2 = tbst::node<short        , node_link<short>        >;
+  using node3 = tbst::node<int          , node_link<int>          >;
+  using node4 = tbst::node<long long    , node_link<long long>    >;
+  using node5 = tbst::node<char*        , node_link<char*>        >;
 
   constexpr std::size_t U1 = sizeof (node1);
   constexpr std::size_t U2 = sizeof (node2);
@@ -166,11 +166,11 @@ void print_node_sizes()
   constexpr std::size_t U4 = sizeof (node4);
   constexpr std::size_t U5 = sizeof (node5);
 
-  std::cout << "tbst::node<uchar    , node_ptr<uchar>>     : " << U1 << std::endl;
-  std::cout << "tbst::node<short    , node_ptr<short>>     : " << U2 << std::endl;
-  std::cout << "tbst::node<int      , node_ptr<int>>       : " << U3 << std::endl;
-  std::cout << "tbst::node<long long, node_ptr<long long>> : " << U4 << std::endl;
-  std::cout << "tbst::node<char*    , node_ptr<char*>>     : " << U5 << std::endl;
+  std::cout << "tbst::node<uchar    , node_link<uchar>>     : " << U1 << std::endl;
+  std::cout << "tbst::node<short    , node_link<short>>     : " << U2 << std::endl;
+  std::cout << "tbst::node<int      , node_link<int>>       : " << U3 << std::endl;
+  std::cout << "tbst::node<long long, node_link<long long>> : " << U4 << std::endl;
+  std::cout << "tbst::node<char*    , node_link<char*>>     : " << U5 << std::endl;
 }
 
 void print_data_type_size()
