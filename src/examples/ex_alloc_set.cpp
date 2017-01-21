@@ -14,7 +14,7 @@ int main()
   using C = rt::set<T, std::less<T>, A>;
   using node_type = typename C::node_type;
 
-  static_assert(sizeof (node_type) == 4);
+  static_assert((sizeof (node_type) == 4),"");
 
   C t1 {'k', 'd', 'u', 'c', 'l', 'e', 'g', 'b', 'h', 'i'};
 
@@ -25,7 +25,7 @@ int main()
 
   auto alloc = t1.get_allocator().get_node_storage();
 
-  for (auto a: *alloc)
+  for (auto& a: *alloc)
     std::cout << a.key << " ";
 
   std::cout << std::endl;
