@@ -21,7 +21,7 @@ RT_TEST(test_nullable_ptr)
 
   // Equality comparable.
   RT_CHECK(p1 == p2);
-  RT_CHECK(p3 == p2) 
+  RT_CHECK(p3 == p2);
   RT_CHECK(!p3);
 }
 
@@ -29,10 +29,24 @@ void test_node_ptr_type()
 {
   using namespace rt;
 
-  test_nullable_ptr<node_ptr<unsigned, unsigned, 4>>();
-  test_nullable_ptr<node_link<unsigned>>();
-  test_nullable_ptr<void_node_ptr<unsigned>>();
-  test_nullable_ptr<const_void_node_ptr<unsigned>>();
+  using node_strg_t = node_storage<unsigned, unsigned, 4>;
+  using ptr_t = node_ptr<unsigned, unsigned, 4>;
+  using cptr_t = const_node_ptr<unsigned, unsigned, 4>;
+  using link_t = node_link<unsigned>;
+  using void_ptr_t = void_node_ptr<unsigned>;
+  using cvoid_ptr_t = const_void_node_ptr<unsigned>;
+
+  test_nullable_ptr<ptr_t>();
+  test_nullable_ptr<cptr_t>();
+  test_nullable_ptr<link_t>();
+  test_nullable_ptr<void_ptr_t>();
+  test_nullable_ptr<cvoid_ptr_t>();
+
+  node_strg_t strg;
+  void_ptr_t p1(&strg, 8);
+  cvoid_ptr_t p2 = p1;
+  (void) p2;
+  //void_ptr_t p3 = p2; // Error
 }
 
 template <class T, class L>

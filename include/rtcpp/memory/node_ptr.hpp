@@ -111,26 +111,6 @@ public:
   {return !(p1 == p2);}
 };
 
-template <class T, class I, std::size_t N>
-auto operator==( const node_ptr<T, I, N>& p1
-               , const node_link<I>& p2)
-{return p1.get_link() == p2;}
-
-template <class T, class I, std::size_t N>
-auto operator!=( const node_ptr<T, I, N>& p1
-               , const node_link<I>& p2)
-{return !(p1 == p2);}
-
-template <class T, class I, std::size_t N>
-auto operator==( const node_link<I>& p1
-               , const node_ptr<T, I, N>& p2)
-{return p1 == p2.get_link();}
-
-template <class T, class I, std::size_t N>
-auto operator!=( const node_link<I>& p1
-               , const node_ptr<T, I, N>& p2)
-{return !(p1 == p2);}
-
 //____________________________________________________
 template <class T, class I, std::size_t N>
 class const_node_ptr {
@@ -192,26 +172,6 @@ public:
   {return !(p1 == p2);}
 };
 
-template <class T, class I, std::size_t N>
-auto operator==( const const_node_ptr<T, I, N>& p1
-               , const node_link<I>& p2)
-{return p1.get_link() == p2;}
-
-template <class T, class I, std::size_t N>
-auto operator!=( const const_node_ptr<T, I, N>& p1
-               , const node_link<I>& p2)
-{return !(p1 == p2);}
-
-template <class T, class I, std::size_t N>
-auto operator==( const node_link<I>& p1
-               , const const_node_ptr<T, I, N>& p2)
-{return p1 == p2.get_link();}
-
-template <class T, class I, std::size_t N>
-auto operator!=( const node_link<I>& p1
-               , const const_node_ptr<T, I, N>& p2)
-{return !(p1 == p2);}
-
 //____________________________________________________
 template <class I>
 class void_node_ptr {
@@ -226,6 +186,9 @@ public:
 
   void_node_ptr(std::nullptr_t = nullptr)
   : m_strg(nullptr), m_idx(nullptr) {}
+
+  void_node_ptr(void* p, I i)
+  : m_strg(p), m_idx(i) {}
 
   auto get_strg() {return m_strg;}
   auto get_link() const {return m_idx;}
