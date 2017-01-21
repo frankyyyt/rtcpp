@@ -46,7 +46,7 @@ public:
   using const_iterator = const_pointer;
   using iterator = pointer;
 
-  auto begin() const { return const_pointer(this, 0); }
+  auto begin() const { return const_pointer(this, 1); }
   auto end() const
   {
     return
@@ -54,7 +54,7 @@ public:
                    , static_cast<I>(get_n_blocks() * N));
   }
 
-  auto begin() { return pointer(this, 0); }
+  auto begin() { return pointer(this, 1); }
   auto end()
   {
     return pointer(this, static_cast<I>(get_n_blocks() * N));
@@ -113,11 +113,12 @@ I node_storage<T, I, N>::add_bloc()
     const auto size = bufs.size();
     bufs.push_back(std::make_unique<I[]>(N * R));
     const auto offset = size * N;
-    for (std::size_t i = 1; i < N; ++i)
-      bufs.back()[i * R] = static_cast<I>(offset + i - 1);
+    for (std::size_t i = 0; i < N - 1; ++i)
+      bufs.back()[i * R] = static_cast<I>(offset + i + 1);
 
-    bufs.back()[0] = 0;
-    return static_cast<I>(bufs.size() * N - 1);
+    bufs.back()[N - 1] = 0;
+    return (size == 0) ? static_cast<I>(1) 
+                       : static_cast<I>(size * N);
 }
 
 } // rt
