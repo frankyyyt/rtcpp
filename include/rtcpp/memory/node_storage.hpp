@@ -39,8 +39,8 @@ private:
 public:
   using pointer = node_ptr<T, I, N>;
   using const_pointer = const_node_ptr<T, I, N>;
-  using void_pointer = node_ptr_void<I>;
-  using const_void_pointer = const_node_ptr_void<I>;
+  using void_pointer = void_node_ptr<I>;
+  using const_void_pointer = const_void_node_ptr<I>;
   using link_type = node_link<I>;
   using value_type = T;
   using const_iterator = const_pointer;

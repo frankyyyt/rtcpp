@@ -31,6 +31,8 @@ void test_node_ptr_type()
 
   test_nullable_ptr<node_ptr<unsigned, unsigned, 4>>();
   test_nullable_ptr<node_link<unsigned>>();
+  test_nullable_ptr<void_node_ptr<unsigned>>();
+  test_nullable_ptr<const_void_node_ptr<unsigned>>();
 }
 
 template <class T, class L>
@@ -138,11 +140,11 @@ void print_node_sizes()
 
   std::cout << "_____" << std::endl;
 
-  using node1 = tbst::node<unsigned char, node_ptr_void<unsigned char>>;
-  using node2 = tbst::node<short        , node_ptr_void<short>        >;
-  using node3 = tbst::node<int          , node_ptr_void<int>          >;
-  using node4 = tbst::node<long long    , node_ptr_void<long long>    >;
-  using node5 = tbst::node<char*        , node_ptr_void<char*>        >;
+  using node1 = tbst::node<unsigned char, void_node_ptr<unsigned char>>;
+  using node2 = tbst::node<short        , void_node_ptr<short>        >;
+  using node3 = tbst::node<int          , void_node_ptr<int>          >;
+  using node4 = tbst::node<long long    , void_node_ptr<long long>    >;
+  using node5 = tbst::node<char*        , void_node_ptr<char*>        >;
 
   constexpr std::size_t U1 = sizeof (node1);
   constexpr std::size_t U2 = sizeof (node2);

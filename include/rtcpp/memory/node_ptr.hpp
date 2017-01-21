@@ -178,9 +178,8 @@ public:
   auto operator!=(const node_link& p1, const node_link& p2)
   {return !(p1 == p2);}
 
-  explicit operator bool () {return m_idx != 0;}
+  explicit operator bool () const {return m_idx != 0;}
   auto get_idx() const {return m_idx;}
-
 };
 
 //____________________________________________________
@@ -227,29 +226,64 @@ auto operator!=( const node_link<I>& p1
 
 //____________________________________________________
 template <class I>
-class node_ptr_void {
+class void_node_ptr {
 private:
-  void* strg {nullptr};
-  I m_idx {};
+  void* m_strg;
+  node_link<I> m_idx;
+
 public:
   using index_type = I;
   using element_type = void;
   using difference_type = std::ptrdiff_t;
-  template <class U>
-  using rebind = node_ptr_void<I>;
+
+  void_node_ptr(std::nullptr_t = nullptr)
+  : m_strg(nullptr), m_idx(nullptr) {}
+
+  auto get_strg() {return m_strg;}
+  auto get_node_link() {return m_idx;}
+
+  explicit operator bool() const {return m_strg && m_idx;}
+
+  friend
+  auto operator==( const void_node_ptr& a
+                 , const void_node_ptr& b) 
+  { return a.m_strg == b.m_strg && a.m_idx == b.m_idx;}
+
+  friend
+  auto operator!=( const void_node_ptr& a
+                 , const void_node_ptr& b) 
+  { return !(a == b);}
 };
 
 template <class I>
-class const_node_ptr_void {
+class const_void_node_ptr {
 private:
-  const void* strg {nullptr};
-  I idx {};
+  const void* m_strg;
+  node_link<I> m_idx;
+
 public:
   using index_type = I;
   using element_type = void;
   using difference_type = std::ptrdiff_t;
-  template <class U>
-  using rebind = const_node_ptr_void<I>;
+
+  const_void_node_ptr(std::nullptr_t = nullptr)
+  : m_strg(nullptr), m_idx(nullptr) {}
+
+  const_void_node_ptr(void_node_ptr<I> p)
+  : m_strg(p.get_strg()), m_idx(p.get_node_link())
+  {}
+
+  explicit operator bool() const {return m_strg && m_idx;}
+
+  friend
+  auto operator==( const const_void_node_ptr& a
+                 , const const_void_node_ptr& b) 
+  { return a.m_strg == b.m_strg && a.m_idx == b.m_idx;}
+
+  friend
+  auto operator!=( const const_void_node_ptr& a
+                 , const const_void_node_ptr& b) 
+  { return !(a == b);}
 };
 
 } // rt
