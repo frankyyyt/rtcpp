@@ -10,33 +10,27 @@
 #include <rtcpp/memory/node_storage.hpp>
 #include <rtcpp/memory/node_allocator.hpp>
 
+#include "rt_test.hpp"
+
+template <class Ptr>
+RT_TEST(test_nullable_ptr)
+{
+  Ptr p1; // Default constructable.
+  Ptr p2(p1); // Copy costructable.
+  Ptr p3 = p1; // Copy assignable.
+
+  // Equality comparable.
+  RT_CHECK(p1 == p2);
+  RT_CHECK(p3 == p2) 
+  RT_CHECK(!p3);
+}
+
 void test_node_ptr_type()
 {
   using namespace rt;
 
-  constexpr auto N = 4;
-  using I = unsigned;
-  using T = I;
-  using node_ptr_type = node_ptr<T, I, N>;
-
-  // Default constructuble.
-  node_ptr_type p1;
-
-  // Copy costructable.
-  node_ptr_type p2(p1);
-
-  // Copy assignable.
-  node_ptr_type p3 = p1;
-
-  // Equality comparable.
-  if (p1 != p2) 
-    throw std::runtime_error("");
-
-  if (p3 != p2) 
-    throw std::runtime_error("");
-
-  if (p3) 
-    throw std::runtime_error("");
+  test_nullable_ptr<node_ptr<unsigned, unsigned, 4>>();
+  test_nullable_ptr<node_link<unsigned>>();
 }
 
 template <class T, class L>

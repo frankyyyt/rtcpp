@@ -148,21 +148,39 @@ auto operator!=( const const_node_ptr<T, I, N>& p1
 {return !(p1 == p2);}
 
 //____________________________________________________
+// The following class obeys the requisite of a nullable
+// pointer type.
+
 template <class I>
 class node_link {
 private:
-  I idx;
+  I m_idx;
+
 public:
   using index_type = I;
   using difference_type = std::ptrdiff_t;
 
-  auto get_idx() const {return idx;}
+  node_link(std::nullptr_t = nullptr) : m_idx(0) {}
+
   template <class T, std::size_t N>
   auto& operator=(const node_ptr<T, I, N>& rhs)
-  { idx = rhs.get_idx(); return *this; }
+  { m_idx = rhs.get_idx(); return *this; }
+
   template <class T, std::size_t N>
   auto& operator=(const const_node_ptr<T, I, N>& rhs)
-  { idx = rhs.get_idx(); return *this; }
+  { m_idx = rhs.get_idx(); return *this; }
+
+  friend
+  auto operator==(const node_link& p1, const node_link& p2)
+  {return p1.m_idx == p2.m_idx;}
+
+  friend
+  auto operator!=(const node_link& p1, const node_link& p2)
+  {return !(p1 == p2);}
+
+  explicit operator bool () {return m_idx != 0;}
+  auto get_idx() const {return m_idx;}
+
 };
 
 //____________________________________________________
