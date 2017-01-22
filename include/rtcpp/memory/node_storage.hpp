@@ -68,7 +68,7 @@ public:
   const I* get_base_ptr(I idx) const
   { return bufs[idx / N].get(); }
   std::size_t get_raw_idx(I idx) const
-  {return (idx % N) * R;}
+  {return (idx & (N - 1)) * R;}
   pointer pop();
   void push(pointer idx) noexcept;
   bool operator==(const node_storage& rhs) const noexcept
