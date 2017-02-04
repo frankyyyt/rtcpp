@@ -67,7 +67,7 @@ public:
   { return bufs[idx / N].get(); }
   const I* get_base_ptr(I idx) const
   { return bufs[idx / N].get(); }
-  std::size_t get_raw_idx(I idx) const
+  static constexpr std::size_t get_raw_idx(I idx)
   {return (idx & (N - 1)) * R;}
   pointer pop();
   void push(pointer idx) noexcept;
@@ -79,10 +79,6 @@ template < class T, class I, std::size_t N>
 void node_storage<T, I, N>::push(pointer idx) noexcept
 {
   assert(idx.get_strg() == this);
-  //if (idx.get_strg() != this) {
-  //  std::cout << std::endl;
-  //}
-
   const auto i = idx.get_link().get_idx();
   auto b = get_base_ptr(i);
   b[get_raw_idx(i)] = free;
