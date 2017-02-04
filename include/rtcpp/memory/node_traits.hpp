@@ -63,6 +63,14 @@ struct const_void_pointer<A, false> {
 };
 
 //__________________________________________________________________
+
+template <bool B, class T1, class T2>
+struct if_type { using type = T1; };
+
+template <class T1, class T2>
+struct if_type<false, T1, T2> { using type = T2; };
+
+//__________________________________________________________________
 template <typename T>
 struct is_node_type {
   static const bool value = has_value_type<T>::value &&

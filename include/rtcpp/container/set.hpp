@@ -236,9 +236,8 @@ public:
     if (m_head->template get_null_link<0>()) // The tree is empty
       return 0;
 
-    node_pointer p =
-      inner_alloc_traits_type::make_ptr(m_inner_alloc,
-        m_head->link[0]);
+    auto p = m_head;
+    p = m_head->link[0];
 
     for (;;) {
       if (m_comp(key, p->key)) {
@@ -302,7 +301,7 @@ public:
         }
       } else if (m_comp(p->key, key)) {
         if (!p->template get_null_link<1>()) {
-          p = inner_alloc_traits_type::make_ptr(m_inner_alloc, p->link[1]);
+          p = p->link[1];
         } else {
           auto q = get_node();
           safe_construct(q, key);
