@@ -29,20 +29,11 @@ class flist_iter :
   private:
   Ptr head;
   public:
-  // Make this private.
   Ptr get_internal_ptr() {return head;}
   flist_iter(Ptr h) : head(h) {}
-  flist_iter& operator++()
-  {
-    head = head->next;
-    return *this;
-  }
+  flist_iter& operator++() { head = head->next; return *this; }
   flist_iter operator++(int)
-  {
-    flist_iter tmp(*this);
-    operator++();
-    return tmp;
-  }
+  { flist_iter tmp(*this); operator++(); return tmp; }
   T& operator*() { return head->info; }
   bool operator==(const flist_iter<T, Ptr>& rhs)
   {return head == rhs.head;}
@@ -56,22 +47,14 @@ class flist_const_iter :
   private:
   Ptr head;
   public:
-  // Make this private.
   Ptr get_internal_ptr() {return head;}
   flist_const_iter(Ptr h) : head(h) {}
   template <class P>
   flist_const_iter(flist_iter<T, P> h) : head(h.get_internal_ptr()) {}
   const flist_const_iter& operator++()
-  {
-    head = head->next;
-    return *this;
-  }
+  { head = head->next; return *this; }
   flist_const_iter operator++(int)
-  {
-    flist_const_iter tmp(*this);
-    operator++();
-    return tmp;
-  }
+  { flist_const_iter tmp(*this); operator++(); return tmp; }
   const T& operator*() const { return head->info; }
   bool operator==(const flist_const_iter<T, Ptr>& rhs)
   {return head == rhs.head;}
@@ -101,8 +84,7 @@ class forward_list {
   using node_pointer = typename inner_alloct_type::pointer;
   using const_node_pointer = typename inner_alloct_type::const_pointer;
   using iterator = flist_iter<T, node_pointer>;
-  //using const_iterator = flist_const_iter<T, const_node_pointer>;
-  using const_iterator = iterator;
+  using const_iterator = flist_const_iter<T, node_pointer>;
   private:
   inner_alloc_type m_inner_alloc;
   node_pointer head; // Not requested from the allocator.
