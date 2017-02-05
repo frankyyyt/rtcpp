@@ -78,12 +78,9 @@ Coding Standards
 
 * Use two spaces for indentation. Tabs are not allowed.
 * Do not end a line with spaces.
-* All files must end with a newline.
 * Limit line length to 70 characters.
-* Make runtime state obvious to the programmer.
 * Use standard c++ naming convention.
-* Keep names short and do use abbreviations.
-* Avoid global variables.
+* Keep names short.
 
 Some further cosmetic guidelines
 
@@ -181,6 +178,19 @@ There is a space between if and ():
   if (condition) // right
   if(condition) // wrong
 
+Return as early as possible from a function.
+
+  void foo()
+  {
+    if (ready1)
+      return;
+
+    if (ready2)
+      return;
+
+    // Do further stuff.
+  }
+
 for, while, do - while 
 ======================================================================
 
@@ -206,15 +216,13 @@ infinite loop, use
 Pointers
 ======================================================================
 
-You usually do not need this in modern C++, but if you do.
-
   int* a = nullptr;
 
   if (!a) // right
 
-  if (a = nullptr) // wrong
+  if (a == nullptr) // wrong
 
-  if (a = NULL) // wrong
+  if (a == NULL) // wrong
 
 But if a is not a pointer or a boolean variable prefer
 
@@ -254,9 +262,9 @@ Getters and setters are sometimes a (big) waste of time and can also
 hide bad program design.  For example:
 
   class foo {
-    private:
+  private:
     int m_a;
-    public:
+  public:
     void set(int a) {m_a = a;}
     int get() const {return m_a;}
   };
