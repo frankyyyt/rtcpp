@@ -25,7 +25,7 @@ class bst_iterator :
   public std::iterator<std::bidirectional_iterator_tag, const T> {
   public:
   Ptr m_p;
-  bst_iterator() noexcept : m_p(0) {}
+  bst_iterator() noexcept : m_p(nullptr) {}
   bst_iterator(Ptr root) noexcept : m_p(root) {}
 
   auto& operator++() noexcept

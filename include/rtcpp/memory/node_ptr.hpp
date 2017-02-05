@@ -77,30 +77,24 @@ public:
   explicit operator bool() const {return m_strg && m_link;}
   operator link_type () const {return m_link;};
 
-  auto& operator*()
+  auto* get_ptr()
   {
     const auto b = m_strg->get_base_ptr(m_link.get_idx());
-    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
-    return *reinterpret_cast<T*>(&b[raw_idx]);
-  }
-  const auto& operator*() const
-  {
-    const auto b = m_strg->get_base_ptr(m_link.get_idx());
-    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
-    return *reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  auto* operator->()
-  {
-    const auto b = m_strg->get_base_ptr(m_link.get_idx());
-    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    const auto raw_idx = strg_type::get_raw_idx(m_link.get_idx());
     return reinterpret_cast<T*>(&b[raw_idx]);
   }
-  const auto* operator->() const
+
+  const auto* get_ptr() const
   {
     const auto b = m_strg->get_base_ptr(m_link.get_idx());
-    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
+    const auto raw_idx = strg_type::get_raw_idx(m_link.get_idx());
     return reinterpret_cast<const T*>(&b[raw_idx]);
   }
+
+  auto& operator*() { return *get_ptr(); }
+  const auto& operator*() const { return *get_ptr(); }
+  auto* operator->() { return get_ptr(); }
+  const auto* operator->() const { return get_ptr(); }
 
   friend
   auto operator==( const node_ptr& p1 , const node_ptr& p2)
@@ -136,6 +130,13 @@ public:
   const_node_ptr(const node_ptr<T, I, N>& pp)
   : m_strg(pp.get_strg()), m_link(pp.get_link()) {}
 
+  const auto* get_ptr() const
+  {
+    const auto b = m_strg->get_base_ptr(m_link.get_idx());
+    const auto raw_idx = strg_type::get_raw_idx(m_link.get_idx());
+    return reinterpret_cast<const T*>(&b[raw_idx]);
+  }
+
   auto get_link() const {return m_link;}
   const strg_type* get_strg() const {return m_strg;}
 
@@ -145,19 +146,8 @@ public:
   auto operator++(int)
   { auto tmp = *this; operator++; return tmp; }
 
-  const auto& operator*() const
-  {
-    const auto b = m_strg->get_base_ptr(m_link.get_idx());
-    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
-    return *reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-  const auto* operator->() const
-  {
-    const auto b = m_strg->get_base_ptr(m_link.get_idx());
-    const auto raw_idx = m_strg->get_raw_idx(m_link.get_idx());
-    return reinterpret_cast<const T*>(&b[raw_idx]);
-  }
-
+  const auto& operator*() const { return *get_ptr(); }
+  const auto* operator->() const { return get_ptr(); }
   const_node_ptr& operator=(const node_link<I>& rhs)
   { m_link = rhs; return *this; }
 

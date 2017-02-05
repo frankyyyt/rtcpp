@@ -61,16 +61,16 @@ public:
   }
 
   node_storage() {}
-  std::size_t get_n_blocks() const
-  {return bufs.size();}
-  I* get_base_ptr(I idx)
-  { return bufs[idx / N].get(); }
-  const I* get_base_ptr(I idx) const
-  { return bufs[idx / N].get(); }
+  std::size_t get_n_blocks() const {return bufs.size();}
+  I* get_base_ptr(I idx) { return bufs[idx / N].get(); }
+  const I* get_base_ptr(I idx) const { return bufs[idx / N].get(); }
+
   static constexpr std::size_t get_raw_idx(I idx)
   {return (idx & (N - 1)) * R;}
+
   pointer pop();
   void push(pointer idx) noexcept;
+
   bool operator==(const node_storage& rhs) const noexcept
   {return bufs == rhs.bufs;}
 };
