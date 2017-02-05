@@ -106,7 +106,7 @@ void test_erase(const std::vector<int>& arr)
   t1.insert(std::begin(arr), std::end(arr));
   for (auto v : arr) { // Removes forward
     t1.erase(v);
-    if (t1.find(v) != std::end(t1))
+    if (t1.find(v) != std::cend(t1))
       throw std::runtime_error("test_erase");
   }
 

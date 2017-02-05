@@ -55,6 +55,43 @@ class bst_iterator :
 
 };
 
+template <class T, class Ptr>
+class const_bst_iterator :
+  public std::iterator<std::bidirectional_iterator_tag, const T> {
+  public:
+  Ptr m_p;
+  const_bst_iterator() noexcept : m_p(nullptr) {}
+  const_bst_iterator(Ptr root) noexcept : m_p(root) {}
+  template <class Ptr2>
+  const_bst_iterator(bst_iterator<T, Ptr2> ptr) noexcept
+  : m_p(ptr.m_p) {}
+
+  auto& operator++() noexcept
+  { m_p = tbst::inorder<1>(m_p); return *this; }
+
+  auto operator++(int) noexcept
+  { auto tmp(*this); operator++(); return tmp; }
+
+  auto& operator--() noexcept
+  { m_p = tbst::inorder<0>(m_p); return *this; }
+
+  auto operator--(int) noexcept
+  { auto tmp(*this); operator--(); return tmp; }
+
+  const T& operator*() const noexcept {return m_p->key;}
+
+  friend
+  auto operator==( const const_bst_iterator<T, Ptr>& rhs
+                 , const const_bst_iterator<T, Ptr>& lhs) noexcept
+  { return lhs.m_p == rhs.m_p; }
+
+  friend
+  auto operator!=( const const_bst_iterator<T, Ptr>& rhs
+                 , const const_bst_iterator<T, Ptr>& lhs) noexcept
+  { return !(lhs == rhs); }
+
+};
+
 template < class T
          , class Compare = std::less<T>
          , class Allocator = std::allocator<T>>
@@ -88,7 +125,7 @@ class set {
     typename inner_alloc_traits_type::const_pointer;
   public:
   using iterator = bst_iterator<T, node_pointer>;
-  using const_iterator = iterator;
+  using const_iterator = const_bst_iterator<T, const_node_pointer>;
   using const_reverse_iterator =
     std::reverse_iterator<const_iterator>;
 private:
@@ -256,9 +293,14 @@ public:
     }
   }
 
-  template <typename K>
-  auto find(const K& key) const
+  template <class K>
+  auto find(const K& key)
   { return iterator(find_with_parent(m_head, key, m_comp).first); }
+
+  template <class K>
+  auto find(const K& key) const
+  { return const_iterator(find_with_parent(m_head, key, m_comp).first); }
+
   template<typename K>
   auto max_size() const noexcept
   { return std::numeric_limits<size_type>::max(); }
@@ -284,7 +326,7 @@ public:
       auto q = get_node();
       safe_construct(q, key);
       tbst::attach_node<0>(m_head, q);
-      return std::make_pair(const_iterator(q), true);
+      return std::make_pair(iterator(q), true);
     }
 
     auto p = m_head;

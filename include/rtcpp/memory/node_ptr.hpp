@@ -68,7 +68,7 @@ public:
   { m_link = rhs; return *this; }
 
   auto get_link() const {return m_link;}
-  const auto* get_strg() {return m_strg;}
+  const auto* get_strg() const {return m_strg;}
 
   auto operator++() { ++m_link; return *this; }
   auto operator++(int)
