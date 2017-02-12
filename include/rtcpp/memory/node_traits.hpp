@@ -33,9 +33,7 @@ struct void_pointer {
 
 template <class A>
 struct void_pointer<A, false> {
-  using pointer = typename A::pointer;
-  using type =
-    typename std::pointer_traits<pointer>::template rebind<void>;
+  using type = void*;
 };
 
 //__________________________________________________________________
@@ -57,9 +55,7 @@ struct const_void_pointer {
 
 template <class A>
 struct const_void_pointer<A, false> {
-  using pointer = typename A::pointer;
-  using type =
-    typename std::pointer_traits<pointer>::template rebind<const void>;
+  using type = const void*;
 };
 
 //__________________________________________________________________
