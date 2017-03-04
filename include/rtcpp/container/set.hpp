@@ -182,6 +182,8 @@ public:
   {
     m_head->link[0] = m_head;
     m_head->link[1] = m_head;
+    m_head->template unset_link_null<0>();
+    m_head->template unset_link_null<1>();
     m_head->template set_link_null<0>();
   }
 
