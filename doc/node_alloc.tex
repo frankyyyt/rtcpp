@@ -279,6 +279,7 @@
 \fill[nodecontc]  (253:2.5cm) -- (253:3.3cm) arc (253:343:3.3cm) -- (343:2.5cm) arc (343:253:2.5cm);
 \fill[memC]       (343:2.5cm) -- (343:3.3cm) arc (343:360:3.3cm) -- (360:2.5cm) arc (360:343:2.5cm);
 
+\filldraw[white] (-1.5cm, 1.00cm) circle (0.08cm) node[right] {\color{black} Jobs};
 \filldraw[arraycontc] (-1.5cm, 0.50cm) circle (0.08cm) node[right] {\color{black} Edorado Institute};
 \filldraw[bothcontc]  (-1.5cm, 0.00cm) circle (0.08cm) node[right] {\color{black} Numerical Offshore Tank};
 \filldraw[nodecontc]  (-1.5cm,-0.50cm) circle (0.08cm) node[right] {\color{black} Robert Bosch GmbH};
@@ -292,9 +293,10 @@
 \fill[bothcontc]  (125:2.5cm) -- (125:3.3cm) arc (125:187:3.3cm) -- (187:2.5cm) arc (187:125:2.5cm);
 \fill[nodecontc]  (187:2.5cm) -- (187:3.3cm) arc (187:360:3.3cm) -- (360:2.5cm) arc (360:187:2.5cm);
 
-\filldraw[arraycontc] (-2cm,0.50cm) circle (0.08cm) node[right] {\color{black} Bsc Physics};
-\filldraw[bothcontc] (-2cm,-0.00cm) circle (0.08cm) node[right] {\color{black} Msc Physics - gravitation};
-\filldraw[nodecontc] (-2cm,-0.50cm) circle (0.08cm) node[right] {\color{black} PhD Astrophisics};
+\filldraw[white]     (-1.7cm,1.00cm) circle (0.08cm) node[right] {\color{black} Education};
+\filldraw[arraycontc](-1.7cm,0.50cm) circle (0.08cm) node[right] {\color{black} Bsc Physics};
+\filldraw[bothcontc] (-1.7cm,-0.00cm) circle (0.08cm) node[right] {\color{black} Msc Physics (Gravitation)};
+\filldraw[nodecontc] (-1.7cm,-0.50cm) circle (0.08cm) node[right] {\color{black} PhD Astrophisics};
 \end{tikzpicture}
 \end{column}
 \end{columns}
@@ -647,7 +649,7 @@ deallocation reduces to these functions.
 \begin{lstlisting}
 // Boost interface. Allows choosing the number
 // of nodes per blocks. You know its best value
-// better than malloc.
+// better than malloc does.
 node_allocator< int
               , 256 // Nodes per block
               > alloc;
@@ -832,7 +834,7 @@ are unnecessary on node allocation
 \subsection{Proposal}
 
 %____________________________________________________________
-\begin{frame}{Should node allocation be standardized}{Proposal to the ISO \texttt{C++} Standards Committee}
+\begin{frame}{Should node allocation be standardized?}{Proposal to the ISO \texttt{C++} Standards Committee}
 \vspace{-3cm}
     \begin{center}
         \includegraphics[scale=0.6]{fig/prop1.pdf} \\
@@ -1189,7 +1191,7 @@ l = {27, 1, 60};
 \node[anchor=south,draw,node distance=0cm, fill=alertc,shape=rectangle,minimum height=0.43cm  ,minimum width=1.0cm]
 (node1) at (1cm,0.0cm) {};
 
-\node[] at (2cm,4.5cm) {\color{black} Traversal time};
+\node[] at (3cm,4.5cm) {\color{black} Traversal time};
 \filldraw[memC] (2cm,4.0cm) circle (0.08cm) node[right]
 {\color{black} Pointer chasing};
 \filldraw[alertc] (2cm,3.5cm) circle (0.08cm) node[right]
@@ -1279,13 +1281,14 @@ make both perform the same.
 using alloc_type =
     node_allocator<int, node_type, 8>;
 
-std::list<int, alloc_type> l = {1, 2, 3};
+std::list<int, alloc_type> l {11, 23, 35};
 
-auto alloc = l.get_allocator();
+auto strg =
+  l.get_allocator().get_node_storage();
 
 const auto n =
-    std::count_if( std::begin(alloc)
-                 , std::end(alloc),
+    std::count_if( std::begin(strg)
+                 , std::end(strg),
                  , in_use());
 // n = 3
 \end{lstlisting}
@@ -1619,9 +1622,6 @@ struct allocator_traits {
   // Equal to Alloc::link_type if present,
   // Alloc::pointer otherwise.
   using link_type = ...
-
-  // Converts a node link to a pointer.
-  pointer make_ptr(link_type a);
 };
 \end{lstlisting}
 \end{column}
@@ -1629,15 +1629,15 @@ struct allocator_traits {
 \begin{column}{0.47\textwidth}
 \begin{block}{How it works}
 \begin{itemize}
-\item Define a fancy pointer that detects when
-it is inside a node. (Specialization for \texttt{void}
-rebinds).
-\item Specialization contains
+\item Nodes store links to other nodes not pointers.
+\item Define some convertions from \texttt{link\_type}
+to \texttt{pointer} and back.
+\item The \texttt{link\_type} contains
 only an index (e.g. \texttt{std::uint16\_t})
-\item Function to convert between a \texttt{link\_type}
-and \texttt{pointer} in the allocator.
 \item \texttt{link\_type} equal to \texttt{pointer}
 in current cases.
+\item Containers rebind their nodes to the \texttt{link\_type}
+instead of the \texttt{void\_pointer}
 \end{itemize}
 \end{block}
 \end{column}
