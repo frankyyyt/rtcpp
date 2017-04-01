@@ -3,12 +3,9 @@
 #include <iostream>
 #include <exception>
 #include <algorithm>
-#include <rtcpp/algorithm/bubble_sort.hpp>
+
+#include <rtcpp/algorithm/algorithm.hpp>
 #include <rtcpp/utility/make_rand_data.hpp>
-#include <rtcpp/algorithm/comp_counting_sort.hpp>
-#include <rtcpp/algorithm/insertion_sort.hpp>
-#include <rtcpp/algorithm/dist_counting_sort.hpp>
-#include <rtcpp/algorithm/straight_selection_sort.hpp>
 
 #define TEST_SORT(name)                                \
 void test_##name()                                     \

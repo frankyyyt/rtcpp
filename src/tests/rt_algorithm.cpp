@@ -5,11 +5,8 @@
 #include <iostream>
 #include <algorithm>
 
-#include <rtcpp/algorithm/reverse.hpp>
 #include <rtcpp/algorithm/algorithm.hpp>
 #include <rtcpp/utility/make_rand_data.hpp>
-#include <rtcpp/algorithm/insertion_sort.hpp>
-#include <rtcpp/algorithm/find_intrusive.hpp>
 
 #include "rt_test.hpp"
 

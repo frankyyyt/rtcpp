@@ -5,10 +5,10 @@
 #include <algorithm>
 #include <functional>
 
-#include <rtcpp/algorithm/find_intrusive.hpp>
-#include <rtcpp/utility/to_number.hpp>
-#include <rtcpp/utility/make_rand_data.hpp>
 #include <rtcpp/utility/timer.hpp>
+#include <rtcpp/utility/to_number.hpp>
+#include <rtcpp/algorithm/algorithm.hpp>
+#include <rtcpp/utility/make_rand_data.hpp>
 
 int main(int argc, char* argv[])
 {

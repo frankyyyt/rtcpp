@@ -4,12 +4,33 @@
 #include <cmath>
 #include <numeric>
 #include <iostream>
+#include <iterator>
 #include <algorithm>
 #include <initializer_list>
 
-#include <rtcpp/algorithm/snorm.hpp>
-
 namespace rt {
+
+template <std::size_t n>
+struct dot_product_impl {
+  template <typename RIter1, typename RIter2> // P is a random access iter.
+  static typename std::iterator_traits<RIter1>::value_type apply(RIter1 p1, RIter2 p2)
+  { return p1[n - 1] * p2[n - 1] + dot_product_impl<n - 1>::apply(p1, p2); }
+};
+
+template <>
+struct dot_product_impl<1> {
+  template <typename RIter1, typename RIter2>
+  static typename std::iterator_traits<RIter2>::value_type apply(RIter1 p1, RIter2 p2)
+  { return p1[0] * p2[0]; }
+};
+
+template <std::size_t n, typename RIter1, typename RIter2>
+typename std::iterator_traits<RIter1>::value_type dot_product(RIter1 p1, RIter2 p2)
+{ return dot_product_impl<n>::apply(p1, p2); }
+
+template <std::size_t N, typename RandomAccessIter>
+typename std::iterator_traits<RandomAccessIter>::value_type snorm(RandomAccessIter iter)
+{ return dot_product<N>(iter, iter); }
 
 inline
 std::size_t row_major_idx(std::size_t i, std::size_t j,
