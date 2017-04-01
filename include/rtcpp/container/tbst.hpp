@@ -285,6 +285,31 @@ void copy(Ptr head1, Ptr head2, C get_node) noexcept
   }
 }
 
+template<class Ptr, class K, class C>
+std::size_t count(Ptr p, const K& key, C comp) noexcept
+{
+  if (p->template get_null_link<0>()) // The tree is empty
+    return 0;
+
+  p = p->link[0];
+
+  for (;;) {
+    if (comp(key, p->key)) {
+      if (!p->template get_null_link<0>())
+        p = p->link[0];
+      else
+        return 0;
+    } else if (comp(p->key, key)) {
+      if (!p->template get_null_link<1>())
+        p = p->link[1];
+      else
+        return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+
 }
 }
 

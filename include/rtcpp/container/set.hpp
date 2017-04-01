@@ -245,29 +245,7 @@ public:
 
   template<typename K>
   size_type count(const K& key) const noexcept
-  {
-    if (m_head->template get_null_link<0>()) // The tree is empty
-      return 0;
-
-    auto p = m_head;
-    p = m_head->link[0];
-
-    for (;;) {
-      if (m_comp(key, p->key)) {
-        if (!p->template get_null_link<0>())
-          p = p->link[0];
-        else
-          return 0;
-      } else if (m_comp(p->key, key)) {
-        if (!p->template get_null_link<1>())
-          p = p->link[1];
-        else
-          return 0;
-      } else {
-        return 1;
-      }
-    }
-  }
+  { return tbst::count(m_head, key, m_comp); }
 
   template <class K>
   auto find(const K& key)
@@ -288,9 +266,6 @@ public:
     if (pair.first == m_head)
       return 0;
 
-    //node_pointer r = tbst::erase_node<1>(
-    //  const_cast<node_pointer>(pair.second),
-    //  const_cast<node_pointer>(pair.first), m_inner_alloc);
     auto r = tbst::erase_node<1>(pair.second, pair.first);
     release_node(r);
     return 1;
