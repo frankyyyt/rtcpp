@@ -133,32 +133,6 @@ private:
   node_pointer m_head;
   Compare m_comp;
 
-  void copy(set& rhs) const noexcept
-  {
-    auto p = m_head;
-    auto q = rhs.m_head;
-
-    for (;;) {
-      if (!p->template get_null_link<0>()) {
-        auto tmp = get_node();
-        tbst::attach_node<0>(q, tmp);
-      }
-
-      p = tbst::preorder_successor(p);
-      q = tbst::preorder_successor(q);
-
-      if (p == m_head)
-        break;
-
-      if (!p->template get_null_link<1>()) {
-        auto tmp = get_node();
-        tbst::attach_node<1>(q, tmp);
-      }
-
-      q->key = p->key;
-    }
-  }
-
   auto get_node() const
   { return inner_alloc_traits_type::allocate_node(m_inner_alloc); }
   void release_node(node_pointer p) const
@@ -199,7 +173,7 @@ public:
     m_head->link[1] = m_head;
     m_head->template set_link_null<0>();
     clear();
-    rhs.copy(*this);
+    tbst::copy(rhs.m_head, this->m_head, [this](){return get_node();});
   }
 
   template <typename InputIt>

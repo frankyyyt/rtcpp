@@ -258,6 +258,33 @@ find_with_parent(Ptr head, const K& key, const Comp& comp)
   }
 }
 
+template <class Ptr, class C>
+void copy(Ptr head1, Ptr head2, C get_node) noexcept
+{
+  auto p = head1;
+  auto q = head2;
+
+  for (;;) {
+    if (!p->template get_null_link<0>()) {
+      auto tmp = get_node();
+      attach_node<0>(q, tmp);
+    }
+
+    p = preorder_successor(p);
+    q = preorder_successor(q);
+
+    if (p == head1)
+      break;
+
+    if (!p->template get_null_link<1>()) {
+      auto tmp = get_node();
+      attach_node<1>(q, tmp);
+    }
+
+    q->key = p->key;
+  }
+}
+
 }
 }
 
